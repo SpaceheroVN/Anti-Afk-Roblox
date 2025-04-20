@@ -1,1 +1,1 @@
-# Auto anti - afk and reduce lag
+# Auto anti - afk
