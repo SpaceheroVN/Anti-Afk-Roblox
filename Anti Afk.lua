@@ -5,7 +5,7 @@ local StarterGui = game:GetService("StarterGui")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local TweenService = game:GetService("TweenService")
 
-local afkThreshold = 180 -- time noti
+local afkThreshold = 10 -- time noti
 local interventionInterval = 600 -- run
 local checkInterval = 30 -- noti
 local notificationDuration = 4 -- time print noti
@@ -141,42 +141,35 @@ end
     local tweenInfoOut = TweenInfo.new(animationTime, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
     local tweenOut = TweenService:Create(frame, tweenInfoOut, { Position = offScreenPosition })
 
-    -- Chạy animation trượt vào
     tweenIn:Play()
-    currentTween = tweenIn -- Lưu lại để có thể cancel nếu cần
+    currentTween = tweenIn
 
-    -- Đặt lịch để chạy animation trượt ra
     task.delay(notificationDuration + animationTime, function()
-        -- Chỉ chạy tweenOut nếu tweenIn đã hoàn thành và không có tween mới nào được tạo
         if currentTween == tweenIn then
             tweenOut:Play()
             currentTween = tweenOut
             tweenOut.Completed:Connect(function()
                 if currentTween == tweenOut then
-                    currentTween = nil -- Đánh dấu là không còn tween nào chạy
+                    currentTween = nil 
                 end
             end)
         end
     end)
 end
 
--- Hàm thực hiện hành động chống AFK (Click chuột giữa màn hình)
 local function performAntiAFKAction()
     print("AntiAFK: Performing action (simulating mouse click).")
     local viewportSize = workspace.CurrentCamera.ViewportSize
     local centerX = viewportSize.X / 2
     local centerY = viewportSize.Y / 2
 
-    -- Mô phỏng nhấn chuột trái xuống
     VirtualInputManager:SendMouseButtonEvent(centerX, centerY, 0, true, game) -- 0 là MouseButton1
-    task.wait(0.05) -- Đợi một chút rất ngắn
-    -- Mô phỏng nhả chuột trái ra
+    task.wait(0.05)
     VirtualInputManager:SendMouseButtonEvent(centerX, centerY, 0, false, game)
 
     lastInterventionTime = tick()
 end
 
--- Hàm cập nhật trạng thái AFK dựa trên input
 local function onInput()
     local now = tick()
     if isConsideredAFK then
@@ -186,7 +179,6 @@ local function onInput()
     lastInputTime = now
 end
 
--- Lắng nghe input
 UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
     if gameProcessedEvent then return end
     if input.UserInputType == Enum.UserInputType.Keyboard or input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.MouseButton2 or input.UserInputType == Enum.UserInputType.Touch then
@@ -200,18 +192,16 @@ UserInputService.InputChanged:Connect(function(input, gameProcessedEvent)
      end
 end)
 
--- Vòng lặp chính
 local function mainLoop()
     createNotificationGui()
-    task.wait(1) -- Đợi 1 giây để game load xong GUI cơ bản
-    showNotification("Anti afk: On!", "is test") -- Thông báo khởi động
+    task.wait(1)
+    showNotification("Anti afk: On!", "is test")
 
     while task.wait(1) do
         local now = tick()
         local timeSinceLastInput = now - lastInputTime
         local timeSinceLastIntervention = now - lastInterventionTime
 
-        -- 1. Kiểm tra nếu cần thực hiện hành động chống AFK định kỳ
         if timeSinceLastIntervention >= interventionInterval then
             performAntiAFKAction()
             if isConsideredAFK then
@@ -220,7 +210,6 @@ local function mainLoop()
             end
         end
 
-        -- 2. Kiểm tra xem người chơi có vẻ đang AFK không
         if not isConsideredAFK and timeSinceLastInput >= afkThreshold then
             isConsideredAFK = true
             print("AntiAFK: Player potentially AFK based on input timeout.")
@@ -230,10 +219,8 @@ local function mainLoop()
             lastCheckTime = now
         end
 
-        -- 3. Nếu đang AFK, hiển thị thông báo "Have you returned?" định kỳ
         if isConsideredAFK then
             if now - lastCheckTime >= checkInterval then
-                -- Chỉ hiển thị nếu không có thông báo nào khác đang hiện (kiểm tra currentTween)
                 if not currentTween or currentTween.PlaybackState ~= Enum.PlaybackState.Playing then
                      showNotification("Have you returned?", "")
                      lastCheckTime = now
@@ -243,6 +230,5 @@ local function mainLoop()
     end
 end
 
--- Khởi chạy
 coroutine.wrap(mainLoop)()
 print("Anti-AFK Script Running.")
