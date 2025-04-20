@@ -298,70 +298,98 @@ local function cleanup()
     notificationTemplate = nil
 end
 
-local buttonState = "default"
+local function createCustomButton()
+    local buttonFrame = Instance.new("Frame")
+    buttonFrame.Name = "CustomButton"
+    buttonFrame.Size = UDim2.new(0, 250, 0, 60)
+    buttonFrame.Position = UDim2.new(1, -270, 1, -70)
+    buttonFrame.AnchorPoint = Vector2.new(1, 1)
+    buttonFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    buttonFrame.ClipsDescendants = true
 
-local function createButton()
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(0, 100, 0, 50)
-    button.Position = UDim2.new(1, -110, 1, -60)
-    button.AnchorPoint = Vector2.new(1, 1)
-    button.BackgroundColor3 = Color3.new(1, 1, 1)
-    button.Text = "Tối ưu"
+    local corner = Instance.new("UICorner", buttonFrame)
+    corner.CornerRadius = UDim.new(0, 8)
+
+    local padding = Instance.new("UIPadding", buttonFrame)
+    padding.PaddingLeft = UDim.new(0, 10)
+    padding.PaddingRight = UDim.new(0, 10)
+    padding.PaddingTop = UDim.new(0, 5)
+    padding.PaddingBottom = UDim.new(0, 5)
+
+    local listLayout = Instance.new("UIListLayout", buttonFrame)
+    listLayout.FillDirection = Enum.FillDirection.Horizontal
+    listLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.Padding = UDim.new(0, 10)
+
+    local icon = Instance.new("ImageLabel")
+    icon.Name = "Icon"
+    icon.Image = "rbxassetid://117118515787811" -- Thay thế bằng Asset ID của bạn
+    icon.BackgroundTransparency = 1
+    icon.ImageTransparency = 0.5
+    icon.Size = UDim2.new(0, 40, 0, 40)
+    icon.LayoutOrder = 1
+    icon.Parent = buttonFrame
+
+    local textFrame = Instance.new("Frame")
+    textFrame.Name = "TextFrame"
+    textFrame.BackgroundTransparency = 1
+    textFrame.Size = UDim2.new(1, -50, 1, 0)
+    textFrame.LayoutOrder = 2
+    textFrame.Parent = buttonFrame
+
+    local title = Instance.new("TextLabel")
+    title.Name = "Title"
+    title.Text = "Tối ưu"
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 15
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.BackgroundTransparency = 1
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.Size = UDim2.new(1, 0, 1, 0)
+    title.Parent = textFrame
+
     local playerGui = game.Players.LocalPlayer:FindFirstChild("PlayerGui")
     if not playerGui then
         warn("PlayerGui not found for LocalPlayer.")
         return
     end
     local screenGui = playerGui:FindFirstChild("ScreenGui") or Instance.new("ScreenGui", playerGui)
-        button.Parent = screenGui
-    return button
+    buttonFrame.Parent = screenGui
+
+    return buttonFrame, icon, title
 end
 
-local function showMessage(title, message)
-    local notification = Instance.new("TextLabel")
-    notification.Size = UDim2.new(0, 200, 0, 100)
-    notification.Position = UDim2.new(0.5, 0, 0.5, 0)
-    notification.AnchorPoint = Vector2.new(0.5, 0.5)
-    notification.BackgroundColor3 = Color3.new(0, 0, 0)
-    notification.TextColor3 = Color3.new(1, 1, 1)
-    notification.Text = title .. "\n" .. message
-    notification.Parent = game.Players.LocalPlayer.PlayerGui.ScreenGui
-    wait(2)
-    notification:Destroy()
+local function setupButtonInteraction(buttonFrame, icon, title)
+    local tweenInfoHover = TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+
+    buttonFrame.MouseEnter:Connect(function()
+        local hoverTween = TweenService:Create(buttonFrame, tweenInfoHover, { BackgroundColor3 = Color3.fromRGB(40, 40, 40) })
+        hoverTween:Play()
+    end)
+
+    buttonFrame.MouseLeave:Connect(function()
+        local leaveTween = TweenService:Create(buttonFrame, tweenInfoHover, { BackgroundColor3 = Color3.fromRGB(30, 30, 30) })
+        leaveTween:Play()
+    end)
+
+    buttonFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            local clickTween = TweenService:Create(icon, tweenInfoHover, { ImageTransparency = 0.2 })
+            local clickTweenTitle = TweenService:Create(title, tweenInfoHover, { TextColor3 = Color3.fromRGB(0, 255, 0) })
+            clickTween:Play()
+            clickTweenTitle:Play()
+            task.wait(0.3)
+            clickTween:Cancel()
+            clickTweenTitle:Cancel()
+        end
+    end)
 end
 
-local function onButtonClick(button)
-    if buttonState == "default" then
-        buttonState = "optimizing"
-        button.BackgroundColor3 = Color3.new(1, 1, 0)
-        button.Text = "Đang tối ưu..."
-        showMessage("Đang tối ưu...", "Xin chờ giây lát...")
-        wait(3)
-        buttonState = "success"
-        button.BackgroundColor3 = Color3.new(0, 1, 0)
-        button.Text = "Tối ưu thành công!"
-        showMessage("Tối ưu thành công!", "Chúc bạn chơi vui vẻ")
-    elseif buttonState == "success" then
-        buttonState = "restoring"
-        button.BackgroundColor3 = Color3.new(1, 1, 0)
-        button.Text = "Đang khôi phục..."
-        showMessage("Đang khôi phục...", "Xin chờ giây lát...")
-        wait(3)
-        buttonState = "default"
-        button.BackgroundColor3 = Color3.new(1, 1, 1)
-        button.Text = "Tối ưu"
-        showMessage("Khôi phục thành công!", "Chúc bạn chơi vui vẻ")
-    end
+local buttonFrame, icon, title = createCustomButton()
+if buttonFrame then
+    setupButtonInteraction(buttonFrame, icon, title)
 end
-
-local button = createButton()
-if not button then
-    warn("Button creation failed.")
-    return
-end
-button.MouseButton1Click:Connect(function()
-    onButtonClick(button)
-end)
 
 local function main()
     notificationContainer = setupNotificationContainer()
