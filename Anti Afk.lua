@@ -9,8 +9,8 @@ local afkThreshold = 10
 local interventionInterval = 600
 local checkInterval = 30
 local notificationDuration = 4
-local animationTime = 0.3
-local iconAssetId = "rbxassetid://137888597"
+local animationTime = 0.5
+local iconAssetId = "rbxassetid://117118515787811"
 
 local lastInputTime = tick()
 local isConsideredAFK = false
@@ -21,15 +21,9 @@ local currentTween = nil
 local isNotificationShowing = false
 local afkWarningCount = 0
 
-local guiPadding = 15
-local iconSize = 36
-local guiCornerRadius = 8
-local shadowOffset = 2
-
-local backgroundColor = Color3.fromRGB(45, 45, 45)
-local textColorTitle = Color3.fromRGB(230, 230, 230)
-local textColorMessage = Color3.fromRGB(180, 180, 180)
-local shadowColor = Color3.fromRGB(20, 20, 20)
+local guiSize = UDim2.new(0, 250, 0, 60)
+local onScreenPosition = UDim2.new(1, -guiSize.X.Offset - 10, 1, -guiSize.Y.Offset - 10)
+local offScreenPosition = UDim2.new(1, 10, 1, -guiSize.Y.Offset - 10)
 
 local function createNotificationGui()
     if guiElement then return guiElement end
@@ -45,57 +39,47 @@ local function createNotificationGui()
     screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     screenGui.Parent = playerGui
 
-    -- Tạo bóng đổ (tùy chọn)
-    local shadow = Instance.new("Frame")
-    shadow.Name = "Shadow"
-    shadow.BackgroundColor3 = shadowColor
-    shadow.BackgroundTransparency = 0.5
-    shadow.BorderSizePixel = 0
-    shadow.Size = UDim2.new(0, 250 + shadowOffset, 0, 60 + shadowOffset)
-    shadow.Position = UDim2.new(1, -250 - guiPadding + shadowOffset, 1, -60 - guiPadding + shadowOffset)
-    shadow.AnchorPoint = Vector2.new(1, 1)
-    shadow.ClipsDescendants = true
-    shadow.Parent = screenGui
-
-    local shadowCorner = Instance.new("UICorner")
-    shadowCorner.CornerRadius = UDim.new(0, guiCornerRadius)
-    shadowCorner.Parent = shadow
-
     local notificationFrame = Instance.new("Frame")
     notificationFrame.Name = "NotificationFrame"
-    notificationFrame.BackgroundColor3 = backgroundColor
-    notificationFrame.BackgroundTransparency = 0
+    notificationFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    notificationFrame.BackgroundTransparency = 0.2
     notificationFrame.BorderSizePixel = 0
-    notificationFrame.Size = UDim2.new(0, 250, 0, 60)
-    notificationFrame.Position = UDim2.new(1, -250 - guiPadding, 1, -60 - guiPadding)
-    notificationFrame.AnchorPoint = Vector2.new(1, 1)
+    notificationFrame.Size = guiSize
+    notificationFrame.Position = offScreenPosition
     notificationFrame.ClipsDescendants = true
     notificationFrame.Parent = screenGui
 
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, guiCornerRadius)
+    corner.CornerRadius = UDim.new(0, 6)
     corner.Parent = notificationFrame
 
+    local listLayout = Instance.new("UIListLayout")
+    listLayout.FillDirection = Enum.FillDirection.Horizontal
+    listLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.Padding = UDim.new(0, 10)
+    listLayout.Parent = notificationFrame
+
     local padding = Instance.new("UIPadding")
-    padding.PaddingLeft = UDim.new(0, guiPadding)
-    padding.PaddingRight = UDim.new(0, guiPadding)
-    padding.PaddingTop = UDim.new(0, guiPadding / 2)
-    padding.PaddingBottom = UDim.new(0, guiPadding / 2)
+    padding.PaddingLeft = UDim.new(0, 10)
+    padding.PaddingRight = UDim.new(0, 10)
+    padding.PaddingTop = UDim.new(0, 5)
+    padding.PaddingBottom = UDim.new(0, 5)
     padding.Parent = notificationFrame
 
     local icon = Instance.new("ImageLabel")
     icon.Name = "Icon"
+    icon.LayoutOrder = 1
     icon.Image = iconAssetId
     icon.BackgroundTransparency = 1
-    icon.Size = UDim2.new(0, iconSize, 0, iconSize)
-    icon.Position = UDim2.new(0, guiPadding / 2, 0.5, -iconSize / 2)
+    icon.Size = UDim2.new(0, 40, 0, 40)
     icon.Parent = notificationFrame
 
     local textFrame = Instance.new("Frame")
     textFrame.Name = "TextFrame"
+    textFrame.LayoutOrder = 2
     textFrame.BackgroundTransparency = 1
-    textFrame.Size = UDim2.new(1, -iconSize - 2 * guiPadding, 1, 0)
-    textFrame.Position = UDim2.new(0, iconSize + 1.5 * guiPadding, 0, 0)
+    textFrame.Size = UDim2.new(1, -60, 1, 0)
     textFrame.Parent = notificationFrame
 
     local textListLayout = Instance.new("UIListLayout")
@@ -107,9 +91,10 @@ local function createNotificationGui()
 
     local titleLabel = Instance.new("TextLabel")
     titleLabel.Name = "Title"
+    titleLabel.LayoutOrder = 1
     titleLabel.Font = Enum.Font.SourceSansBold
     titleLabel.TextSize = 16
-    titleLabel.TextColor3 = textColorTitle
+    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     titleLabel.BackgroundTransparency = 1
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
     titleLabel.Size = UDim2.new(1, 0, 0, 18)
@@ -117,9 +102,10 @@ local function createNotificationGui()
 
     local messageLabel = Instance.new("TextLabel")
     messageLabel.Name = "Message"
+    messageLabel.LayoutOrder = 2
     messageLabel.Font = Enum.Font.SourceSans
     messageLabel.TextSize = 14
-    messageLabel.TextColor3 = textColorMessage
+    messageLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
     messageLabel.BackgroundTransparency = 1
     messageLabel.TextXAlignment = Enum.TextXAlignment.Left
     messageLabel.Size = UDim2.new(1, 0, 0, 16)
@@ -151,11 +137,8 @@ local function showNotification(title, message)
     titleLabel.Text = title
     messageLabel.Text = message
 
-    frame.Position = UDim2.new(1, -250 - guiPadding, 1, -60 - guiPadding) -- Vị trí ban đầu
-    local onScreenPosition = UDim2.new(1, -250 - guiPadding, 1, -60 - guiPadding) -- Vị trí cuối cùng (trượt từ phải xuống)
-    local offScreenPosition = UDim2.new(1, -guiPadding, 1, -60 - guiPadding) -- Vị trí trượt ra
+    frame.Position = offScreenPosition
 
-    -- Animation trượt vào
     local tweenInfoIn = TweenInfo.new(animationTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
     local tweenIn = TweenService:Create(frame, tweenInfoIn, { Position = onScreenPosition })
 
@@ -196,10 +179,10 @@ local function onInput()
     local now = tick()
     if isConsideredAFK then
         isConsideredAFK = false
-        showNotification("Chào mừng trở lại!", "Bạn đã hết AFK.")
+        showNotification("Bạn đây rồi♥️", "Tạm dừng kích hoạt.")
     end
     lastInputTime = now
-    afkWarningCount = 0
+    afkWarningCount = 0 
 end
 
 UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
@@ -223,7 +206,7 @@ local function mainLoop()
     end
 
     task.wait(1)
-    showNotification("Anti AFK", "Đã được kích hoạt.")
+    showNotification("Anti AFK: Đã bật!", "Script đang hoạt động❤️")
 
     while task.wait(1) do
         local now = tick()
@@ -233,7 +216,7 @@ local function mainLoop()
         if timeSinceLastIntervention >= interventionInterval then
             performAntiAFKAction()
             if isConsideredAFK then
-                 showNotification("Phát hiện AFK", "Đã thực hiện hành động❤️")
+                 showNotification("Phát hiện người chơi AFK.", "Đã thực hiện hành động can thiệp!")
                  lastCheckTime = now
                  afkWarningCount = 0
             end
@@ -241,9 +224,9 @@ local function mainLoop()
 
         if not isConsideredAFK and timeSinceLastInput >= afkThreshold then
             isConsideredAFK = true
-            print("AntiAFK: Người chơi có dấu hiệu AFK.")
+            print("AntiAFK: Người chơi có thể đang AFK.")
             if timeSinceLastIntervention > 1 then
-                 showNotification("Cảnh báo AFK", "Sắp có hành động can thiệp!")
+                 showNotification("Phát hiện người chơi AFK.", "Sắp thực hiện hành động can thiệp!")
             end
             lastCheckTime = now
             afkWarningCount = 0
@@ -253,7 +236,7 @@ local function mainLoop()
             if now - lastCheckTime >= checkInterval then
                 if not isNotificationShowing then
                     afkWarningCount += 1
-                    showNotification("Bạn còn đó không?", "Chúng tôi vẫn đang can thiệp!")
+                    showNotification("Bạn đã quay lại chưa?", "Chúng tôi vẫn đang can thiệp!")
                     lastCheckTime = now
                 end
             end
