@@ -3,6 +3,7 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local TweenService = game:GetService("TweenService")
+local player = Players.LocalPlayer
 
 local afkThreshold = 180
 local interventionInterval = 600
@@ -22,7 +23,6 @@ local notificationContainer = nil
 local notificationTemplate = nil
 local inputBeganConnection = nil
 local inputChangedConnection = nil
-local player = Players.LocalPlayer
 
 local guiSize = UDim2.new(0, 250, 0, 60)
 
@@ -79,7 +79,7 @@ local function createNotificationTemplate()
 
     local title = Instance.new("TextLabel")
     title.Name = "Title"
-    title.Text = "Tiêu đề" 
+    title.Text = "Tiêu đề"
     title.Font = Enum.Font.GothamBold
     title.TextSize = 15
     title.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -92,7 +92,7 @@ local function createNotificationTemplate()
 
     local message = Instance.new("TextLabel")
     message.Name = "Message"
-    message.Text = "Nội dung tin nhắn." 
+    message.Text = "Nội dung tin nhắn."
     message.Font = Enum.Font.Gotham
     message.TextSize = 13
     message.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -270,6 +270,119 @@ local function cleanup()
     notificationTemplate = nil
 end
 
+--[[  
+    ==============================
+    * CHỨC NĂNG GIẢM LAG *
+    ==============================
+    - Hiển thị hộp thoại hỏi "Bạn có muốn giảm lag không?" với 2 nút "Có" và "Không".
+    - Nếu người dùng chọn "Có": gọi hàm disableMapEffects() để tắt các hiệu ứng
+      (vd. hiệu ứng ánh sáng, Bloom, Blur, Fire, Smoke, Particle, Sparkles, …).
+      Sau đó xoá hộp thoại và hiện thông báo "Đã giảm hiệu ứng và đồ họa.
+      Chúc bạn vui vẻ!".
+    - Nếu chọn "Không": chỉ xoá hộp thoại.
+]]--
+
+local function disableMapEffects()
+    local lighting = game:GetService("Lighting")
+    for _, effect in pairs(lighting:GetChildren()) do
+        if effect:IsA("BloomEffect") or effect:IsA("BlurEffect") or effect:IsA("SunRaysEffect") or effect:IsA("ColorCorrectionEffect") or effect:IsA("DepthOfFieldEffect") then
+            effect.Enabled = false
+        end
+    end
+    for _, desc in pairs(workspace:GetDescendants()) do
+        if desc:IsA("ParticleEmitter") or desc:IsA("Smoke") or desc:IsA("Fire") or desc:IsA("Sparkles") then
+            desc.Enabled = false
+        end
+    end
+    print("Lag Reduction: Tất cả hiệu ứng đã được tắt.")
+end
+
+local lagPromptGui = nil
+
+local function createLagPrompt()
+    local playerGui = player:WaitForChild("PlayerGui", 20)
+    if not playerGui then
+        warn("Lag Reduction Prompt: PlayerGui không tồn tại cho " .. player.Name)
+        return nil
+    end
+
+    local promptGui = Instance.new("ScreenGui")
+    promptGui.Name = "LagReductionPromptGui"
+    promptGui.ResetOnSpawn = false
+    promptGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    promptGui.Parent = playerGui
+
+    local frame = Instance.new("Frame")
+    frame.Name = "LagPromptFrame"
+    frame.AnchorPoint = Vector2.new(0.5, 0.5)
+    frame.Position = UDim2.new(0.5, 0, 0.5, 0)
+    frame.Size = UDim2.new(0, 300, 0, 150)
+    frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    frame.BorderSizePixel = 0
+    frame.Parent = promptGui
+
+    local corner = Instance.new("UICorner", frame)
+    corner.CornerRadius = UDim.new(0, 8)
+
+    local title = Instance.new("TextLabel")
+    title.Name = "PromptTitle"
+    title.Text = "Bạn có muốn giảm lag không?"
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 18
+    title.TextColor3 = Color3.new(1, 1, 1)
+    title.BackgroundTransparency = 1
+    title.Size = UDim2.new(1, 0, 0.4, 0)
+    title.Position = UDim2.new(0, 0, 0, 0)
+    title.Parent = frame
+
+    local buttonYes = Instance.new("TextButton")
+    buttonYes.Name = "ButtonYes"
+    buttonYes.Text = "Có"
+    buttonYes.Font = Enum.Font.GothamBold
+    buttonYes.TextSize = 16
+    buttonYes.TextColor3 = Color3.new(1, 1, 1)
+    buttonYes.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+    buttonYes.Size = UDim2.new(0.4, -10, 0.3, 0)
+    buttonYes.Position = UDim2.new(0.1, 0, 0.55, 0)
+    buttonYes.Parent = frame
+
+    local buttonNo = Instance.new("TextButton")
+    buttonNo.Name = "ButtonNo"
+    buttonNo.Text = "Không"
+    buttonNo.Font = Enum.Font.GothamBold
+    buttonNo.TextSize = 16
+    buttonNo.TextColor3 = Color3.new(1, 1, 1)
+    buttonNo.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
+    buttonNo.Size = UDim2.new(0.4, -10, 0.3, 0)
+    buttonNo.Position = UDim2.new(0.55, 0, 0.55, 0)
+    buttonNo.Parent = frame
+
+    lagPromptGui = promptGui
+    return promptGui
+end
+
+local function showLagReductionPrompt()
+    local promptGui = createLagPrompt()
+    if not promptGui then
+        return
+    end
+
+    local frame = promptGui:WaitForChild("LagPromptFrame")
+    local buttonYes = frame:WaitForChild("ButtonYes")
+    local buttonNo = frame:WaitForChild("ButtonNo")
+
+    buttonYes.MouseButton1Click:Connect(function()
+        disableMapEffects()
+        promptGui:Destroy()
+        showNotification("Thông báo", "Đã giảm hiệu ứng và đồ họa.\nChúc bạn vui vẻ!")
+        print("Lag Reduction: Người dùng đã chọn giảm lag.")
+    end)
+    buttonNo.MouseButton1Click:Connect(function()
+        promptGui:Destroy()
+        print("Lag Reduction: Người dùng từ chối giảm lag.")
+    end)
+end
+
 local function main()
     notificationContainer = setupNotificationContainer()
     if not notificationContainer then
@@ -303,6 +416,9 @@ local function main()
     task.wait(3)
     showNotification("Anti AFK", "Đã được kích hoạt.")
     print("Anti-AFK Script đã khởi chạy và đang theo dõi input.")
+
+    -- Sau khi thông báo ban đầu, hiện hộp thoại hỏi giảm lag
+    showLagReductionPrompt()
 
     while true do
         task.wait(0.5)
