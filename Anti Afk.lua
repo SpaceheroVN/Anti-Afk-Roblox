@@ -8,9 +8,9 @@ local TweenService = game:GetService("TweenService")
 local afkThreshold = 10
 local interventionInterval = 600
 local checkInterval = 30
-local notificationDuration = 4
-local animationTime = 0.3 -- Giảm thời gian animation cho cảm giác nhanh hơn
-local iconAssetId = "rbxassetid://137888597" -- Icon dấu chấm than cách điệu (thay đổi tùy thích)
+local notificationDuration = 10
+local animationTime = 0.5
+local iconAssetId = "rbxassetid://137888597"
 
 local lastInputTime = tick()
 local isConsideredAFK = false
