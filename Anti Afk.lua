@@ -5,9 +5,9 @@ local StarterGui = game:GetService("StarterGui")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local TweenService = game:GetService("TweenService")
 
-local afkThreshold = 10
+local afkThreshold = 180
 local interventionInterval = 600
-local checkInterval = 10
+local checkInterval = 60
 local notificationDuration = 4
 local animationTime = 0.5
 local iconAssetId = "rbxassetid://117118515787811"
