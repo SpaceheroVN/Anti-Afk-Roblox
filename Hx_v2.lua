@@ -188,13 +188,37 @@ local function showNotification(title, message)
     if titleLabel then titleLabel.Text = title or "Thông báo" end
     if messageLabel then messageLabel.Text = message or "" end
 
+    local button = Instance.new("TextButton", newFrame)
+    button.Name = "ActionButton"
+    button.Text = "Đóng"
+    button.Font = Enum.Font.GothamBold
+    button.TextSize = 14
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    button.BackgroundTransparency = 1
+    button.Size = UDim2.new(0, 80, 0, 30)
+    button.Position = UDim2.new(1, -90, 1, -40)
+    button.AnchorPoint = Vector2.new(1, 1)
+
+    local buttonCorner = Instance.new("UICorner", button)
+    buttonCorner.CornerRadius = UDim.new(0, 8)
+
     local tweenInfo = TweenInfo.new(CONFIG.animationTime, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
     TweenService:Create(newFrame, tweenInfo, { BackgroundTransparency = 0.2 }):Play()
     if icon then TweenService:Create(icon, tweenInfo, { ImageTransparency = 0 }):Play() end
     if titleLabel then TweenService:Create(titleLabel, tweenInfo, { TextTransparency = 0 }):Play() end
     if messageLabel then TweenService:Create(messageLabel, tweenInfo, { TextTransparency = 0 }):Play() end
+    TweenService:Create(button, tweenInfo, { BackgroundTransparency = 0.2 }):Play()
 
-    task.delay(CONFIG.notificationDuration, function()
+    button.MouseButton1Click:Connect(function()
+        if newFrame and newFrame.Parent then
+            TweenService:Create(newFrame, tweenInfo, { BackgroundTransparency = 1 }):Play()
+            task.wait(CONFIG.animationTime)
+            newFrame:Destroy()
+        end
+    end)
+
+    task.delay(CONFIG.notificationDuration + 5, function()
         if newFrame and newFrame.Parent then
             TweenService:Create(newFrame, tweenInfo, { BackgroundTransparency = 1 }):Play()
             newFrame:Destroy()
