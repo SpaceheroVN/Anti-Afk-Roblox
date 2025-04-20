@@ -301,53 +301,34 @@ end
 local function createCustomButton()
     local buttonFrame = Instance.new("Frame")
     buttonFrame.Name = "CustomButton"
-    buttonFrame.Size = UDim2.new(0, 250, 0, 60)
-    buttonFrame.Position = UDim2.new(1, -270, 1, -70)
+    buttonFrame.Size = UDim2.new(0, 150, 0, 40) -- Khung nhỏ lại
+    buttonFrame.Position = UDim2.new(1, -170, 1, -50)
     buttonFrame.AnchorPoint = Vector2.new(1, 1)
-    buttonFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    buttonFrame.BackgroundColor3 = Color3.fromRGB(200, 200, 200) -- Màu nhạt hơn
+    buttonFrame.BackgroundTransparency = 0.6 -- Trong suốt hơn
     buttonFrame.ClipsDescendants = true
 
-    local corner = Instance.new("UICorner", buttonFrame)
-    corner.CornerRadius = UDim.new(0, 8)
+    -- Vòng bo ngoài
+    local outerCircle = Instance.new("UICorner", buttonFrame)
+    outerCircle.CornerRadius = UDim.new(1, 0) -- Vòng bo tròn hoàn toàn
 
-    local padding = Instance.new("UIPadding", buttonFrame)
-    padding.PaddingLeft = UDim.new(0, 10)
-    padding.PaddingRight = UDim.new(0, 10)
-    padding.PaddingTop = UDim.new(0, 5)
-    padding.PaddingBottom = UDim.new(0, 5)
+    local border = Instance.new("UIStroke", buttonFrame)
+    border.Color = Color3.fromRGB(150, 150, 150) -- Màu nhạt hơn cho viền
+    border.Thickness = 2
+    border.Transparency = 0.5 -- Viền trong suốt hơn
 
-    local listLayout = Instance.new("UIListLayout", buttonFrame)
-    listLayout.FillDirection = Enum.FillDirection.Horizontal
-    listLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    listLayout.Padding = UDim.new(0, 10)
-
-    local icon = Instance.new("ImageLabel")
-    icon.Name = "Icon"
-    icon.Image = "rbxassetid://117118515787811" -- Thay thế bằng Asset ID của bạn
-    icon.BackgroundTransparency = 1
-    icon.ImageTransparency = 0.5
-    icon.Size = UDim2.new(0, 40, 0, 40)
-    icon.LayoutOrder = 1
-    icon.Parent = buttonFrame
-
-    local textFrame = Instance.new("Frame")
-    textFrame.Name = "TextFrame"
-    textFrame.BackgroundTransparency = 1
-    textFrame.Size = UDim2.new(1, -50, 1, 0)
-    textFrame.LayoutOrder = 2
-    textFrame.Parent = buttonFrame
-
+    -- Phần chữ
     local title = Instance.new("TextLabel")
     title.Name = "Title"
     title.Text = "Tối ưu"
     title.Font = Enum.Font.GothamBold
-    title.TextSize = 15
-    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.TextSize = 14 -- Kích thước chữ nhỏ hơn
+    title.TextColor3 = Color3.fromRGB(50, 50, 50) -- Màu chữ đậm hơn để nổi bật
     title.BackgroundTransparency = 1
-    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.TextXAlignment = Enum.TextXAlignment.Center
+    title.TextYAlignment = Enum.TextYAlignment.Center
     title.Size = UDim2.new(1, 0, 1, 0)
-    title.Parent = textFrame
+    title.Parent = buttonFrame
 
     local playerGui = game.Players.LocalPlayer:FindFirstChild("PlayerGui")
     if not playerGui then
@@ -357,38 +338,35 @@ local function createCustomButton()
     local screenGui = playerGui:FindFirstChild("ScreenGui") or Instance.new("ScreenGui", playerGui)
     buttonFrame.Parent = screenGui
 
-    return buttonFrame, icon, title
+    return buttonFrame, title
 end
 
-local function setupButtonInteraction(buttonFrame, icon, title)
+local function setupButtonInteraction(buttonFrame, title)
     local tweenInfoHover = TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
 
     buttonFrame.MouseEnter:Connect(function()
-        local hoverTween = TweenService:Create(buttonFrame, tweenInfoHover, { BackgroundColor3 = Color3.fromRGB(40, 40, 40) })
+        local hoverTween = TweenService:Create(buttonFrame, tweenInfoHover, { BackgroundTransparency = 0.3 }) -- Giảm độ trong suốt khi hover
         hoverTween:Play()
     end)
 
     buttonFrame.MouseLeave:Connect(function()
-        local leaveTween = TweenService:Create(buttonFrame, tweenInfoHover, { BackgroundColor3 = Color3.fromRGB(30, 30, 30) })
+        local leaveTween = TweenService:Create(buttonFrame, tweenInfoHover, { BackgroundTransparency = 0.6 }) -- Trở về trong suốt khi bỏ hover
         leaveTween:Play()
     end)
 
     buttonFrame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            local clickTween = TweenService:Create(icon, tweenInfoHover, { ImageTransparency = 0.2 })
-            local clickTweenTitle = TweenService:Create(title, tweenInfoHover, { TextColor3 = Color3.fromRGB(0, 255, 0) })
+            local clickTween = TweenService:Create(title, tweenInfoHover, { TextColor3 = Color3.fromRGB(0, 255, 0) }) -- Đổi màu chữ khi click
             clickTween:Play()
-            clickTweenTitle:Play()
             task.wait(0.3)
             clickTween:Cancel()
-            clickTweenTitle:Cancel()
         end
     end)
 end
 
-local buttonFrame, icon, title = createCustomButton()
+local buttonFrame, title = createCustomButton()
 if buttonFrame then
-    setupButtonInteraction(buttonFrame, icon, title)
+    setupButtonInteraction(buttonFrame, title)
 end
 
 local function main()
