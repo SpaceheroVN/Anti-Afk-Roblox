@@ -18,13 +18,14 @@ local lastInterventionTime = tick()
 local lastCheckTime = 0
 local guiElement = nil
 local currentTween = nil -- ql animation
+local isNotificationShowing = false -- Trạng thái thông báo
 
 local guiSize = UDim2.new(0, 250, 0, 60)
 local onScreenPosition = UDim2.new(1, -guiSize.X.Offset - 10, 1, -guiSize.Y.Offset - 10)
 local offScreenPosition = UDim2.new(1, 10, 1, -guiSize.Y.Offset - 10)
 
 local function createNotificationGui()
-    if guiElement and guiElement.Parent then return end
+    if guiElement then return end
 
     local player = Players.LocalPlayer
     local playerGui = player:WaitForChild("PlayerGui")
@@ -74,15 +75,14 @@ local function createNotificationGui()
     textFrame.Name = "TextFrame"
     textFrame.LayoutOrder = 2
     textFrame.BackgroundTransparency = 1
-
-    textFrame.Size = UDim2.new(1, -60, 1, 0) 
+    textFrame.Size = UDim2.new(1, -60, 1, 0)
     textFrame.Parent = notificationFrame
 
     local textListLayout = Instance.new("UIListLayout")
     textListLayout.FillDirection = Enum.FillDirection.Vertical
     textListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
     textListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    textListLayout.Padding = UDim.new(0, 2) 
+    textListLayout.Padding = UDim.new(0, 2)
     textListLayout.Parent = textFrame
 
     local titleLabel = Instance.new("TextLabel")
@@ -111,8 +111,9 @@ local function createNotificationGui()
     guiElement.Parent = playerGui
 end
 
-    if not guiElement then createNotificationGui() end
-    if not guiElement or not guiElement.Parent then return end
+local function showNotification(title, message)
+    if not guiElement then return end
+    if isNotificationShowing then return end
 
     local frame = guiElement:FindFirstChild("NotificationFrame")
     local titleLabel = frame and frame:FindFirstChild("TextFrame"):FindFirstChild("Title")
@@ -132,12 +133,12 @@ end
     messageLabel.Text = message
 
     frame.Position = offScreenPosition
+    isNotificationShowing = true
 
     -- Tạo animation trượt vào
     local tweenInfoIn = TweenInfo.new(animationTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
     local tweenIn = TweenService:Create(frame, tweenInfoIn, { Position = onScreenPosition })
 
-  
     local tweenInfoOut = TweenInfo.new(animationTime, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
     local tweenOut = TweenService:Create(frame, tweenInfoOut, { Position = offScreenPosition })
 
@@ -150,7 +151,8 @@ end
             currentTween = tweenOut
             tweenOut.Completed:Connect(function()
                 if currentTween == tweenOut then
-                    currentTween = nil 
+                    currentTween = nil
+                    isNotificationShowing = false
                 end
             end)
         end
@@ -174,7 +176,7 @@ local function onInput()
     local now = tick()
     if isConsideredAFK then
         isConsideredAFK = false
-        showNotification("There you are ♥️", "Proceed with pausing.") -- Thời gian hiển thị mặc định
+        showNotification("There you are ♥️", "Proceed with pausing.")
     end
     lastInputTime = now
 end
@@ -197,6 +199,8 @@ local function mainLoop()
     task.wait(1)
     showNotification("Anti afk: On!", "is test")
 
+    local afkWarningCount = 0
+
     while task.wait(1) do
         local now = tick()
         local timeSinceLastInput = now - lastInputTime
@@ -207,6 +211,7 @@ local function mainLoop()
             if isConsideredAFK then
                  showNotification("Player detected to be AFK.", "Intervention initiated!!")
                  lastCheckTime = now
+                 afkWarningCount = 0 -- Reset bộ đếm khi có hành động can thiệp
             end
         end
 
@@ -217,13 +222,15 @@ local function mainLoop()
                  showNotification("Player detected to be AFK.", "Intervention initiated!!")
             end
             lastCheckTime = now
+            afkWarningCount = 0
         end
 
         if isConsideredAFK then
             if now - lastCheckTime >= checkInterval then
-                if not currentTween or currentTween.PlaybackState ~= Enum.PlaybackState.Playing then
-                     showNotification("Have you returned?", "")
-                     lastCheckTime = now
+                if not isNotificationShowing then
+                    showNotification("Have you returned?", "")
+                    lastCheckTime = now
+                    afkWarningCount += 1
                 end
             end
         end
