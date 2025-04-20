@@ -4,11 +4,11 @@ local RunService = game:GetService("RunService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local TweenService = game:GetService("TweenService")
 
-local afkThreshold = 10
+local afkThreshold = 180
 local interventionInterval = 600
-local checkInterval = 10
+local checkInterval = 60
 local notificationDuration = 5
-local animationTime = 0.5  -- Thời gian tween hơi lâu hơn cho mượt
+local animationTime = 0.5
 local iconAssetId = "rbxassetid://117118515787811"
 local enableIntervention = true
 local simulatedKeyCode = Enum.KeyCode.Space
@@ -66,42 +66,43 @@ local function createNotificationTemplate()
     local textFrame = Instance.new("Frame")
     textFrame.Name = "TextFrame"
     textFrame.BackgroundTransparency = 1
-    textFrame.Size = UDim2.fromScale(1, 1)
-    textFrame.SizeConstraint = Enum.SizeConstraint.RelativeYY
+    textFrame.Size = UDim2.new(1, 0, 1, 0)
     textFrame.LayoutOrder = 2
     textFrame.Parent = frame
 
+    -- Sắp xếp title và message theo chiều ngang
     local textListLayout = Instance.new("UIListLayout", textFrame)
-    textListLayout.FillDirection = Enum.FillDirection.Vertical
+    textListLayout.FillDirection = Enum.FillDirection.Horizontal
     textListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+    textListLayout.VerticalAlignment = Enum.VerticalAlignment.Center
     textListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    textListLayout.Padding = UDim.new(0, 2)
+    textListLayout.Padding = UDim.new(0, 5)
 
     local title = Instance.new("TextLabel")
     title.Name = "Title"
-    title.Text = "Tiêu đề"
+    title.Text = "Tiêu đề" 
     title.Font = Enum.Font.GothamBold
     title.TextSize = 15
     title.TextColor3 = Color3.fromRGB(255, 255, 255)
     title.BackgroundTransparency = 1
     title.TextTransparency = 1
     title.TextXAlignment = Enum.TextXAlignment.Left
-    title.Size = UDim2.new(1, 0, 0, 18)
-    title.LayoutOrder = 1
+    title.AutomaticSize = Enum.AutomaticSize.X
+    title.Size = UDim2.new(0, 0, 1, 0)
     title.Parent = textFrame
 
     local message = Instance.new("TextLabel")
     message.Name = "Message"
-    message.Text = "Nội dung tin nhắn."
+    message.Text = "Nội dung tin nhắn." 
     message.Font = Enum.Font.Gotham
     message.TextSize = 13
     message.TextColor3 = Color3.fromRGB(200, 200, 200)
     message.BackgroundTransparency = 1
     message.TextTransparency = 1
     message.TextXAlignment = Enum.TextXAlignment.Left
-    message.TextWrapped = true
-    message.Size = UDim2.new(1, 0, 1, -title.Size.Y.Offset - textListLayout.Padding.Offset)
-    message.LayoutOrder = 2
+    message.TextWrapped = false
+    message.AutomaticSize = Enum.AutomaticSize.X
+    message.Size = UDim2.new(0, 0, 1, 0)
     message.Parent = textFrame
 
     notificationTemplate = frame
@@ -131,7 +132,6 @@ local function setupNotificationContainer()
     screenGui.DisplayOrder = 999
     screenGui.Parent = playerGui
 
-    -- Tạo một Frame con để định vị thông báo theo ý muốn (cách cạnh phải -18px, cách đáy -48px)
     local container = Instance.new("Frame")
     container.Name = "NotificationContainerFrame"
     container.AnchorPoint = Vector2.new(1, 1)
@@ -188,13 +188,12 @@ local function showNotification(title, message)
 
     newFrame.Parent = notificationContainer
 
-    -- Tween sử dụng easing Sine cho mượt
     local tweenInfoAppear = TweenInfo.new(animationTime, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
     local fadeInTweenFrame = TweenService:Create(newFrame, tweenInfoAppear, { BackgroundTransparency = 0.2 })
     local fadeInTweenIcon = TweenService:Create(icon, tweenInfoAppear, { ImageTransparency = 0 })
     local fadeInTweenTitle = TweenService:Create(titleLabel, tweenInfoAppear, { TextTransparency = 0 })
     local fadeInTweenMessage = TweenService:Create(messageLabel, tweenInfoAppear, { TextTransparency = 0 })
-
+    
     fadeInTweenFrame:Play()
     fadeInTweenIcon:Play()
     fadeInTweenTitle:Play()
@@ -285,9 +284,7 @@ local function main()
     end
 
     inputBeganConnection = UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
-        if gameProcessedEvent then
-            return
-        end
+        if gameProcessedEvent then return end
         if input.UserInputType == Enum.UserInputType.Keyboard or
            input.UserInputType == Enum.UserInputType.MouseButton1 or
            input.UserInputType == Enum.UserInputType.MouseButton2 or
@@ -296,9 +293,7 @@ local function main()
         end
     end)
     inputChangedConnection = UserInputService.InputChanged:Connect(function(input, gameProcessedEvent)
-        if gameProcessedEvent then
-            return
-        end
+        if gameProcessedEvent then return end
         if input.UserInputType == Enum.UserInputType.MouseMovement or
            input.UserInputType == Enum.UserInputType.MouseWheel or
            input.UserInputType.Name:find("Gamepad") then
