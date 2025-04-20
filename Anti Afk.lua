@@ -1,81 +1,83 @@
---// Services
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local TweenService = game:GetService("TweenService")
 
---// Settings
 local afkThreshold = 180
 local interventionInterval = 600
 local checkInterval = 60
-local notificationDuration = 4
-local animationTime = 0.5
-local iconAssetId = "rbxassetid://117118515787811"
+local notificationDuration = 5
+local animationTime = 0.4
+local iconAssetId = "rbxassetid://117118515787811" -- !!! NHỚ THAY ID NÀY !!!
 
---// State
-local lastInputTime = tick()
-local lastInterventionTime = tick()
+local lastInputTime = os.clock()
+local lastInterventionTime = 0
 local lastCheckTime = 0
 local interventionCounter = 0
-local afkWarningCount = 0
 local isConsideredAFK = false
-local isNotificationShowing = false
-local currentTween = nil
-local guiElement = nil
+local notificationContainer = nil
+local notificationTemplate = nil
+local inputBeganConnection = nil
+local inputChangedConnection = nil
 
---// Positions
 local guiSize = UDim2.new(0, 250, 0, 60)
-local onScreenPosition = UDim2.new(1, -guiSize.X.Offset - 10, 1, -guiSize.Y.Offset - 10)
-local offScreenPosition = UDim2.new(1, 10, 1, -guiSize.Y.Offset - 10)
 
---// GUI
-local function createNotificationGui()
-	if guiElement then return guiElement end
-
-	local player = Players.LocalPlayer
-	if not player then return nil end
-	local playerGui = player:WaitForChild("PlayerGui", 5)
-	if not playerGui then return nil end
-
-	local screenGui = Instance.new("ScreenGui")
-	screenGui.Name = "AntiAFKStatusGui"
-	screenGui.ResetOnSpawn = false
-	screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-	screenGui.Parent = playerGui
+local function createNotificationTemplate()
+	if notificationTemplate then return notificationTemplate end
 
 	local frame = Instance.new("Frame")
-	frame.Name = "NotificationFrame"
+	frame.Name = "NotificationFrameTemplate"
 	frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-	frame.BackgroundTransparency = 0.2
+	frame.BackgroundTransparency = 1
 	frame.BorderSizePixel = 0
 	frame.Size = guiSize
-	frame.Position = offScreenPosition
 	frame.ClipsDescendants = true
-	frame.Parent = screenGui
 
-	Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
-	Instance.new("UIGradient", frame).Color = ColorSequence.new{
+	local corner = Instance.new("UICorner", frame)
+	corner.CornerRadius = UDim.new(0, 8)
+
+	local gradient = Instance.new("UIGradient", frame)
+	gradient.Color = ColorSequence.new{
 		ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 255)),
 		ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 128, 128))
 	}
-	Instance.new("UIPadding", frame).PaddingBottom = UDim.new(0, 5)
-	Instance.new("UIListLayout", frame).FillDirection = Enum.FillDirection.Horizontal
+	gradient.Rotation = 90
+	gradient.Transparency = NumberSequence.new(1)
+
+	local padding = Instance.new("UIPadding", frame)
+	padding.PaddingLeft = UDim.new(0, 5)
+	padding.PaddingRight = UDim.new(0, 5)
+	padding.PaddingTop = UDim.new(0, 5)
+	padding.PaddingBottom = UDim.new(0, 5)
+
+	local listLayout = Instance.new("UIListLayout", frame)
+	listLayout.FillDirection = Enum.FillDirection.Horizontal
+	listLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+	listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	listLayout.Padding = UDim.new(0, 5)
 
 	local icon = Instance.new("ImageLabel")
 	icon.Name = "Icon"
 	icon.Image = iconAssetId
 	icon.BackgroundTransparency = 1
+	icon.ImageTransparency = 1
 	icon.Size = UDim2.new(0, 40, 0, 40)
+	icon.LayoutOrder = 1
 	icon.Parent = frame
 
 	local textFrame = Instance.new("Frame")
 	textFrame.Name = "TextFrame"
 	textFrame.BackgroundTransparency = 1
-	textFrame.Size = UDim2.new(1, -60, 1, 0)
+	textFrame.Size = UDim2.new(1, -50, 1, 0)
+	textFrame.LayoutOrder = 2
 	textFrame.Parent = frame
 
-	Instance.new("UIListLayout", textFrame).FillDirection = Enum.FillDirection.Vertical
+	local textListLayout = Instance.new("UIListLayout", textFrame)
+	textListLayout.FillDirection = Enum.FillDirection.Vertical
+	textListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+	textListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	textListLayout.Padding = UDim.new(0, 2)
 
 	local title = Instance.new("TextLabel")
 	title.Name = "Title"
@@ -84,8 +86,10 @@ local function createNotificationGui()
 	title.TextSize = 15
 	title.TextColor3 = Color3.fromRGB(255, 255, 255)
 	title.BackgroundTransparency = 1
+	title.TextTransparency = 1
 	title.TextXAlignment = Enum.TextXAlignment.Left
 	title.Size = UDim2.new(1, 0, 0, 20)
+	title.LayoutOrder = 1
 	title.Parent = textFrame
 
 	local message = Instance.new("TextLabel")
@@ -95,130 +99,272 @@ local function createNotificationGui()
 	message.TextSize = 13
 	message.TextColor3 = Color3.fromRGB(200, 200, 200)
 	message.BackgroundTransparency = 1
+	message.TextTransparency = 1
 	message.TextXAlignment = Enum.TextXAlignment.Left
-	message.Size = UDim2.new(1, 0, 0, 18)
+	message.TextWrapped = true
+	message.Size = UDim2.new(1, 0, 1, -22)
+	message.LayoutOrder = 2
 	message.Parent = textFrame
 
-	guiElement = screenGui
-	return guiElement
+	notificationTemplate = frame
+	return notificationTemplate
 end
 
---// Notification
+local function setupNotificationContainer()
+	if notificationContainer and notificationContainer.Parent then return notificationContainer end
+
+	local player = Players.LocalPlayer or Players.PlayerAdded:Wait()
+	local playerGui = player:WaitForChild("PlayerGui", 10)
+	if not playerGui then
+		warn("AntiAFK: Không tìm thấy PlayerGui.")
+		return nil
+	end
+
+	local oldGui = playerGui:FindFirstChild("AntiAFKContainerGui")
+	if oldGui then oldGui:Destroy() end
+
+	local screenGui = Instance.new("ScreenGui")
+	screenGui.Name = "AntiAFKContainerGui"
+	screenGui.ResetOnSpawn = false
+	screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	screenGui.DisplayOrder = 999
+	screenGui.Parent = playerGui
+
+	local listLayout = Instance.new("UIListLayout", screenGui)
+	listLayout.FillDirection = Enum.FillDirection.Vertical
+	listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+	listLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+	listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	listLayout.Padding = UDim.new(0, 5)
+
+	local paddingFrame = Instance.new("Frame", screenGui)
+	paddingFrame.Name = "PaddingBottom"
+	paddingFrame.BackgroundTransparency = 1
+	paddingFrame.Size = UDim2.new(0, guiSize.X.Offset, 0, 10)
+	paddingFrame.LayoutOrder = 9999
+
+	notificationContainer = screenGui
+	return notificationContainer
+end
+
 local function showNotification(title, message)
-	if isNotificationShowing or not guiElement then return end
-	isNotificationShowing = true
+	if not notificationContainer or not notificationContainer.Parent then
+		warn("AntiAFK: Container thông báo không hợp lệ.")
+		if not setupNotificationContainer() then
+			warn("AntiAFK: Không thể tạo container thông báo.")
+			return
+		end
+	end
 
-	local frame = guiElement:FindFirstChild("NotificationFrame")
-	if not frame then warn("AntiAFK: Frame not found") return end
+	if not notificationTemplate then
+		warn("AntiAFK: Template thông báo chưa được tạo.")
+		if not createNotificationTemplate() then
+			warn("AntiAFK: Không thể tạo template thông báo.")
+			return
+		end
+	end
 
-	local textFrame = frame:FindFirstChild("TextFrame")
-	if not textFrame then warn("AntiAFK: TextFrame missing") return end
+	local newFrame = notificationTemplate:Clone()
 
-	local titleLabel = textFrame:FindFirstChild("Title")
-	local messageLabel = textFrame:FindFirstChild("Message")
-	if not titleLabel or not messageLabel then
-		warn("AntiAFK: Missing title/message labels.")
-		isNotificationShowing = false
+	local icon = newFrame:FindFirstChild("Icon")
+	local textFrame = newFrame:FindFirstChild("TextFrame")
+	local titleLabel = textFrame and textFrame:FindFirstChild("Title")
+	local messageLabel = textFrame and textFrame:FindFirstChild("Message")
+	local gradient = newFrame:FindFirstChild("UIGradient")
+
+	if not (icon and titleLabel and messageLabel and gradient) then
+		warn("AntiAFK: Frame thông báo được clone bị lỗi.")
+		newFrame:Destroy()
 		return
 	end
 
-	if currentTween then currentTween:Cancel() end
-
-	titleLabel.Text = title or ""
+	titleLabel.Text = title or "Thông báo"
 	messageLabel.Text = message or ""
+	newFrame.Name = "Notification_" .. (title or "Default")
 
-	frame.Position = offScreenPosition
-	local tweenIn = TweenService:Create(frame, TweenInfo.new(animationTime), { Position = onScreenPosition })
-	local tweenOut = TweenService:Create(frame, TweenInfo.new(animationTime), { Position = offScreenPosition })
+	newFrame.Parent = notificationContainer
 
-	tweenIn:Play()
-	currentTween = tweenIn
+	local tweenInfo = TweenInfo.new(animationTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+	local targetTransparency = 0.2
+	local fadeInGoals = {
+		BackgroundTransparency = targetTransparency,
+		ImageTransparency = 0,
+		TextTransparency = 0,
+	}
 
-	task.delay(notificationDuration + animationTime, function()
-		if currentTween == tweenIn then
-			tweenOut:Play()
-			currentTween = tweenOut
-			tweenOut.Completed:Once(function()
-				if currentTween == tweenOut then
-					currentTween = nil
-					isNotificationShowing = false
-				end
-			end)
-		end
+	local fadeInTweenFrame = TweenService:Create(newFrame, tweenInfo, { BackgroundTransparency = fadeInGoals.BackgroundTransparency })
+	local fadeInTweenIcon = icon and TweenService:Create(icon, tweenInfo, { ImageTransparency = fadeInGoals.ImageTransparency })
+	local fadeInTweenTitle = titleLabel and TweenService:Create(titleLabel, tweenInfo, { TextTransparency = fadeInGoals.TextTransparency })
+	local fadeInTweenMessage = messageLabel and TweenService:Create(messageLabel, tweenInfo, { TextTransparency = fadeInGoals.TextTransparency })
+	local fadeInTweenGradient = gradient and TweenService:Create(gradient, tweenInfo, { Transparency = NumberSequence.new(0) })
+
+	fadeInTweenFrame:Play()
+	if fadeInTweenIcon then fadeInTweenIcon:Play() end
+	if fadeInTweenTitle then fadeInTweenTitle:Play() end
+	if fadeInTweenMessage then fadeInTweenMessage:Play() end
+	if fadeInTweenGradient then fadeInTweenGradient:Play() end
+
+	local fadeOutDelay = task.delay(notificationDuration, function()
+		local fadeOutGoals = {
+			BackgroundTransparency = 1,
+			ImageTransparency = 1,
+			TextTransparency = 1,
+		}
+		local fadeOutTweenFrame = TweenService:Create(newFrame, tweenInfo, { BackgroundTransparency = fadeOutGoals.BackgroundTransparency })
+		local fadeOutTweenIcon = icon and TweenService:Create(icon, tweenInfo, { ImageTransparency = fadeOutGoals.ImageTransparency })
+		local fadeOutTweenTitle = titleLabel and TweenService:Create(titleLabel, tweenInfo, { TextTransparency = fadeOutGoals.TextTransparency })
+		local fadeOutTweenMessage = messageLabel and TweenService:Create(messageLabel, tweenInfo, { TextTransparency = fadeOutGoals.TextTransparency })
+		local fadeOutTweenGradient = gradient and TweenService:Create(gradient, tweenInfo, { Transparency = NumberSequence.new(1) })
+
+		fadeOutTweenFrame:Play()
+		if fadeOutTweenIcon then fadeOutTweenIcon:Play() end
+		if fadeOutTweenTitle then fadeOutTweenTitle:Play() end
+		if fadeOutTweenMessage then fadeOutTweenMessage:Play() end
+		if fadeOutTweenGradient then fadeOutTweenGradient:Play() end
+
+		fadeOutTweenFrame.Completed:Once(function()
+			if newFrame and newFrame.Parent then
+				newFrame:Destroy()
+			end
+		end)
 	end)
 end
 
---// AFK Action
 local function performAntiAFKAction()
-	local cam = workspace.CurrentCamera
-	if not cam then return end
-
-	local centerX, centerY = cam.ViewportSize.X / 2, cam.ViewportSize.Y / 2
-
-	pcall(function()
-		VirtualInputManager:SendMouseButtonEvent(centerX, centerY, 0, true, game, 0)
+	local success = pcall(function()
+		VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
 		task.wait(0.05)
-		VirtualInputManager:SendMouseButtonEvent(centerX, centerY, 0, false, game, 0)
+		VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
 	end)
 
-	lastInterventionTime = tick()
-	interventionCounter += 1
+	if not success then
+		warn("AntiAFK: Không thể mô phỏng nhấn phím Space.")
+	else
+		lastInterventionTime = os.clock()
+		interventionCounter += 1
+		print("AntiAFK: Đã thực hiện hành động can thiệp lần", interventionCounter)
+	end
 end
 
---// Input Handler
 local function onInput()
-	local now = tick()
+	local now = os.clock()
 	if isConsideredAFK then
 		isConsideredAFK = false
-		showNotification("Bạn đây rồi♥️", "Tạm dừng kích hoạt.")
+		lastInterventionTime = 0
+		showNotification("Bạn đã quay lại!", "Đã tạm dừng can thiệp AFK.")
+		print("AntiAFK: Người dùng không còn AFK.")
 	end
 	lastInputTime = now
-	afkWarningCount = 0
 end
 
---// Input Events
-UserInputService.InputBegan:Connect(function(input, processed)
-	if not processed and (input.UserInputType == Enum.UserInputType.Keyboard or input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.MouseButton2 or input.UserInputType == Enum.UserInputType.Touch) then
-		onInput()
+local function cleanup()
+	print("AntiAFK: Dọn dẹp tài nguyên...")
+	if inputBeganConnection then
+		inputBeganConnection:Disconnect()
+		inputBeganConnection = nil
 	end
-end)
-
-UserInputService.InputChanged:Connect(function(input, processed)
-	if not processed and input.UserInputType == Enum.UserInputType.MouseMovement then
-		onInput()
+	if inputChangedConnection then
+		inputChangedConnection:Disconnect()
+		inputChangedConnection = nil
 	end
-end)
+	if notificationContainer then
+		notificationContainer:Destroy()
+		notificationContainer = nil
+	end
+end
 
---// Main Loop
-local function mainLoop()
-	guiElement = createNotificationGui()
-	if not guiElement then warn("Không thể tạo GUI") return end
+local function main()
+	notificationContainer = setupNotificationContainer()
+	if not notificationContainer then
+		warn("AntiAFK: Không thể khởi tạo container GUI. Script sẽ không hoạt động.")
+		return
+	end
+	notificationTemplate = createNotificationTemplate()
+	if not notificationTemplate then
+	    warn("AntiAFK: Không thể tạo template GUI. Script sẽ không hoạt động.")
+		return
+	end
 
-	task.wait(1)
+	inputBeganConnection = UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
+		if gameProcessedEvent then return end
+		if input.UserInputType == Enum.UserInputType.Keyboard or
+		   input.UserInputType == Enum.UserInputType.MouseButton1 or
+		   input.UserInputType == Enum.UserInputType.MouseButton2 or
+		   input.UserInputType == Enum.UserInputType.Touch then
+			onInput()
+		end
+	end)
+
+	inputChangedConnection = UserInputService.InputChanged:Connect(function(input, gameProcessedEvent)
+		if gameProcessedEvent then return end
+		if input.UserInputType == Enum.UserInputType.MouseMovement or
+		   input.UserInputType == Enum.UserInputType.MouseWheel or
+		   input.UserInputType == Enum.UserInputType.Gamepad1 or
+		   input.UserInputType == Enum.UserInputType.Gamepad2 then
+			onInput()
+		end
+	end)
+
+	task.wait(2)
 	showNotification("Anti AFK", "Đã được kích hoạt.")
+	print("Anti-AFK Script đã khởi chạy và đang theo dõi.")
 
-	while task.wait(1) do
-		local now = tick()
+	while true do
+		local waitTime = task.wait(1)
+		local now = os.clock()
 		local idleTime = now - lastInputTime
-		local sinceIntervention = now - lastInterventionTime
 
-		if sinceIntervention >= interventionInterval then
-			performAntiAFKAction()
-			if isConsideredAFK then
-				showNotification("Phát hiện AFK", "Đã thực hiện hành động.")
+		if isConsideredAFK then
+			local timeSinceLastIntervention = now - lastInterventionTime
+			local timeSinceLastCheck = now - lastCheckTime
+
+			if timeSinceLastIntervention >= interventionInterval then
+				performAntiAFKAction()
+			end
+
+			if timeSinceLastCheck >= checkInterval then
+				showNotification("Vẫn đang AFK...", string.format("Can thiệp tiếp theo sau ~%.0f giây.", math.max(0, interventionInterval - timeSinceLastIntervention)))
+				lastCheckTime = now
+			end
+
+		else
+			if idleTime >= afkThreshold then
+				isConsideredAFK = true
+				lastInterventionTime = now
+				lastCheckTime = now
+				showNotification("Cảnh báo AFK!", string.format("Sẽ can thiệp sau ~%.0f giây nếu không hoạt động.", interventionInterval))
+				print("AntiAFK: Người dùng được coi là AFK.")
 			end
 		end
-
-		if not isConsideredAFK and idleTime >= afkThreshold then
-			isConsideredAFK = true
-			showNotification("Cảnh báo AFK", "Sắp có hành động can thiệp.")
-			lastCheckTime = now
-		elseif isConsideredAFK and now - lastCheckTime >= checkInterval then
-			showNotification("Bạn còn đó không?", "Chúng tôi vẫn đang can thiệp!")
-			lastCheckTime = now
-		end
 	end
 end
 
-coroutine.wrap(mainLoop)()
-print("Anti-AFK Script Đang Chạy.")
+local mainThread = coroutine.create(main)
+local success, err = coroutine.resume(mainThread)
+if not success then
+	warn("AntiAFK Error:", err)
+end
+
+local player = Players.LocalPlayer
+if player then
+	Players.PlayerRemoving:Connect(function(leavingPlayer)
+		if leavingPlayer == player then
+			cleanup()
+		end
+	end)
+else
+	local playerAddedConn
+	playerAddedConn = Players.PlayerAdded:Connect(function(addedPlayer)
+		if addedPlayer == Players.LocalPlayer then
+			player = addedPlayer
+			Players.PlayerRemoving:Connect(function(leavingPlayer)
+				if leavingPlayer == player then
+					cleanup()
+				end
+			end)
+			if playerAddedConn then
+				playerAddedConn:Disconnect()
+			end
+		end
+	end)
+end
