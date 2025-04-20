@@ -101,7 +101,7 @@ local function createNotificationGui()
     titleLabel.Name = "Title"
     titleLabel.LayoutOrder = 1
     titleLabel.Font = Enum.Font.GothamBold
-    titleLabel.TextSize = 18
+    titleLabel.TextSize = 16
     titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     titleLabel.BackgroundTransparency = 1
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
