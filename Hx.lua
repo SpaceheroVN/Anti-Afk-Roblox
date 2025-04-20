@@ -113,9 +113,9 @@ local function setupNotificationContainer()
         return notificationContainer
     end
 
-    local playerGui = player:WaitForChild("PlayerGui", 20)
+    local playerGui = player:FindFirstChild("PlayerGui")
     if not playerGui then
-        warn("AntiAFK: Không tìm thấy PlayerGui cho " .. player.Name)
+        warn("AntiAFK: Không tìm thấy PlayerGui cho " .. (player and player.Name or "Người chơi không xác định"))
         return nil
     end
 
@@ -168,7 +168,10 @@ local function showNotification(title, message)
     end
 
     local newFrame = notificationTemplate:Clone()
-    newFrame.Parent = nil
+    if not newFrame then
+        warn("AntiAFK: Không thể clone template thông báo.")
+        return
+    end
 
     local icon = newFrame:FindFirstChild("Icon")
     local textFrame = newFrame:FindFirstChild("TextFrame")
