@@ -198,7 +198,7 @@ local function performAntiAFKAction()
     end)
     if ok then
         lastInterventionTime = os.clock()
-        interventionCounter += 1
+        interventionCounter = interventionCounter + 1
         print("AntiAFK: Intervention #"..interventionCounter)
     else
         warn("AntiAFK: Simulation failed:", err)
@@ -260,8 +260,10 @@ local function showLagOptionNotification()
     frame.Parent = notificationContainer
 
     local textFrame = frame:FindFirstChild("TextFrame")
-    textFrame.Title.Text = "Bạn có muốn giảm lag không?"
-    textFrame.Message.Text = ""
+    if textFrame then
+        textFrame.Title.Text = "Bạn có muốn giảm lag không?"
+        textFrame.Message.Text = ""
+    end
 
     -- Buttons
     local btnContainer = Instance.new("Frame", frame)
@@ -299,7 +301,7 @@ end
 
 -- Main loop
 local function main()
-    if not setupNotificationContainer() then return end
+    setupNotificationContainer()
     createNotificationTemplate()
 
     inputBeganConnection = UserInputService.InputBegan:Connect(function(input, gp)
@@ -317,7 +319,7 @@ local function main()
     showNotification("Anti AFK", "Đã được kích hoạt.")
     showLagOptionNotification()
 
-    while RunService:IsRunning() do
+    while true do
         task.wait(0.5)
         local now = os.clock()
         local idle = now - lastInputTime
