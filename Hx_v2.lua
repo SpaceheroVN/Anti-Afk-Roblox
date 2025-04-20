@@ -1,27 +1,22 @@
-if _G.AntiAFK_Running then
-    if _G.AntiAFK_CleanupFunction then
-        _G.AntiAFK_CleanupFunction()
+local function cleanupOldButton()
+    local playerGui = game.Players.LocalPlayer:FindFirstChild("PlayerGui")
+    if playerGui then
+        local oldGui = playerGui:FindFirstChild("ScreenGui")
+        if oldGui then
+            oldGui:Destroy()
+        end
     end
 end
 
-_G.AntiAFK_Running = true
-
-_G.AntiAFK_CleanupFunction = function()
-    print("AntiAFK: Dọn dẹp tài nguyên của script cũ...")
-    if inputBeganConnection then
-        inputBeganConnection:Disconnect()
-        inputBeganConnection = nil
-    end
-    if inputChangedConnection then
-        inputChangedConnection:Disconnect()
-        inputChangedConnection = nil
-    end
-    if notificationContainer and notificationContainer.Parent then
-        notificationContainer:Destroy()
-    end
-    notificationContainer = nil
-    notificationTemplate = nil
-end
+local function createCustomButton()
+    local buttonFrame = Instance.new("Frame")
+    buttonFrame.Name = "CustomButton"
+    buttonFrame.Size = UDim2.new(0, 120, 0, 40)
+    buttonFrame.Position = UDim2.new(1, -20, 1, -50)
+    buttonFrame.AnchorPoint = Vector2.new(1, 1)
+    buttonFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    buttonFrame.BackgroundTransparency = 0.5
+    buttonFrame.ClipsDescendants = true
 
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
@@ -302,8 +297,8 @@ local function createCustomButton()
     local buttonFrame = Instance.new("Frame")
     buttonFrame.Name = "CustomButton"
     buttonFrame.Size = UDim2.new(0, 120, 0, 40) -- Kích thước nhỏ gọn hơn
-    buttonFrame.Position = UDim2.new(0, 20, 1, -50) -- Chuyển sang góc trái dưới cùng
-    buttonFrame.AnchorPoint = Vector2.new(0, 1) -- Cố định góc dưới bên trái
+    buttonFrame.Position = UDim2.new(1, -20, 1, -50) -- Đặt ở góc phải dưới cùng
+    buttonFrame.AnchorPoint = Vector2.new(1, 1) -- Cố định góc dưới bên phải
     buttonFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30) -- Màu đen giống thông báo
     buttonFrame.BackgroundTransparency = 0.5 -- Trong suốt nhẹ
     buttonFrame.ClipsDescendants = true
