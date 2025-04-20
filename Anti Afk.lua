@@ -49,8 +49,16 @@ local function createNotificationGui()
     notificationFrame.ClipsDescendants = true
     notificationFrame.Parent = screenGui
 
+    local gradient = Instance.new("UIGradient")
+    gradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 128, 128))
+    }
+    gradient.Rotation = 45
+    gradient.Parent = notificationFrame
+
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
+    corner.CornerRadius = UDim.new(0, 8)
     corner.Parent = notificationFrame
 
     local listLayout = Instance.new("UIListLayout")
@@ -92,23 +100,23 @@ local function createNotificationGui()
     local titleLabel = Instance.new("TextLabel")
     titleLabel.Name = "Title"
     titleLabel.LayoutOrder = 1
-    titleLabel.Font = Enum.Font.SourceSansBold
-    titleLabel.TextSize = 16
+    titleLabel.Font = Enum.Font.GothamBold
+    titleLabel.TextSize = 18
     titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     titleLabel.BackgroundTransparency = 1
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.Size = UDim2.new(1, 0, 0, 18)
+    titleLabel.Size = UDim2.new(1, 0, 0, 20)
     titleLabel.Parent = textFrame
 
     local messageLabel = Instance.new("TextLabel")
     messageLabel.Name = "Message"
     messageLabel.LayoutOrder = 2
-    messageLabel.Font = Enum.Font.SourceSans
-    messageLabel.TextSize = 14
+    messageLabel.Font = Enum.Font.Gotham
+    messageLabel.TextSize = 16
     messageLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
     messageLabel.BackgroundTransparency = 1
     messageLabel.TextXAlignment = Enum.TextXAlignment.Left
-    messageLabel.Size = UDim2.new(1, 0, 0, 16)
+    messageLabel.Size = UDim2.new(1, 0, 0, 18)
     messageLabel.Parent = textFrame
 
     guiElement = screenGui
