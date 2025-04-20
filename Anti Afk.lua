@@ -234,7 +234,7 @@ local function mainLoop()
             isConsideredAFK = true
             print("AntiAFK: Người chơi có thể đang AFK.")
             if timeSinceLastIntervention > 1 then
-                 showNotification("Phát hiện người chơi AFK.", "Sắp thực hiện hành động can thiệp!")
+                 showNotification("Phát hiện người chơi AFK.", "Tiến hành can thiệp!")
             end
             lastCheckTime = now
             afkWarningCount = 0
