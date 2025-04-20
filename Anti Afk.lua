@@ -70,7 +70,6 @@ local function createNotificationTemplate()
     textFrame.LayoutOrder = 2
     textFrame.Parent = frame
 
-    -- Sắp xếp title và message theo chiều ngang
     local textListLayout = Instance.new("UIListLayout", textFrame)
     textListLayout.FillDirection = Enum.FillDirection.Horizontal
     textListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
