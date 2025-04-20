@@ -172,7 +172,14 @@ end
 
 local function performAntiAFKAction()
     print("AntiAFK: Performing action (simulating mouse click).")
-    local viewportSize = workspace.CurrentCamera.ViewportSize
+    
+    local currentCamera = workspace.CurrentCamera
+    if not currentCamera then
+        warn("AntiAFK: Không tìm thấy CurrentCamera để thực hiện hành động.")
+        return
+    end
+
+    local viewportSize = currentCamera.ViewportSize
     local centerX = viewportSize.X / 2
     local centerY = viewportSize.Y / 2
 
