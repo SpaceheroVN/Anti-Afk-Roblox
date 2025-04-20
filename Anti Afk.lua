@@ -9,7 +9,7 @@ local afkThreshold = 10
 local interventionInterval = 600
 local checkInterval = 30
 local notificationDuration = 4
-local animationTime = 0.5
+local animationTime = 0.3
 local iconAssetId = "rbxassetid://137888597"
 
 local lastInputTime = tick()
