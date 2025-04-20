@@ -170,24 +170,20 @@ local function showNotification(title, message)
     end)
 end
 
-local function performAntiAFKAction()
-    print("AntiAFK: Performing action (simulating mouse click).")
-    
-    local currentCamera = workspace.CurrentCamera
-    if not currentCamera then
-        warn("AntiAFK: Không tìm thấy CurrentCamera để thực hiện hành động.")
-        return
-    end
+local interventionCounter = 0
 
-    local viewportSize = currentCamera.ViewportSize
+local function performAntiAFKAction()
+    print("AntiAFK: Performing action (simulating mouse click). Count:", interventionCounter)
+    local viewportSize = workspace.CurrentCamera.ViewportSize
     local centerX = viewportSize.X / 2
     local centerY = viewportSize.Y / 2
 
-    VirtualInputManager:SendMouseButtonEvent(centerX, centerY, 0, true, game)
+    pcall(VirtualInputManager.SendMouseButtonEvent, VirtualInputManager, centerX, centerY, 0, true, game)
     task.wait(0.05)
-    VirtualInputManager:SendMouseButtonEvent(centerX, centerY, 0, false, game)
+    pcall(VirtualInputManager.SendMouseButtonEvent, VirtualInputManager, centerX, centerY, 0, false, game)
 
     lastInterventionTime = tick()
+    interventionCounter += 1
 end
 
 local function onInput()
@@ -221,7 +217,7 @@ local function mainLoop()
     end
 
     task.wait(1)
-    showNotification("Anti AFK: Đã bật!", "Script đang hoạt động❤️")
+    showNotification("Anti AFK", "Đã được kích hoạt.")
 
     while task.wait(1) do
         local now = tick()
@@ -231,7 +227,7 @@ local function mainLoop()
         if timeSinceLastIntervention >= interventionInterval then
             performAntiAFKAction()
             if isConsideredAFK then
-                 showNotification("Phát hiện người chơi AFK.", "Đã thực hiện hành động can thiệp!")
+                 showNotification("Phát hiện AFK", "Đã thực hiện hành động.", "Chúng tôi vẫn đang can thiệp!")
                  lastCheckTime = now
                  afkWarningCount = 0
             end
@@ -239,9 +235,9 @@ local function mainLoop()
 
         if not isConsideredAFK and timeSinceLastInput >= afkThreshold then
             isConsideredAFK = true
-            print("AntiAFK: Người chơi có thể đang AFK.")
+            print("AntiAFK: Người chơi có dấu hiệu AFK.")
             if timeSinceLastIntervention > 1 then
-                 showNotification("Phát hiện người chơi AFK.", "Tiến hành can thiệp!")
+                 showNotification("Cảnh báo AFK", "Sắp có hành động can thiệp.", "Chúng tôi sẽ can thiệp sau giây lát!")
             end
             lastCheckTime = now
             afkWarningCount = 0
@@ -251,7 +247,7 @@ local function mainLoop()
             if now - lastCheckTime >= checkInterval then
                 if not isNotificationShowing then
                     afkWarningCount += 1
-                    showNotification("Bạn đã quay lại chưa?", "Chúng tôi vẫn đang can thiệp!")
+                    showNotification("Bạn còn đó không?", "", "Chúng tôi vẫn đang can thiệp!")
                     lastCheckTime = now
                 end
             end
