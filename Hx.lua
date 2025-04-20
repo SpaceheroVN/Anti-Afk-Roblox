@@ -3,6 +3,11 @@ local UserInputService      = game:GetService("UserInputService")
 local Players               = game:GetService("Players")
 local RunService            = game:GetService("RunService")
 local VirtualInputManager   = game:GetService("VirtualInputManager")
+-- If VirtualInputManager isn't available, disable intervention to avoid nil-call errors
+if not VirtualInputManager or not VirtualInputManager.SendKeyEvent then
+    warn("AntiAFK: VirtualInputManager unavailable; disabling automatic intervention.")
+    enableIntervention = false
+end
 local TweenService          = game:GetService("TweenService")
 
 -- Graphics settings service
