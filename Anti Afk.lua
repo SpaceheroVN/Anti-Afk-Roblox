@@ -148,14 +148,19 @@ local function setupNotificationContainer()
 
 	local listLayout = Instance.new("UIListLayout", screenGui)
 	listLayout.FillDirection = Enum.FillDirection.Vertical
-	listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
-	listLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+	listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right -- Căn các mục về phía cạnh phải
+	listLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom   -- Căn các mục về phía cạnh dưới
 	listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	listLayout.Padding = UDim.new(0, 5) -- Khoảng cách giữa các thông báo
+	listLayout.Padding = UDim.new(0, 5) -- Khoảng cách GIỮA các thông báo
 
-	-- Padding từ cạnh màn hình (tính cả phần bị che bởi TopBar nếu có)
-	local inset = GuiService:GetGuiInset()
-	screenGui.Padding = UDim.new(0, 10, 0, guiPaddingBottom + inset.Y) -- Padding phải và dưới
+	-- [[ ĐÃ XÓA DÒNG GÂY LỖI ]]
+	-- screenGui.Padding = UDim.new(0, 10, 0, guiPaddingBottom + inset.Y) -- DÒNG NÀY SAI
+
+	-- Nếu bạn muốn có khoảng cách từ các cạnh màn hình, bạn cần dùng cách khác.
+	-- Ví dụ: Tạo một Frame con bên trong ScreenGui, đặt UIListLayout và các thông báo
+	-- vào Frame đó, rồi áp dụng UIPadding cho Frame đó.
+	-- Hiện tại, việc loại bỏ lỗi là ưu tiên. Các thuộc tính Alignment của UIListLayout
+	-- sẽ đặt danh sách thông báo ở góc dưới cùng bên phải.
 
 	notificationContainer = screenGui
 	return notificationContainer
