@@ -1,29 +1,24 @@
 -- Anti AFK Script with Lag-Reduction Prompt
-local UserInputService      = game:GetService("UserInputService")
-local Players               = game:GetService("Players")
-local RunService            = game:GetService("RunService")
-local VirtualInputManager   = game:GetService("VirtualInputManager")
--- If VirtualInputManager isn't available, disable intervention to avoid nil-call errors
+local UserInputService    = game:GetService("UserInputService")
+local Players             = game:GetService("Players")
+local RunService          = game:GetService("RunService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local TweenService        = game:GetService("TweenService")
+
+-- Core parameters
+local afkThreshold         = 180
+local interventionInterval = 600
+local checkInterval        = 60
+local notificationDuration = 5
+local animationTime        = 0.5
+local iconAssetId          = "rbxassetid://117118515787811"
+local enableIntervention   = true
+
+-- Disable intervention if VirtualInputManager unavailable
 if not VirtualInputManager or not VirtualInputManager.SendKeyEvent then
     warn("AntiAFK: VirtualInputManager unavailable; disabling automatic intervention.")
     enableIntervention = false
 end
-local TweenService          = game:GetService("TweenService")
-
--- Graphics settings service
-local successUGS, UserGameSettings = pcall(function()
-    return UserSettings():GetService("UserGameSettings")
-end)
-
--- Core parameters
-local afkThreshold          = 180
-local interventionInterval  = 600
-local checkInterval         = 60
-local notificationDuration  = 5
-local animationTime         = 0.5
-local iconAssetId           = "rbxassetid://117118515787811"
-local enableIntervention    = true
-local simulatedKeyCode      = Enum.KeyCode.Space
 
 -- State vars
 local lastInputTime         = os.clock()
@@ -40,7 +35,7 @@ local inputChangedConnection = nil
 local player                = Players.LocalPlayer
 local guiSize               = UDim2.new(0, 250, 0, 60)
 
--- Create notification template once
+-- Create notification template
 local function createNotificationTemplate()
     if notificationTemplate then return notificationTemplate end
     local frame = Instance.new("Frame")
@@ -51,149 +46,112 @@ local function createNotificationTemplate()
     frame.Size = guiSize
     frame.ClipsDescendants = true
 
-    local corner = Instance.new("UICorner", frame)
-    corner.CornerRadius = UDim.new(0, 8)
-    local padding = Instance.new("UIPadding", frame)
-    padding.PaddingLeft = UDim.new(0, 10)
-    padding.PaddingRight = UDim.new(0, 10)
-    padding.PaddingTop = UDim.new(0, 5)
-    padding.PaddingBottom = UDim.new(0, 5)
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
+    local pad = Instance.new("UIPadding", frame)
+    pad.PaddingLeft = UDim.new(0,10); pad.PaddingRight = UDim.new(0,10)
+    pad.PaddingTop  = UDim.new(0,5);  pad.PaddingBottom = UDim.new(0,5)
 
-    local listLayout = Instance.new("UIListLayout", frame)
-    listLayout.FillDirection = Enum.FillDirection.Horizontal
-    listLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    listLayout.Padding = UDim.new(0, 10)
+    local list = Instance.new("UIListLayout", frame)
+    list.FillDirection = Enum.FillDirection.Horizontal
+    list.VerticalAlignment = Enum.VerticalAlignment.Center
+    list.Padding = UDim.new(0,10)
 
-    local icon = Instance.new("ImageLabel")
-    icon.Name = "Icon"
-    icon.Image = iconAssetId
-    icon.BackgroundTransparency = 1
-    icon.ImageTransparency = 1
-    icon.Size = UDim2.new(0, 40, 0, 40)
-    icon.LayoutOrder = 1
-    icon.Parent = frame
+    local icon = Instance.new("ImageLabel", frame)
+    icon.Name = "Icon"; icon.Image = iconAssetId
+    icon.BackgroundTransparency = 1; icon.ImageTransparency = 1
+    icon.Size = UDim2.new(0,40,0,40); icon.LayoutOrder = 1
 
     local textFrame = Instance.new("Frame", frame)
-    textFrame.Name = "TextFrame"
-    textFrame.BackgroundTransparency = 1
-    textFrame.Size = UDim2.new(1, 0, 1, 0)
-    textFrame.LayoutOrder = 2
-
-    local textListLayout = Instance.new("UIListLayout", textFrame)
-    textListLayout.FillDirection = Enum.FillDirection.Horizontal
-    textListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-    textListLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-    textListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    textListLayout.Padding = UDim.new(0, 5)
+    textFrame.Name = "TextFrame"; textFrame.BackgroundTransparency = 1
+    textFrame.Size = UDim2.new(1,0,1,0); textFrame.LayoutOrder = 2
+    local txtList = Instance.new("UIListLayout", textFrame)
+    txtList.FillDirection = Enum.FillDirection.Horizontal
+    txtList.HorizontalAlignment = Enum.HorizontalAlignment.Left
+    txtList.VerticalAlignment = Enum.VerticalAlignment.Center
+    txtList.Padding = UDim.new(0,5)
 
     local title = Instance.new("TextLabel", textFrame)
-    title.Name = "Title"
-    title.Text = "Title"
-    title.Font = Enum.Font.GothamBold
-    title.TextSize = 15
-    title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    title.BackgroundTransparency = 1
-    title.TextTransparency = 1
-    title.TextXAlignment = Enum.TextXAlignment.Left
-    title.AutomaticSize = Enum.AutomaticSize.X
-    title.Size = UDim2.new(0, 0, 1, 0)
-    title.LayoutOrder = 1
+    title.Name = "Title"; title.Text = ""; title.Font = Enum.Font.GothamBold
+    title.TextSize = 15; title.TextColor3 = Color3.new(1,1,1)
+    title.BackgroundTransparency = 1; title.TextTransparency = 1
+    title.AutomaticSize = Enum.AutomaticSize.X; title.LayoutOrder = 1
 
-    local message = Instance.new("TextLabel", textFrame)
-    message.Name = "Message"
-    message.Text = "Message"
-    message.Font = Enum.Font.Gotham
-    message.TextSize = 13
-    message.TextColor3 = Color3.fromRGB(200, 200, 200)
-    message.BackgroundTransparency = 1
-    message.TextTransparency = 1
-    message.TextXAlignment = Enum.TextXAlignment.Left
-    message.AutomaticSize = Enum.AutomaticSize.X
-    message.Size = UDim2.new(0, 0, 1, 0)
-    message.LayoutOrder = 2
+    local msg = Instance.new("TextLabel", textFrame)
+    msg.Name = "Message"; msg.Text = ""; msg.Font = Enum.Font.Gotham
+    msg.TextSize = 13; msg.TextColor3 = Color3.fromRGB(200,200,200)
+    msg.BackgroundTransparency = 1; msg.TextTransparency = 1
+    msg.AutomaticSize = Enum.AutomaticSize.X; msg.LayoutOrder = 2
 
     notificationTemplate = frame
     return frame
 end
 
--- Setup container for stacking notifications
+-- Setup notification container
 local function setupNotificationContainer()
     if notificationContainer and notificationContainer.Parent then return notificationContainer end
-    local playerGui = player:WaitForChild("PlayerGui", 20)
-    if not playerGui then warn("AntiAFK: No PlayerGui.") return end
-    local old = playerGui:FindFirstChild("AntiAFKContainerGui")
-    if old then old:Destroy() end
+    local pg = player:FindFirstChild("PlayerGui") or player:WaitForChild("PlayerGui",10)
+    if not pg then warn("AntiAFK: PlayerGui not found.") return end
+    local old = pg:FindFirstChild("AntiAFKContainerGui"); if old then old:Destroy() end
 
-    local screenGui = Instance.new("ScreenGui", playerGui)
-    screenGui.Name = "AntiAFKContainerGui"
-    screenGui.ResetOnSpawn = false
-    screenGui.DisplayOrder = 999
+    local sg = Instance.new("ScreenGui", pg)
+    sg.Name = "AntiAFKContainerGui"; sg.ResetOnSpawn = false; sg.DisplayOrder = 999
+    local cont = Instance.new("Frame", sg)
+    cont.Name = "NotificationContainer"; cont.AnchorPoint = Vector2.new(1,1)
+    cont.Position = UDim2.new(1,-18,1,-48); cont.Size = UDim2.new(0,300,0,200)
+    cont.BackgroundTransparency = 1
 
-    local container = Instance.new("Frame", screenGui)
-    container.Name = "NotificationContainer"
-    container.AnchorPoint = Vector2.new(1,1)
-    container.Position = UDim2.new(1,-18,1,-48)
-    container.Size = UDim2.new(0, 300, 0, 200)
-    container.BackgroundTransparency = 1
-
-    local layout = Instance.new("UIListLayout", container)
+    local layout = Instance.new("UIListLayout", cont)
     layout.FillDirection = Enum.FillDirection.Vertical
     layout.HorizontalAlignment = Enum.HorizontalAlignment.Right
     layout.VerticalAlignment = Enum.VerticalAlignment.Bottom
-    layout.SortOrder = Enum.SortOrder.LayoutOrder
     layout.Padding = UDim.new(0,5)
 
-    notificationContainer = container
-    return container
+    notificationContainer = cont
+    return cont
 end
 
--- Display a basic notification
+-- Show basic notification
 local function showNotification(titleText, messageText)
-    if not notificationContainer or not notificationContainer.Parent then setupNotificationContainer() end
-    if not notificationTemplate then createNotificationTemplate() end
+    setupNotificationContainer(); createNotificationTemplate()
+    local cont = notificationContainer; local tmp = notificationTemplate
+    if not cont or not tmp then warn("AntiAFK: Cannot show notification, missing container or template.") return end
 
-    local frame = notificationTemplate:Clone()
-    frame.Name = "Notification_"..titleText
-    frame.Parent = notificationContainer
-    frame.BackgroundTransparency = 1
+    local ok, frame = pcall(function() return tmp:Clone() end)
+    if not ok or not frame then warn("AntiAFK: Failed to clone template.") return end
+    frame.Name = "Notification_"..titleText; frame.Parent = cont
 
-    -- set texts
+    local tf = frame:FindFirstChild("TextFrame")
+    if tf then tf.Title.Text = titleText; tf.Message.Text = messageText end
     local icon = frame:FindFirstChild("Icon")
-    local txt = frame:FindFirstChild("TextFrame")
-    if txt then
-        txt.Title.Text = titleText
-        txt.Message.Text = messageText
-    end
 
-    -- animate in
-    TweenService:Create(frame, TweenInfo.new(animationTime), {BackgroundTransparency = 0.2}):Play()
-    if icon then TweenService:Create(icon, TweenInfo.new(animationTime), {ImageTransparency = 0}):Play() end
-    for _, child in ipairs(txt and txt:GetChildren() or {}) do
+    local tweenIn = TweenInfo.new(animationTime)
+    TweenService:Create(frame, tweenIn, {BackgroundTransparency = 0.2}):Play()
+    if icon then TweenService:Create(icon, tweenIn, {ImageTransparency = 0}):Play() end
+    for _, child in ipairs(tf and tf:GetChildren() or {}) do
         if child:IsA("TextLabel") then
-            TweenService:Create(child, TweenInfo.new(animationTime), {TextTransparency = 0}):Play()
+            TweenService:Create(child, tweenIn, {TextTransparency = 0}):Play()
         end
     end
 
-    -- auto remove after duration
     task.delay(notificationDuration, function()
         if frame and frame.Parent then
-            local t = TweenInfo.new(animationTime)
-            TweenService:Create(frame, t, {BackgroundTransparency = 1}):Play()
-            if icon then TweenService:Create(icon, t, {ImageTransparency = 1}):Play() end
-            for _, child in ipairs(txt and txt:GetChildren() or {}) do
+            local tweenOut = TweenInfo.new(animationTime)
+            TweenService:Create(frame, tweenOut, {BackgroundTransparency = 1}):Play()
+            if icon then TweenService:Create(icon, tweenOut, {ImageTransparency = 1}):Play() end
+            for _, child in ipairs(tf and tf:GetChildren() or {}) do
                 if child:IsA("TextLabel") then
-                    TweenService:Create(child, t, {TextTransparency = 1}):Play()
+                    TweenService:Create(child, tweenOut, {TextTransparency = 1}):Play()
                 end
             end
-            TweenService:Create(frame, t, {}).Completed:Connect(function()
-                frame:Destroy()
+            -- destroy after tween
+            TweenService:Create(frame, tweenOut, {}):Completed:Connect(function()
+                if frame then frame:Destroy() end
             end)
         end
     end)
 end
 
--- Simulate a key to prevent AFK
+-- Simulate key press
 local function performAntiAFKAction()
     if not enableIntervention then return end
     local ok, err = pcall(function()
@@ -202,151 +160,97 @@ local function performAntiAFKAction()
         VirtualInputManager:SendKeyEvent(false, simulatedKeyCode, false, game)
     end)
     if ok then
-        lastInterventionTime = os.clock()
-        interventionCounter = interventionCounter + 1
+        lastInterventionTime = os.clock(); interventionCounter += 1
         print("AntiAFK: Intervention #"..interventionCounter)
     else
         warn("AntiAFK: Simulation failed:", err)
     end
 end
 
--- Reset AFK state on input
+-- Handle user input
 local function onInput()
     if isConsideredAFK then
-        isConsideredAFK = false
-        lastInterventionTime = 0
-        interventionCounter = 0
-        showNotification("Bạn đã quay lại!", "Đã tạm dừng can thiệp AFK.")
-        print("AntiAFK: Back from AFK.")
+        isConsideredAFK = false; lastInterventionTime = 0; interventionCounter = 0
+        showNotification("Bạn đã quay lại!","Đã tạm dừng can thiệp AFK.")
     end
     lastInputTime = os.clock()
 end
 
--- Cleanup on exit
+-- Cleanup
 local function cleanup()
     if inputBeganConnection then inputBeganConnection:Disconnect() end
     if inputChangedConnection then inputChangedConnection:Disconnect() end
     if notificationContainer and notificationContainer.Parent then notificationContainer:Destroy() end
-    notificationContainer = nil
-    notificationTemplate = nil
+    notificationContainer = nil; notificationTemplate = nil
 end
 
--- Apply lowest graphics settings
+-- Apply lowest graphics
 local function applyLowGraphics()
-    if successUGS then
-        if UserGameSettings.SetVisualSettingsOverride then
-            UserGameSettings:SetVisualSettingsOverride(Enum.SavedQualitySetting.QualityLevel1)
-        elseif UserGameSettings.SetQualityLevel then
-            UserGameSettings:SetQualityLevel(Enum.SavedQualitySetting.QualityLevel1, true)
+    local okGS, UGS = pcall(function() return UserSettings():GetService("UserGameSettings") end)
+    if okGS and UGS then
+        if UGS.SetVisualSettingsOverride then
+            UGS:SetVisualSettingsOverride(Enum.SavedQualitySetting.QualityLevel1)
+        elseif UGS.SetQualityLevel then
+            UGS:SetQualityLevel(Enum.SavedQualitySetting.QualityLevel1, true)
         end
     end
-    -- Lighting tweaks
-    if game.Lighting then
-        game.Lighting.GlobalShadows = false
-        game.Lighting.FogEnd = 0
-    end
-    -- Disable heavy effects
+    if game.Lighting then game.Lighting.GlobalShadows = false; game.Lighting.FogEnd = 0 end
     for _, obj in ipairs(workspace:GetDescendants()) do
-        if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") then
-            obj.Enabled = false
-        end
+        if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") then obj.Enabled = false end
     end
-    showNotification("Đang giảm lag...", "Thành công!!!!")
+    showNotification("Đang giảm lag...","Thành công!!!!")
 end
 
--- Show prompt with two buttons
+-- Show lag prompt
 local function showLagOptionNotification()
-    if not notificationContainer or not notificationContainer.Parent then setupNotificationContainer() end
-    if not notificationTemplate then createNotificationTemplate() end
+    setupNotificationContainer(); createNotificationTemplate()
+    local cont = notificationContainer; local tmp = notificationTemplate
+    if not cont or not tmp then warn("AntiAFK: Cannot show lag prompt.") return end
+    local ok, frame = pcall(function() return tmp:Clone() end)
+    if not ok or not frame then warn("AntiAFK: Failed to clone template for lag prompt.") return end
+    frame.Name = "LagOptionPrompt"; frame.Size = UDim2.new(0,300,0,100); frame.Parent = cont
 
-    local frame = notificationTemplate:Clone()
-    frame.Name = "LagOptionPrompt"
-    frame.Size = UDim2.new(0, 300, 0, 100)
-    frame.Parent = notificationContainer
+    local tf = frame:FindFirstChild("TextFrame")
+    if tf then tf.Title.Text = "Bạn có muốn giảm lag không?"; tf.Message.Text = "" end
 
-    local textFrame = frame:FindFirstChild("TextFrame")
-    if textFrame then
-        textFrame.Title.Text = "Bạn có muốn giảm lag không?"
-        textFrame.Message.Text = ""
-    end
+    local btnCon = Instance.new("Frame", frame)
+    btnCon.Name = "BtnContainer"; btnCon.BackgroundTransparency=1
+    btnCon.Size = UDim2.new(1,0,0,30); btnCon.Position=UDim2.new(0,0,1,-35)
+    local lay=Instance.new("UIListLayout",btnCon)
+    lay.FillDirection=Enum.FillDirection.Horizontal; lay.HorizontalAlignment=Enum.HorizontalAlignment.Center; lay.Padding=UDim.new(0,10)
 
-    -- Buttons
-    local btnContainer = Instance.new("Frame", frame)
-    btnContainer.Name = "BtnContainer"
-    btnContainer.BackgroundTransparency = 1
-    btnContainer.Size = UDim2.new(1,0,0,30)
-    btnContainer.Position = UDim2.new(0,0,1,-35)
-    local layout = Instance.new("UIListLayout", btnContainer)
-    layout.FillDirection = Enum.FillDirection.Horizontal
-    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    layout.Padding = UDim.new(0,10)
+    local yes=Instance.new("TextButton",btnCon)
+    yes.Text="Có"; yes.Size=UDim2.new(0,100,1,-10); yes.Font=Enum.Font.GothamBold; yes.TextSize=14
+    yes.BackgroundColor3=Color3.fromRGB(50,200,50); yes.TextColor3=Color3.new(1,1,1)
+    yes.MouseButton1Click:Connect(function() frame:Destroy(); applyLowGraphics() end)
 
-    local yesBtn = Instance.new("TextButton", btnContainer)
-    yesBtn.Name = "Yes"
-    yesBtn.Text = "Có"
-    yesBtn.Font = Enum.Font.GothamBold
-    yesBtn.TextSize = 14
-    yesBtn.Size = UDim2.new(0,100,1,-10)
-    yesBtn.BackgroundColor3 = Color3.fromRGB(50,200,50)
-    yesBtn.TextColor3 = Color3.new(1,1,1)
-    yesBtn.MouseButton1Click:Connect(function()
-        frame:Destroy()
-        applyLowGraphics()
-    end)
-
-    local noBtn = yesBtn:Clone()
-    noBtn.Name = "No"
-    noBtn.Text = "Không"
-    noBtn.BackgroundColor3 = Color3.fromRGB(200,50,50)
-    noBtn.Parent = btnContainer
-    noBtn.MouseButton1Click:Connect(function()
-        frame:Destroy()
-    end)
+    local no=yes:Clone(); no.Name="No"; no.Text="Không"; no.Parent=btnCon; no.BackgroundColor3=Color3.fromRGB(200,50,50)
+    no.MouseButton1Click:Connect(function() frame:Destroy() end)
 end
 
--- Main loop
+-- Main
 local function main()
-    setupNotificationContainer()
-    createNotificationTemplate()
-
-    inputBeganConnection = UserInputService.InputBegan:Connect(function(input, gp)
-        if not gp and (input.UserInputType==Enum.UserInputType.Keyboard or input.UserInputType==Enum.UserInputType.MouseButton1) then
-            onInput()
-        end
-    end)
-    inputChangedConnection = UserInputService.InputChanged:Connect(function(input, gp)
-        if not gp and (input.UserInputType==Enum.UserInputType.MouseMovement or input.UserInputType==Enum.UserInputType.MouseWheel) then
-            onInput()
-        end
-    end)
-
+    setupNotificationContainer(); createNotificationTemplate()
+    inputBeganConnection = UserInputService.InputBegan:Connect(function(i, gp) if not gp and (i.UserInputType==Enum.UserInputType.Keyboard or i.UserInputType==Enum.UserInputType.MouseButton1) then onInput() end end)
+    inputChangedConnection = UserInputService.InputChanged:Connect(function(i, gp) if not gp and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.MouseWheel) then onInput() end end)
     task.wait(3)
-    showNotification("Anti AFK", "Đã được kích hoạt.")
+    showNotification("Anti AFK","Đã được kích hoạt.")
     showLagOptionNotification()
-
     while true do
         task.wait(0.5)
-        local now = os.clock()
-        local idle = now - lastInputTime
+        local now = os.clock(); local idle = now - lastInputTime
         if isConsideredAFK then
             if now - lastInterventionTime >= interventionInterval then performAntiAFKAction() end
-            if now - lastCheckTime >= checkInterval then
-                showNotification("Vẫn đang AFK...", string.format("Can thiệp sau ~%.0f giây.", interventionInterval - (now - lastInterventionTime)))
-                lastCheckTime = now
-            end
+            if now - lastCheckTime >= checkInterval then showNotification("Vẫn đang AFK...",string.format("Can thiệp sau ~%.0f giây.",interventionInterval - (now - lastInterventionTime))); lastCheckTime=now end
         elseif idle >= afkThreshold then
-            isConsideredAFK = true
-            lastInterventionTime = now
-            lastCheckTime = now
-            interventionCounter = 0
-            showNotification("Cảnh báo AFK!", string.format("Sẽ can thiệp sau ~%.0f giây.", interventionInterval))
-            print("AntiAFK: AFK detected.")
+            isConsideredAFK=true; lastInterventionTime=now; lastCheckTime=now; interventionCounter=0
+            showNotification("Cảnh báo AFK!",string.format("Sẽ can thiệp sau ~%.0f giây.",interventionInterval)); print("AntiAFK: AFK detected.")
         end
     end
 end
 
--- Start
-coroutine.wrap(main)()
-Players.PlayerRemoving:Connect(function(p)
-    if p==player then cleanup() end
-end)
+-- Start with error capture
+local thread = coroutine.create(main)
+local ok, err = coroutine.resume(thread)
+if not ok then warn("AntiAFK Lỗi Khởi Tạo:", err) end
+Players.PlayerRemoving:Connect(function(p) if p==player then cleanup() end end)
