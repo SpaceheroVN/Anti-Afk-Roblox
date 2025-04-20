@@ -301,29 +301,29 @@ end
 local function createCustomButton()
     local buttonFrame = Instance.new("Frame")
     buttonFrame.Name = "CustomButton"
-    buttonFrame.Size = UDim2.new(0, 150, 0, 40) -- Khung nhỏ lại
-    buttonFrame.Position = UDim2.new(1, -170, 1, -50)
+    buttonFrame.Size = UDim2.new(0, 120, 0, 40) -- Kích thước nhỏ gọn hơn
+    buttonFrame.Position = UDim2.new(1, -150, 1, -50)
     buttonFrame.AnchorPoint = Vector2.new(1, 1)
-    buttonFrame.BackgroundColor3 = Color3.fromRGB(200, 200, 200) -- Màu nhạt hơn
-    buttonFrame.BackgroundTransparency = 0.6 -- Trong suốt hơn
+    buttonFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30) -- Màu đen giống thông báo
+    buttonFrame.BackgroundTransparency = 0.5 -- Trong suốt nhẹ
     buttonFrame.ClipsDescendants = true
 
     -- Vòng bo ngoài
     local outerCircle = Instance.new("UICorner", buttonFrame)
-    outerCircle.CornerRadius = UDim.new(1, 0) -- Vòng bo tròn hoàn toàn
+    outerCircle.CornerRadius = UDim.new(0, 8) -- Bo tròn góc
 
     local border = Instance.new("UIStroke", buttonFrame)
-    border.Color = Color3.fromRGB(150, 150, 150) -- Màu nhạt hơn cho viền
+    border.Color = Color3.fromRGB(50, 50, 50) -- Viền đen nhạt hơn
     border.Thickness = 2
-    border.Transparency = 0.5 -- Viền trong suốt hơn
+    border.Transparency = 0.3 -- Viền trong suốt nhẹ
 
     -- Phần chữ
     local title = Instance.new("TextLabel")
     title.Name = "Title"
     title.Text = "Tối ưu"
     title.Font = Enum.Font.GothamBold
-    title.TextSize = 14 -- Kích thước chữ nhỏ hơn
-    title.TextColor3 = Color3.fromRGB(50, 50, 50) -- Màu chữ đậm hơn để nổi bật
+    title.TextSize = 14
+    title.TextColor3 = Color3.fromRGB(255, 255, 255) -- Màu chữ trắng
     title.BackgroundTransparency = 1
     title.TextXAlignment = Enum.TextXAlignment.Center
     title.TextYAlignment = Enum.TextYAlignment.Center
@@ -345,18 +345,24 @@ local function setupButtonInteraction(buttonFrame, title)
     local tweenInfoHover = TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
 
     buttonFrame.MouseEnter:Connect(function()
-        local hoverTween = TweenService:Create(buttonFrame, tweenInfoHover, { BackgroundTransparency = 0.3 }) -- Giảm độ trong suốt khi hover
+        local hoverTween = TweenService:Create(buttonFrame, tweenInfoHover, { BackgroundTransparency = 0.3 }) -- Giảm trong suốt khi hover
         hoverTween:Play()
+
+        local hoverBorder = TweenService:Create(buttonFrame.UIStroke, tweenInfoHover, { Transparency = 0 }) -- Viền rõ khi hover
+        hoverBorder:Play()
     end)
 
     buttonFrame.MouseLeave:Connect(function()
-        local leaveTween = TweenService:Create(buttonFrame, tweenInfoHover, { BackgroundTransparency = 0.6 }) -- Trở về trong suốt khi bỏ hover
+        local leaveTween = TweenService:Create(buttonFrame, tweenInfoHover, { BackgroundTransparency = 0.5 }) -- Trở lại trong suốt
         leaveTween:Play()
+
+        local leaveBorder = TweenService:Create(buttonFrame.UIStroke, tweenInfoHover, { Transparency = 0.3 }) -- Viền mờ lại
+        leaveBorder:Play()
     end)
 
     buttonFrame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            local clickTween = TweenService:Create(title, tweenInfoHover, { TextColor3 = Color3.fromRGB(0, 255, 0) }) -- Đổi màu chữ khi click
+            local clickTween = TweenService:Create(title, tweenInfoHover, { TextColor3 = Color3.fromRGB(0, 255, 0) }) -- Màu chữ chuyển xanh khi click
             clickTween:Play()
             task.wait(0.3)
             clickTween:Cancel()
