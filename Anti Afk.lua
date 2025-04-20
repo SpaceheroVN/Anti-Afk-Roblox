@@ -5,35 +5,39 @@ local StarterGui = game:GetService("StarterGui")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local TweenService = game:GetService("TweenService")
 
-local afkThreshold = 10 -- time noti
-local interventionInterval = 600 -- run
-local checkInterval = 30 -- noti
-local notificationDuration = 4 -- time print noti
-local animationTime = 0.5 -- animation
-local iconAssetId = "rbxassetid://117118515787811" -- logo
+local afkThreshold = 10 -- Thời gian (giây) không có tương tác trước khi coi là AFK
+local interventionInterval = 600 -- Thời gian (giây) giữa các lần can thiệp chống AFK
+local checkInterval = 30 -- Thời gian (giây) giữa các lần kiểm tra và hiển thị thông báo "Have you returned?"
+local notificationDuration = 4 -- Thời gian (giây) hiển thị thông báo
+local animationTime = 0.5 -- Thời gian (giây) cho animation trượt vào/ra của thông báo
+local iconAssetId = "rbxassetid://117118515787811" -- ID tài sản của icon
 
 local lastInputTime = tick()
 local isConsideredAFK = false
 local lastInterventionTime = tick()
 local lastCheckTime = 0
 local guiElement = nil
-local currentTween = nil -- ql animation
-local isNotificationShowing = false -- Trạng thái thông báo
+local currentTween = nil -- Quản lý animation hiện tại
+local isNotificationShowing = false -- Trạng thái hiển thị của thông báo
+local afkWarningCount = 0 -- Đếm số lần cảnh báo AFK
 
 local guiSize = UDim2.new(0, 250, 0, 60)
 local onScreenPosition = UDim2.new(1, -guiSize.X.Offset - 10, 1, -guiSize.Y.Offset - 10)
 local offScreenPosition = UDim2.new(1, 10, 1, -guiSize.Y.Offset - 10)
 
 local function createNotificationGui()
-    if guiElement then return end
+    if guiElement then return guiElement end -- Trả về GUI đã tồn tại nếu có
 
     local player = Players.LocalPlayer
+    if not player then return nil end
     local playerGui = player:WaitForChild("PlayerGui")
+    if not playerGui then return nil end
 
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "AntiAFKStatusGui"
     screenGui.ResetOnSpawn = false
     screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    screenGui.Parent = playerGui
 
     local notificationFrame = Instance.new("Frame")
     notificationFrame.Name = "NotificationFrame"
@@ -108,12 +112,12 @@ local function createNotificationGui()
     messageLabel.Parent = textFrame
 
     guiElement = screenGui
-    guiElement.Parent = playerGui
+    return guiElement
 end
 
 local function showNotification(title, message)
-    if not guiElement then return end
-    if isNotificationShowing then return end
+    if isNotificationShowing or not guiElement then return end
+    isNotificationShowing = true
 
     local frame = guiElement:FindFirstChild("NotificationFrame")
     local titleLabel = frame and frame:FindFirstChild("TextFrame"):FindFirstChild("Title")
@@ -121,6 +125,7 @@ local function showNotification(title, message)
 
     if not (frame and titleLabel and messageLabel) then
         warn("AntiAFK: Không tìm thấy các thành phần GUI!")
+        isNotificationShowing = false
         return
     end
 
@@ -133,9 +138,8 @@ local function showNotification(title, message)
     messageLabel.Text = message
 
     frame.Position = offScreenPosition
-    isNotificationShowing = true
 
-    -- Tạo animation trượt vào
+    -- Animation trượt vào
     local tweenInfoIn = TweenInfo.new(animationTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
     local tweenIn = TweenService:Create(frame, tweenInfoIn, { Position = onScreenPosition })
 
@@ -176,9 +180,10 @@ local function onInput()
     local now = tick()
     if isConsideredAFK then
         isConsideredAFK = false
-        showNotification("There you are ♥️", "Proceed with pausing.")
+        showNotification("There you are ♥️", "Hoạt động đã được khôi phục.")
     end
     lastInputTime = now
+    afkWarningCount = 0 -- Reset số lần cảnh báo khi có tương tác
 end
 
 UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
@@ -195,11 +200,14 @@ UserInputService.InputChanged:Connect(function(input, gameProcessedEvent)
 end)
 
 local function mainLoop()
-    createNotificationGui()
-    task.wait(1)
-    showNotification("Anti afk: On!", "is test")
+    guiElement = createNotificationGui()
+    if not guiElement then
+        warn("AntiAFK: Không thể tạo GUI thông báo!")
+        return
+    end
 
-    local afkWarningCount = 0
+    task.wait(1)
+    showNotification("Anti AFK: Đã bật!", "Script đang hoạt động.")
 
     while task.wait(1) do
         local now = tick()
@@ -209,17 +217,17 @@ local function mainLoop()
         if timeSinceLastIntervention >= interventionInterval then
             performAntiAFKAction()
             if isConsideredAFK then
-                 showNotification("Player detected to be AFK.", "Intervention initiated!!")
+                 showNotification("Phát hiện người chơi AFK.", "Đã thực hiện hành động can thiệp.")
                  lastCheckTime = now
-                 afkWarningCount = 0 -- Reset bộ đếm khi có hành động can thiệp
+                 afkWarningCount = 0
             end
         end
 
         if not isConsideredAFK and timeSinceLastInput >= afkThreshold then
             isConsideredAFK = true
-            print("AntiAFK: Player potentially AFK based on input timeout.")
+            print("AntiAFK: Người chơi có thể đang AFK (dựa trên thời gian chờ tương tác).")
             if timeSinceLastIntervention > 1 then
-                 showNotification("Player detected to be AFK.", "Intervention initiated!!")
+                 showNotification("Phát hiện người chơi AFK.", "Sắp thực hiện hành động can thiệp.")
             end
             lastCheckTime = now
             afkWarningCount = 0
@@ -228,9 +236,14 @@ local function mainLoop()
         if isConsideredAFK then
             if now - lastCheckTime >= checkInterval then
                 if not isNotificationShowing then
-                    showNotification("Have you returned?", "")
-                    lastCheckTime = now
                     afkWarningCount += 1
+                    showNotification("Bạn đã quay lại chưa?", "")
+                    lastCheckTime = now
+                    -- Có thể thêm điều kiện dừng hoặc hành động khác sau một số lần cảnh báo nhất định
+                    -- if afkWarningCount >= 3 then
+                    --     print("AntiAFK: Đã cảnh báo nhiều lần mà không có phản hồi.")
+                    --     -- Thực hiện hành động mạnh hơn (ví dụ: thông báo lớn hơn, âm thanh, v.v.)
+                    -- end
                 end
             end
         end
@@ -238,4 +251,4 @@ local function mainLoop()
 end
 
 coroutine.wrap(mainLoop)()
-print("Anti-AFK Script Running.")
+print("Anti-AFK Script Đang Chạy.")
