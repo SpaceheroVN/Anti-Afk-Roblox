@@ -4,11 +4,11 @@ local RunService = game:GetService("RunService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local TweenService = game:GetService("TweenService")
 
-local afkThreshold = 10
+local afkThreshold = 180
 local interventionInterval = 600
-local checkInterval = 10
+local checkInterval = 60
 local notificationDuration = 5
-local animationTime = 0.4
+local animationTime = 0.5  -- Thời gian tween hơi lâu hơn cho mượt
 local iconAssetId = "rbxassetid://117118515787811"
 local enableIntervention = true
 local simulatedKeyCode = Enum.KeyCode.Space
@@ -25,7 +25,6 @@ local inputChangedConnection = nil
 local player = Players.LocalPlayer
 
 local guiSize = UDim2.new(0, 250, 0, 60)
-local guiPaddingBottom = 10
 
 local function createNotificationTemplate()
     if notificationTemplate then
@@ -132,6 +131,7 @@ local function setupNotificationContainer()
     screenGui.DisplayOrder = 999
     screenGui.Parent = playerGui
 
+    -- Tạo một Frame con để định vị thông báo theo ý muốn (cách cạnh phải -18px, cách đáy -48px)
     local container = Instance.new("Frame")
     container.Name = "NotificationContainerFrame"
     container.AnchorPoint = Vector2.new(1, 1)
@@ -150,7 +150,6 @@ local function setupNotificationContainer()
     notificationContainer = container
     return notificationContainer
 end
-
 
 local function showNotification(title, message)
     if not notificationContainer or not notificationContainer.Parent then
@@ -189,7 +188,8 @@ local function showNotification(title, message)
 
     newFrame.Parent = notificationContainer
 
-    local tweenInfoAppear = TweenInfo.new(animationTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    -- Tween sử dụng easing Sine cho mượt
+    local tweenInfoAppear = TweenInfo.new(animationTime, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
     local fadeInTweenFrame = TweenService:Create(newFrame, tweenInfoAppear, { BackgroundTransparency = 0.2 })
     local fadeInTweenIcon = TweenService:Create(icon, tweenInfoAppear, { ImageTransparency = 0 })
     local fadeInTweenTitle = TweenService:Create(titleLabel, tweenInfoAppear, { TextTransparency = 0 })
@@ -205,7 +205,7 @@ local function showNotification(title, message)
             return
         end
 
-        local tweenInfoDisappear = TweenInfo.new(animationTime, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+        local tweenInfoDisappear = TweenInfo.new(animationTime, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
         local fadeOutTweenFrame = TweenService:Create(newFrame, tweenInfoDisappear, { BackgroundTransparency = 1 })
         local fadeOutTweenIcon = TweenService:Create(icon, tweenInfoDisappear, { ImageTransparency = 1 })
         local fadeOutTweenTitle = TweenService:Create(titleLabel, tweenInfoDisappear, { TextTransparency = 1 })
@@ -228,6 +228,7 @@ local function performAntiAFKAction()
     if not enableIntervention then
         return
     end
+
     local success, err = pcall(function()
         VirtualInputManager:SendKeyEvent(true, simulatedKeyCode, false, game)
         task.wait(0.05 + math.random() * 0.05)
@@ -310,7 +311,7 @@ local function main()
     print("Anti-AFK Script đã khởi chạy và đang theo dõi input.")
 
     while true do
-        task.wait(1)
+        task.wait(0.5)
         local now = os.clock()
         local idleTime = now - lastInputTime
 
@@ -324,11 +325,11 @@ local function main()
 
             if timeSinceLastCheck >= checkInterval then
                 local nextInterventionIn = math.max(0, interventionInterval - timeSinceLastIntervention)
-                local message = string.format("Can thiệp tiếp theo sau ~%.0f giây.", nextInterventionIn)
+                local msg = string.format("Can thiệp tiếp theo sau ~%.0f giây.", nextInterventionIn)
                 if not enableIntervention then
-                    message = "Chế độ can thiệp đang tắt."
+                    msg = "Chế độ can thiệp đang tắt."
                 end
-                showNotification("Vẫn đang AFK...", message)
+                showNotification("Vẫn đang AFK...", msg)
                 lastCheckTime = now
             end
         else
@@ -337,11 +338,11 @@ local function main()
                 lastInterventionTime = now
                 lastCheckTime = now
                 interventionCounter = 0
-                local message = string.format("Sẽ can thiệp sau ~%.0f giây nếu không hoạt động.", interventionInterval)
+                local msg = string.format("Sẽ can thiệp sau ~%.0f giây nếu không hoạt động.", interventionInterval)
                 if not enableIntervention then
-                    message = "Bạn hiện đang AFK (can thiệp tự động đang tắt)."
+                    msg = "Bạn hiện đang AFK (can thiệp tự động đang tắt)."
                 end
-                showNotification("Cảnh báo AFK!", message)
+                showNotification("Cảnh báo AFK!", msg)
                 print("AntiAFK: Người dùng được coi là AFK.")
             end
         end
