@@ -135,7 +135,7 @@ local function setupNotificationContainer()
     local container = Instance.new("Frame")
     container.Name = "NotificationContainerFrame"
     container.AnchorPoint = Vector2.new(1, 1)
-    container.Position = UDim2.new(1, -18, 1, -45)
+    container.Position = UDim2.new(1, -18, 1, -48)
     container.Size = UDim2.new(0, 300, 0, 200)
     container.BackgroundTransparency = 1
     container.Parent = screenGui
