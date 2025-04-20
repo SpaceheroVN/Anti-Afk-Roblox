@@ -101,7 +101,7 @@ local function createNotificationGui()
     titleLabel.Name = "Title"
     titleLabel.LayoutOrder = 1
     titleLabel.Font = Enum.Font.GothamBold
-    titleLabel.TextSize = 16
+    titleLabel.TextSize = 15
     titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     titleLabel.BackgroundTransparency = 1
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -112,7 +112,7 @@ local function createNotificationGui()
     messageLabel.Name = "Message"
     messageLabel.LayoutOrder = 2
     messageLabel.Font = Enum.Font.Gotham
-    messageLabel.TextSize = 16
+    messageLabel.TextSize = 13
     messageLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
     messageLabel.BackgroundTransparency = 1
     messageLabel.TextXAlignment = Enum.TextXAlignment.Left
