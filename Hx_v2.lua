@@ -282,7 +282,13 @@ local function createButton()
     button.AnchorPoint = Vector2.new(1, 1)
     button.BackgroundColor3 = Color3.new(1, 1, 1)
     button.Text = "Tối ưu"
-    button.Parent = game.Players.LocalPlayer.PlayerGui.ScreenGui 
+    local playerGui = game.Players.LocalPlayer:FindFirstChild("PlayerGui")
+    if not playerGui then
+        warn("PlayerGui not found for LocalPlayer.")
+        return
+    end
+    local screenGui = playerGui:FindFirstChild("ScreenGui") or Instance.new("ScreenGui", playerGui)
+        button.Parent = screenGui
     return button
 end
 
@@ -324,6 +330,10 @@ local function onButtonClick(button)
 end
 
 local button = createButton()
+if not button then
+    warn("Button creation failed.")
+    return
+end
 button.MouseButton1Click:Connect(function()
     onButtonClick(button)
 end)
