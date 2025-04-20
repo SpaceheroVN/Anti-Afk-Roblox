@@ -1,3 +1,28 @@
+if _G.AntiAFK_Running then
+    if _G.AntiAFK_CleanupFunction then
+        _G.AntiAFK_CleanupFunction()
+    end
+end
+
+_G.AntiAFK_Running = true
+
+_G.AntiAFK_CleanupFunction = function()
+    print("AntiAFK: Dọn dẹp tài nguyên của script cũ...")
+    if inputBeganConnection then
+        inputBeganConnection:Disconnect()
+        inputBeganConnection = nil
+    end
+    if inputChangedConnection then
+        inputChangedConnection:Disconnect()
+        inputChangedConnection = nil
+    end
+    if notificationContainer and notificationContainer.Parent then
+        notificationContainer:Destroy()
+    end
+    notificationContainer = nil
+    notificationTemplate = nil
+end
+
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
