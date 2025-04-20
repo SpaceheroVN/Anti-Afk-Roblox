@@ -9,8 +9,8 @@ local afkThreshold = 10
 local interventionInterval = 600
 local checkInterval = 30
 local notificationDuration = 4
-local animationTime = 0.3
-local iconAssetId = "rbxassetid://137888597"
+local animationTime = 0.3 -- Giảm thời gian animation cho cảm giác nhanh hơn
+local iconAssetId = "rbxassetid://137888597" -- Icon dấu chấm than cách điệu (thay đổi tùy thích)
 
 local lastInputTime = tick()
 local isConsideredAFK = false
@@ -45,13 +45,14 @@ local function createNotificationGui()
     screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     screenGui.Parent = playerGui
 
+    -- Tạo bóng đổ (tùy chọn)
     local shadow = Instance.new("Frame")
     shadow.Name = "Shadow"
     shadow.BackgroundColor3 = shadowColor
     shadow.BackgroundTransparency = 0.5
     shadow.BorderSizePixel = 0
-    shadow.Size = UDim2.new(0, 250 + shadowOffset, 0, 75 + shadowOffset)
-    shadow.Position = UDim2.new(1, -250 - guiPadding + shadowOffset, 1, -75 - guiPadding + shadowOffset)
+    shadow.Size = UDim2.new(0, 250 + shadowOffset, 0, 60 + shadowOffset)
+    shadow.Position = UDim2.new(1, -250 - guiPadding + shadowOffset, 1, -60 - guiPadding + shadowOffset)
     shadow.AnchorPoint = Vector2.new(1, 1)
     shadow.ClipsDescendants = true
     shadow.Parent = screenGui
@@ -65,8 +66,8 @@ local function createNotificationGui()
     notificationFrame.BackgroundColor3 = backgroundColor
     notificationFrame.BackgroundTransparency = 0
     notificationFrame.BorderSizePixel = 0
-    notificationFrame.Size = UDim2.new(0, 250, 0, 75)
-    notificationFrame.Position = UDim2.new(1, -250 - guiPadding, 1, -75 - guiPadding)
+    notificationFrame.Size = UDim2.new(0, 250, 0, 60)
+    notificationFrame.Position = UDim2.new(1, -250 - guiPadding, 1, -60 - guiPadding)
     notificationFrame.AnchorPoint = Vector2.new(1, 1)
     notificationFrame.ClipsDescendants = true
     notificationFrame.Parent = screenGui
@@ -87,7 +88,7 @@ local function createNotificationGui()
     icon.Image = iconAssetId
     icon.BackgroundTransparency = 1
     icon.Size = UDim2.new(0, iconSize, 0, iconSize)
-    icon.Position = UDim2.new(0, guiPadding / 2, 0.5, -iconSize / 2 - 7.5)
+    icon.Position = UDim2.new(0, guiPadding / 2, 0.5, -iconSize / 2)
     icon.Parent = notificationFrame
 
     local textFrame = Instance.new("Frame")
@@ -124,30 +125,19 @@ local function createNotificationGui()
     messageLabel.Size = UDim2.new(1, 0, 0, 16)
     messageLabel.Parent = textFrame
 
-    local interventionLabel = Instance.new("TextLabel")
-    interventionLabel.Name = "InterventionMessage"
-    interventionLabel.Font = Enum.Font.SourceSansItalic
-    interventionLabel.TextSize = 12
-    interventionLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-    interventionLabel.BackgroundTransparency = 1
-    interventionLabel.TextXAlignment = Enum.TextXAlignment.Left
-    interventionLabel.Size = UDim2.new(1, 0, 0, 14)
-    interventionLabel.Parent = textFrame
-
     guiElement = screenGui
     return guiElement
 end
 
-local function showNotification(title, message, interventionMessage)
+local function showNotification(title, message)
     if isNotificationShowing or not guiElement then return end
     isNotificationShowing = true
 
     local frame = guiElement:FindFirstChild("NotificationFrame")
     local titleLabel = frame and frame:FindFirstChild("TextFrame"):FindFirstChild("Title")
     local messageLabel = frame and frame:FindFirstChild("TextFrame"):FindFirstChild("Message")
-    local interventionLabel = frame and frame:FindFirstChild("TextFrame"):FindFirstChild("InterventionMessage")
 
-    if not (frame and titleLabel and messageLabel and interventionLabel) then
+    if not (frame and titleLabel and messageLabel) then
         warn("AntiAFK: Không tìm thấy các thành phần GUI!")
         isNotificationShowing = false
         return
@@ -160,12 +150,12 @@ local function showNotification(title, message, interventionMessage)
 
     titleLabel.Text = title
     messageLabel.Text = message
-    interventionLabel.Text = interventionMessage or ""
 
-    frame.Position = UDim2.new(1, -250 - guiPadding, 1, -75 - guiPadding)
-    local onScreenPosition = UDim2.new(1, -250 - guiPadding, 1, -75 - guiPadding)
-    local offScreenPosition = UDim2.new(1, -guiPadding, 1, -75 - guiPadding)
+    frame.Position = UDim2.new(1, -250 - guiPadding, 1, -60 - guiPadding) -- Vị trí ban đầu
+    local onScreenPosition = UDim2.new(1, -250 - guiPadding, 1, -60 - guiPadding) -- Vị trí cuối cùng (trượt từ phải xuống)
+    local offScreenPosition = UDim2.new(1, -guiPadding, 1, -60 - guiPadding) -- Vị trí trượt ra
 
+    -- Animation trượt vào
     local tweenInfoIn = TweenInfo.new(animationTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
     local tweenIn = TweenService:Create(frame, tweenInfoIn, { Position = onScreenPosition })
 
@@ -243,7 +233,7 @@ local function mainLoop()
         if timeSinceLastIntervention >= interventionInterval then
             performAntiAFKAction()
             if isConsideredAFK then
-                 showNotification("Phát hiện AFK", "Đã thực hiện hành động.", "Chúng tôi vẫn đang can thiệp!")
+                 showNotification("Phát hiện AFK", "Đã thực hiện hành động❤️")
                  lastCheckTime = now
                  afkWarningCount = 0
             end
@@ -253,7 +243,7 @@ local function mainLoop()
             isConsideredAFK = true
             print("AntiAFK: Người chơi có dấu hiệu AFK.")
             if timeSinceLastIntervention > 1 then
-                 showNotification("Cảnh báo AFK", "Sắp có hành động can thiệp.", "Chúng tôi sẽ can thiệp sau giây lát!")
+                 showNotification("Cảnh báo AFK", "Sắp có hành động can thiệp!")
             end
             lastCheckTime = now
             afkWarningCount = 0
@@ -263,7 +253,7 @@ local function mainLoop()
             if now - lastCheckTime >= checkInterval then
                 if not isNotificationShowing then
                     afkWarningCount += 1
-                    showNotification("Bạn còn đó không?", "", "Chúng tôi vẫn đang can thiệp!")
+                    showNotification("Bạn còn đó không?", "Chúng tôi vẫn đang can thiệp!")
                     lastCheckTime = now
                 end
             end
