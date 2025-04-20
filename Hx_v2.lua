@@ -273,6 +273,61 @@ local function cleanup()
     notificationTemplate = nil
 end
 
+local buttonState = "default"
+
+local function createButton()
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0, 100, 0, 50)
+    button.Position = UDim2.new(1, -110, 1, -60)
+    button.AnchorPoint = Vector2.new(1, 1)
+    button.BackgroundColor3 = Color3.new(1, 1, 1)
+    button.Text = "Tối ưu"
+    button.Parent = game.Players.LocalPlayer.PlayerGui.ScreenGui 
+    return button
+end
+
+local function showMessage(title, message)
+    local notification = Instance.new("TextLabel")
+    notification.Size = UDim2.new(0, 200, 0, 100)
+    notification.Position = UDim2.new(0.5, 0, 0.5, 0)
+    notification.AnchorPoint = Vector2.new(0.5, 0.5)
+    notification.BackgroundColor3 = Color3.new(0, 0, 0)
+    notification.TextColor3 = Color3.new(1, 1, 1)
+    notification.Text = title .. "\n" .. message
+    notification.Parent = game.Players.LocalPlayer.PlayerGui.ScreenGui
+    wait(2)
+    notification:Destroy()
+end
+
+local function onButtonClick(button)
+    if buttonState == "default" then
+        buttonState = "optimizing"
+        button.BackgroundColor3 = Color3.new(1, 1, 0)
+        button.Text = "Đang tối ưu..."
+        showMessage("Đang tối ưu...", "Xin chờ giây lát...")
+        wait(3)
+        buttonState = "success"
+        button.BackgroundColor3 = Color3.new(0, 1, 0)
+        button.Text = "Tối ưu thành công!"
+        showMessage("Tối ưu thành công!", "Chúc bạn chơi vui vẻ")
+    elseif buttonState == "success" then
+        buttonState = "restoring"
+        button.BackgroundColor3 = Color3.new(1, 1, 0)
+        button.Text = "Đang khôi phục..."
+        showMessage("Đang khôi phục...", "Xin chờ giây lát...")
+        wait(3)
+        buttonState = "default"
+        button.BackgroundColor3 = Color3.new(1, 1, 1)
+        button.Text = "Tối ưu"
+        showMessage("Khôi phục thành công!", "Chúc bạn chơi vui vẻ")
+    end
+end
+
+local button = createButton()
+button.MouseButton1Click:Connect(function()
+    onButtonClick(button)
+end)
+
 local function main()
     notificationContainer = setupNotificationContainer()
     if not notificationContainer then
