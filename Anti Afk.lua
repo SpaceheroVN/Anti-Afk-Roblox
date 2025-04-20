@@ -116,7 +116,7 @@ local function setupNotificationContainer()
 
     local playerGui = player:WaitForChild("PlayerGui", 20)
     if not playerGui then
-        warn("AntiAFK: Không tìm thấy PlayerGui cho " .. player.Name .. ". Script sẽ không hiển thị thông báo.")
+        warn("AntiAFK: Không tìm thấy PlayerGui cho " .. player.Name)
         return nil
     end
 
@@ -130,19 +130,27 @@ local function setupNotificationContainer()
     screenGui.ResetOnSpawn = false
     screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     screenGui.DisplayOrder = 999
-    screenGui.IgnoreGuiInset = true
     screenGui.Parent = playerGui
 
-    local listLayout = Instance.new("UIListLayout", screenGui)
+    local container = Instance.new("Frame")
+    container.Name = "NotificationContainerFrame"
+    container.AnchorPoint = Vector2.new(1, 1)
+    container.Position = UDim2.new(1, -20, 1, -50)
+    container.Size = UDim2.new(0, 300, 0, 200)
+    container.BackgroundTransparency = 1
+    container.Parent = screenGui
+
+    local listLayout = Instance.new("UIListLayout", container)
     listLayout.FillDirection = Enum.FillDirection.Vertical
     listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
     listLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
     listLayout.SortOrder = Enum.SortOrder.LayoutOrder
     listLayout.Padding = UDim.new(0, 5)
 
-    notificationContainer = screenGui
+    notificationContainer = container
     return notificationContainer
 end
+
 
 local function showNotification(title, message)
     if not notificationContainer or not notificationContainer.Parent then
