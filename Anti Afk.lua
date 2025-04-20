@@ -170,9 +170,8 @@ local function showNotification(title, message)
 	local textFrame = newFrame:FindFirstChild("TextFrame")
 	local titleLabel = textFrame and textFrame:FindFirstChild("Title")
 	local messageLabel = textFrame and textFrame:FindFirstChild("Message")
-	local gradient = newFrame:FindFirstChild("UIGradient")
-
-	if not (icon and titleLabel and messageLabel and gradient) then
+	
+	if not (icon and titleLabel and messageLabel) then
 		warn("AntiAFK: Frame thông báo được clone bị lỗi.")
 		newFrame:Destroy()
 		return
@@ -196,13 +195,11 @@ local function showNotification(title, message)
 	local fadeInTweenIcon = icon and TweenService:Create(icon, tweenInfo, { ImageTransparency = fadeInGoals.ImageTransparency })
 	local fadeInTweenTitle = titleLabel and TweenService:Create(titleLabel, tweenInfo, { TextTransparency = fadeInGoals.TextTransparency })
 	local fadeInTweenMessage = messageLabel and TweenService:Create(messageLabel, tweenInfo, { TextTransparency = fadeInGoals.TextTransparency })
-	local fadeInTweenGradient = gradient and TweenService:Create(gradient, tweenInfo, { Transparency = NumberSequence.new(0) })
 
 	fadeInTweenFrame:Play()
 	if fadeInTweenIcon then fadeInTweenIcon:Play() end
 	if fadeInTweenTitle then fadeInTweenTitle:Play() end
 	if fadeInTweenMessage then fadeInTweenMessage:Play() end
-	if fadeInTweenGradient then fadeInTweenGradient:Play() end
 
 	local fadeOutDelay = task.delay(notificationDuration, function()
 		local fadeOutGoals = {
@@ -214,13 +211,11 @@ local function showNotification(title, message)
 		local fadeOutTweenIcon = icon and TweenService:Create(icon, tweenInfo, { ImageTransparency = fadeOutGoals.ImageTransparency })
 		local fadeOutTweenTitle = titleLabel and TweenService:Create(titleLabel, tweenInfo, { TextTransparency = fadeOutGoals.TextTransparency })
 		local fadeOutTweenMessage = messageLabel and TweenService:Create(messageLabel, tweenInfo, { TextTransparency = fadeOutGoals.TextTransparency })
-		local fadeOutTweenGradient = gradient and TweenService:Create(gradient, tweenInfo, { Transparency = NumberSequence.new(1) })
 
 		fadeOutTweenFrame:Play()
 		if fadeOutTweenIcon then fadeOutTweenIcon:Play() end
 		if fadeOutTweenTitle then fadeOutTweenTitle:Play() end
 		if fadeOutTweenMessage then fadeOutTweenMessage:Play() end
-		if fadeOutTweenGradient then fadeOutTweenGradient:Play() end
 
 		fadeOutTweenFrame.Completed:Once(function()
 			if newFrame and newFrame.Parent then
