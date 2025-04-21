@@ -122,7 +122,8 @@ local function createNotificationTemplate()
 	title.BackgroundTransparency = 1
 	title.TextTransparency = 1
 	title.TextXAlignment = Enum.TextXAlignment.Left
-	title.Size = UDim2.new(1, 0, 0, 0) -- Chiều rộng full, tự động cao
+	title.Size = UDim2.new(1, 0, 0, 0)
+	title.AutomaticSize = Enum.AutomaticSize.Y -- Cho phép tự động điều chỉnh chiều cao
 
 	local message = Instance.new("TextLabel", textFrame)
 	message.Name = "Message"
@@ -133,7 +134,8 @@ local function createNotificationTemplate()
 	message.BackgroundTransparency = 1
 	message.TextTransparency = 1
 	message.TextXAlignment = Enum.TextXAlignment.Left
-	message.Size = UDim2.new(1, 0, 0, 0) -- Chiều rộng full, tự động cao
+	message.Size = UDim2.new(1, 0, 0, 0)
+	message.AutomaticSize = Enum.AutomaticSize.Y -- Cho phép tự động điều chỉnh chiều cao
 
 	return notificationTemplate
 end
@@ -218,6 +220,12 @@ local function showNotification(title, message)
 		local titleLabel = textFrame and textFrame:FindFirstChild("Title")
 		local messageLabel = textFrame and textFrame:FindFirstChild("Message")
 
+	if notificationObject then
+		local icon = notificationObject:FindFirstChild("Icon")
+		local textFrame = notificationObject:FindFirstChild("TextFrame")
+		local titleLabel = textFrame and textFrame:FindFirstChild("Title")
+		local messageLabel = textFrame and textFrame:FindFirstChild("Message")
+
 		if not (icon and titleLabel and messageLabel) then
 			warn("AntiAFK: Frame thông báo từ pool bị lỗi cấu trúc.")
 			notificationObject:Destroy()
@@ -234,7 +242,7 @@ local function showNotification(title, message)
 		messageLabel.TextTransparency = 1
 
 		local tweenInfoAppear = TweenInfo.new(ANIMATION_TIME, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
-		local tweenPropertiesAppear = { BackgroundTransparency = 0.8, ImageTransparency = 0, TextTransparency = 0 } -- Độ trong suốt khi hiển thị
+		local tweenPropertiesAppear = { BackgroundTransparency = 0.2, ImageTransparency = 0, TextTransparency = 0 } -- Giảm độ trong suốt nền
 
 		TweenService:Create(notificationObject, tweenInfoAppear, { BackgroundTransparency = tweenPropertiesAppear.BackgroundTransparency }):Play()
 		TweenService:Create(icon, tweenInfoAppear, { ImageTransparency = tweenPropertiesAppear.ImageTransparency }):Play()
@@ -244,7 +252,7 @@ local function showNotification(title, message)
 		task.delay(NOTIFICATION_DURATION, function()
 			if notificationObject and notificationObject.Parent then
 				local tweenInfoDisappear = TweenInfo.new(ANIMATION_TIME, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
-				local tweenPropertiesDisappear = { BackgroundTransparency = 1, ImageTransparency = 1, TextTransparency = 1 } -- Độ trong suốt khi ẩn
+				local tweenPropertiesDisappear = { BackgroundTransparency = 1, ImageTransparency = 1, TextTransparency = 1 }
 
 				local fadeOutTweenFrame = TweenService:Create(notificationObject, tweenInfoDisappear, { BackgroundTransparency = tweenPropertiesDisappear.BackgroundTransparency })
 				local fadeOutTweenIcon = TweenService:Create(icon, tweenInfoDisappear, { ImageTransparency = tweenPropertiesDisappear.ImageTransparency })
