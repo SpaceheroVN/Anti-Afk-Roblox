@@ -86,11 +86,11 @@ local function createNotificationTemplate()
 	padding.PaddingTop = UDim.new(0, 8) -- Tăng padding top
 	padding.PaddingBottom = UDim.new(0, 8) -- Tăng padding bottom
 
-	local listLayout = Instance.new("UIListLayout", frame)
-	listLayout.FillDirection = Enum.FillDirection.Horizontal
-	listLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-	listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	listLayout.Padding = UDim.new(0, 8) -- Giảm padding giữa các element
+	local listLayoutHorizontal = Instance.new("UIListLayout", frame) -- Layout ngang cho icon và textFrame
+	listLayoutHorizontal.FillDirection = Enum.FillDirection.Horizontal
+	listLayoutHorizontal.VerticalAlignment = Enum.VerticalAlignment.Center
+	listLayoutHorizontal.SortOrder = Enum.SortOrder.LayoutOrder
+	listLayoutHorizontal.Padding = UDim.new(0, 8) -- Giảm padding giữa các element
 
 	local icon = Instance.new("ImageLabel", frame)
 	icon.Name = "Icon"
@@ -106,6 +106,13 @@ local function createNotificationTemplate()
 	textFrame.Size = UDim2.new(1, 0, 1, 0)
 	textFrame.LayoutOrder = 2
 
+	local listLayoutVertical = Instance.new("UIListLayout", textFrame) -- Layout dọc cho title và message
+	listLayoutVertical.FillDirection = Enum.FillDirection.Vertical
+	listLayoutVertical.HorizontalAlignment = Enum.HorizontalAlignment.Left
+	listLayoutVertical.VerticalAlignment = Enum.VerticalAlignment.Top
+	listLayoutVertical.SortOrder = Enum.SortOrder.LayoutOrder
+	listLayoutVertical.Padding = UDim.new(0, 2)
+
 	local title = Instance.new("TextLabel", textFrame)
 	title.Name = "Title"
 	title.Text = "Title"
@@ -115,8 +122,7 @@ local function createNotificationTemplate()
 	title.BackgroundTransparency = 1
 	title.TextTransparency = 1
 	title.TextXAlignment = Enum.TextXAlignment.Left
-	title.AutomaticSize = Enum.AutomaticSize.X
-	title.Size = UDim2.new(0, 0, 0.5, 0) -- Giới hạn chiều cao tương đối
+	title.Size = UDim2.new(1, 0, 0, 0) -- Chiều rộng full, tự động cao
 
 	local message = Instance.new("TextLabel", textFrame)
 	message.Name = "Message"
@@ -127,7 +133,7 @@ local function createNotificationTemplate()
 	message.BackgroundTransparency = 1
 	message.TextTransparency = 1
 	message.TextXAlignment = Enum.TextXAlignment.Left
-	message.Size = UDim2.new(0, 0, 0.5, 0) -- Giới hạn chiều cao tương đối
+	message.Size = UDim2.new(1, 0, 0, 0) -- Chiều rộng full, tự động cao
 
 	return notificationTemplate
 end
@@ -215,7 +221,6 @@ local function showNotification(title, message)
 		if not (icon and titleLabel and messageLabel) then
 			warn("AntiAFK: Frame thông báo từ pool bị lỗi cấu trúc.")
 			notificationObject:Destroy()
-			-- Có thể thử tạo mới ở đây nếu cần, nhưng nên tránh
 			return
 		end
 
@@ -223,13 +228,13 @@ local function showNotification(title, message)
 		messageLabel.Text = message or ""
 		notificationObject.Name = "Notification_" .. (title or "Default")
 		notificationObject.Visible = true
-		notificationObject.BackgroundTransparency = 1
+		notificationObject.BackgroundTransparency = 1 -- Đặt lại độ trong suốt khi hiển thị
 		icon.ImageTransparency = 1
 		titleLabel.TextTransparency = 1
 		messageLabel.TextTransparency = 1
 
 		local tweenInfoAppear = TweenInfo.new(ANIMATION_TIME, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
-		local tweenPropertiesAppear = { BackgroundTransparency = 0.8, ImageTransparency = 0, TextTransparency = 0 }
+		local tweenPropertiesAppear = { BackgroundTransparency = 0.8, ImageTransparency = 0, TextTransparency = 0 } -- Độ trong suốt khi hiển thị
 
 		TweenService:Create(notificationObject, tweenInfoAppear, { BackgroundTransparency = tweenPropertiesAppear.BackgroundTransparency }):Play()
 		TweenService:Create(icon, tweenInfoAppear, { ImageTransparency = tweenPropertiesAppear.ImageTransparency }):Play()
@@ -239,7 +244,7 @@ local function showNotification(title, message)
 		task.delay(NOTIFICATION_DURATION, function()
 			if notificationObject and notificationObject.Parent then
 				local tweenInfoDisappear = TweenInfo.new(ANIMATION_TIME, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
-				local tweenPropertiesDisappear = { BackgroundTransparency = 1, ImageTransparency = 1, TextTransparency = 1 }
+				local tweenPropertiesDisappear = { BackgroundTransparency = 1, ImageTransparency = 1, TextTransparency = 1 } -- Độ trong suốt khi ẩn
 
 				local fadeOutTweenFrame = TweenService:Create(notificationObject, tweenInfoDisappear, { BackgroundTransparency = tweenPropertiesDisappear.BackgroundTransparency })
 				local fadeOutTweenIcon = TweenService:Create(icon, tweenInfoDisappear, { ImageTransparency = tweenPropertiesDisappear.ImageTransparency })
