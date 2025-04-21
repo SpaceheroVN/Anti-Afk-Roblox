@@ -27,13 +27,18 @@ local MAX_NOTIFICATIONS = 5
 local ANIMATION_TIME = 0.35
 
 -- 📐 GUI Style
-local GUI_SIZE = UDim2.new(0, 280, 0, 60)
-local ICON_SIZE = UDim2.new(0, 36, 0, 36)
-local CONTAINER_SIZE = UDim2.new(0, 320, 1, -100)
-local ICON_ASSET_ID = "rbxassetid://117118515787811"
+local GUI_WIDTH, GUI_HEIGHT = 280, 60
+local GUI_SIZE = UDim2.new(0, GUI_WIDTH, 0, GUI_HEIGHT)
+local CONTAINER_SIZE = UDim2.new(0, 320, 0, 300)
+local ICON_SIZE = UDim2.new(0, 42, 0, 42)
 local ANCHOR_POINT = Vector2.new(1, 1)
-local POSITION_VISIBLE = UDim2.new(1, -20, 1, -20)
-local POSITION_HIDDEN = UDim2.new(1, 340, 1, -20)
+local ICON_ASSET_ID = "rbxassetid://117118515787811"
+
+local POSITION_OFFSET_HIDDEN = UDim2.new(1, 30, 1, -20)
+local POSITION_OFFSET_VISIBLE = UDim2.new(1, -10, 1, -20)
+local ANIMATION_TIME = 0.4
+local NOTIFICATION_DURATION = 3
+local MAX_NOTIFICATIONS = 5
 
 -- 📊 State
 local player = Players.LocalPlayer
@@ -61,87 +66,85 @@ _G.AntiAFK_CleanupFunction = function()
     print("✅ AntiAFK đã được dọn sạch.")
 end
 
--- 🎨 Notification GUI
-local function createTemplate()
+-- 📐 Template
+local function createNotificationTemplate()
     if notificationTemplate then return notificationTemplate end
 
     local frame = Instance.new("Frame")
-    frame.Name = "NotificationFrame"
+    frame.Name = "Notification"
     frame.Size = GUI_SIZE
-    frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-    frame.BackgroundTransparency = 0.15
+    frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    frame.BackgroundTransparency = 0.3
+    frame.AnchorPoint = Vector2.new(1, 0)
     frame.BorderSizePixel = 0
-    frame.ClipsDescendants = true
-    frame.ZIndex = 10
 
-    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+    local corner = Instance.new("UICorner", frame)
+    corner.CornerRadius = UDim.new(0, 12)
 
     local shadow = Instance.new("ImageLabel", frame)
-    shadow.Name = "Shadow"
-    shadow.Image = "rbxassetid://1316045217"
-    shadow.Size = UDim2.new(1, 20, 1, 20)
-    shadow.Position = UDim2.new(0, -10, 0, -10)
+    shadow.Size = UDim2.new(1, 0, 1, 0)
     shadow.BackgroundTransparency = 1
+    shadow.Image = "rbxassetid://1316045217"
     shadow.ImageTransparency = 0.8
-    shadow.ZIndex = 9
-
-    local layout = Instance.new("UIListLayout", frame)
-    layout.FillDirection = Enum.FillDirection.Horizontal
-    layout.Padding = UDim.new(0, 8)
-    layout.VerticalAlignment = Enum.VerticalAlignment.Center
+    shadow.ScaleType = Enum.ScaleType.Slice
+    shadow.SliceCenter = Rect.new(10, 10, 118, 118)
+    shadow.ZIndex = -1
 
     local padding = Instance.new("UIPadding", frame)
-    padding.PaddingLeft = UDim.new(0, 12)
-    padding.PaddingRight = UDim.new(0, 12)
+    padding.PaddingLeft = UDim.new(0, 10)
+    padding.PaddingRight = UDim.new(0, 10)
     padding.PaddingTop = UDim.new(0, 8)
     padding.PaddingBottom = UDim.new(0, 8)
 
+    local layout = Instance.new("UIListLayout", frame)
+    layout.FillDirection = Enum.FillDirection.Horizontal
+    layout.Padding = UDim.new(0, 10)
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+
     local icon = Instance.new("ImageLabel", frame)
     icon.Name = "Icon"
+    icon.Image = ICON_ASSET_ID
     icon.Size = ICON_SIZE
     icon.BackgroundTransparency = 1
-    icon.Image = ICON_ASSET_ID
     icon.ImageTransparency = 1
 
-    local text = Instance.new("TextLabel", frame)
-    text.Name = "Text"
-    text.Size = UDim2.new(1, -50, 1, 0)
-    text.BackgroundTransparency = 1
-    text.Text = ""
-    text.TextColor3 = Color3.fromRGB(240, 240, 240)
-    text.Font = Enum.Font.GothamSemibold
-    text.TextSize = 15
-    text.TextXAlignment = Enum.TextXAlignment.Left
-    text.TextWrapped = true
-    text.TextTransparency = 1
+    local iconCorner = Instance.new("UICorner", icon)
+    iconCorner.CornerRadius = UDim.new(1, 0)
+
+    local label = Instance.new("TextLabel", frame)
+    label.Name = "Text"
+    label.Size = UDim2.new(1, -ICON_SIZE.X.Offset - 20, 1, 0)
+    label.BackgroundTransparency = 1
+    label.TextColor3 = Color3.fromRGB(235, 235, 235)
+    label.TextTransparency = 1
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextSize = 15
+    label.Font = Enum.Font.GothamMedium
+    label.TextWrapped = true
 
     notificationTemplate = frame
     return frame
 end
 
-local function setupContainer()
+-- 🧱 Container
+local function setupNotificationContainer()
     if notificationContainer and notificationContainer.Parent then return notificationContainer end
 
-    local oldGui = playerGui:FindFirstChild("AntiAFKGui")
-    if oldGui then oldGui:Destroy() end
-
-    local screenGui = Instance.new("ScreenGui")
+    local gui = player:WaitForChild("PlayerGui")
+    local screenGui = Instance.new("ScreenGui", gui)
     screenGui.Name = "AntiAFKGui"
     screenGui.ResetOnSpawn = false
     screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    screenGui.Parent = playerGui
 
-    local container = Instance.new("Frame")
+    local container = Instance.new("Frame", screenGui)
     container.Name = "NotificationContainer"
     container.Size = CONTAINER_SIZE
-    container.Position = POSITION_VISIBLE
     container.AnchorPoint = ANCHOR_POINT
+    container.Position = UDim2.new(1, -10, 1, -10)
     container.BackgroundTransparency = 1
-    container.Parent = screenGui
 
     local layout = Instance.new("UIListLayout", container)
     layout.FillDirection = Enum.FillDirection.Vertical
-    layout.SortOrder = Enum.SortOrder.LayoutOrder
     layout.VerticalAlignment = Enum.VerticalAlignment.Bottom
     layout.Padding = UDim.new(0, 8)
 
@@ -149,51 +152,53 @@ local function setupContainer()
     return container
 end
 
+-- 🔔 Notification
 local function showNotification(message)
-    local template = createTemplate()
-    local container = setupContainer()
+    local template = createNotificationTemplate()
+    local container = setupNotificationContainer()
     if not (template and container) then return end
 
-    local note
+    local note = nil
     for _, n in ipairs(notificationPool) do
-        if not n.Visible then
-            note = n
-            break
-        end
+        if not n.Visible then note = n break end
     end
-
     if not note and #notificationPool < MAX_NOTIFICATIONS then
         note = template:Clone()
         note.Parent = container
         table.insert(notificationPool, note)
     end
-
     if not note then return end
 
     local icon = note:FindFirstChild("Icon")
     local text = note:FindFirstChild("Text")
-
     note.Visible = true
-    note.Position = POSITION_HIDDEN
-    text.Text = message
+    note.Position = POSITION_OFFSET_HIDDEN
+    note.BackgroundTransparency = 1
     icon.ImageTransparency = 1
     text.TextTransparency = 1
+    text.Text = message
 
+    -- Hiện thông báo
     local tweenIn = TweenInfo.new(ANIMATION_TIME, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
-    TweenService:Create(note, tweenIn, { Position = POSITION_VISIBLE }):Play()
+    TweenService:Create(note, tweenIn, {
+        Position = POSITION_OFFSET_VISIBLE,
+        BackgroundTransparency = 0.3
+    }):Play()
     TweenService:Create(icon, tweenIn, { ImageTransparency = 0 }):Play()
     TweenService:Create(text, tweenIn, { TextTransparency = 0 }):Play()
 
+    -- Ẩn sau thời gian
     task.delay(NOTIFICATION_DURATION, function()
-        if note and note.Parent then
-            local tweenOut = TweenInfo.new(ANIMATION_TIME, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
-            TweenService:Create(note, tweenOut, { Position = POSITION_HIDDEN }):Play()
-            TweenService:Create(icon, tweenOut, { ImageTransparency = 1 }):Play()
-            TweenService:Create(text, tweenOut, { TextTransparency = 1 }):Play()
-            task.delay(ANIMATION_TIME, function()
-                if note then note.Visible = false end
-            end)
-        end
+        local tweenOut = TweenInfo.new(ANIMATION_TIME, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
+        TweenService:Create(note, tweenOut, {
+            Position = POSITION_OFFSET_HIDDEN,
+            BackgroundTransparency = 1
+        }):Play()
+        TweenService:Create(icon, tweenOut, { ImageTransparency = 1 }):Play()
+        TweenService:Create(text, tweenOut, { TextTransparency = 1 }):Play()
+        task.delay(ANIMATION_TIME, function()
+            if note then note.Visible = false end
+        end)
     end)
 end
 
