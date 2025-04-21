@@ -86,7 +86,6 @@ local function cleanupPreviousInstances()
     print("AntiAFK Cleanup: Hoàn tất reset biến & GUI.")
 end
 
-
 --// Notification
 local function createNotificationTemplate()
     -- ... (Nội dung hàm này giữ nguyên như phiên bản trước của bạn) ...
