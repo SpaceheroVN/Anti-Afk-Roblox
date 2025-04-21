@@ -338,6 +338,7 @@ end
 
 local function setupButtonInteraction(buttonFrame, title)
     local tweenInfoHover = TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+    local tweenInfoClick = TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
 
     buttonFrame.MouseEnter:Connect(function()
         local hoverTween = TweenService:Create(buttonFrame, tweenInfoHover, { BackgroundTransparency = 0.3 }) -- Giảm trong suốt khi hover
@@ -354,6 +355,23 @@ local function setupButtonInteraction(buttonFrame, title)
         local leaveBorder = TweenService:Create(buttonFrame.UIStroke, tweenInfoHover, { Transparency = 0.3 }) -- Viền mờ lại
         leaveBorder:Play()
     end)
+
+    buttonFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            local yellowTween = TweenService:Create(title, tweenInfoClick, { TextColor3 = Color3.fromRGB(255, 255, 0) }) -- Chuyển thành màu vàng
+            yellowTween:Play()
+
+            showNotification("Đang tiến hành", "Xin vui lòng chờ")
+
+            task.wait(1)
+
+            local greenTween = TweenService:Create(title, tweenInfoClick, { TextColor3 = Color3.fromRGB(0, 255, 0) }) -- Chuyển thành màu xanh
+            greenTween:Play()
+
+            showNotification("Tối ưu thành công", "Chúc chơi vui vẻ")
+        end
+    end)
+end
 
     buttonFrame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
