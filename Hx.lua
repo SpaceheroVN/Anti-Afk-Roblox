@@ -331,7 +331,7 @@ local function main()
 
     task.wait(3)
     showNotification("Anti AFK", "Đã được kích hoạt.")
-    print("Anti-AFK Script đã khởi chạy và đang theo dõi input.")
+    print("Anti-AFK Script đã khởi chạy.")
 
     while true do
         task.wait(0.5)
