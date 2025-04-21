@@ -299,3 +299,5 @@ cleanupPreviousInstances()
 local button, title = createCustomButton()
 setupButtonInteraction(button, title)
 UserInputService.InputBegan:Connect(onInput)
+
+print("AntiAFK Script đã khởi chạy.")
