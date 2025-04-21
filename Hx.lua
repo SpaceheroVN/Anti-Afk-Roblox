@@ -34,8 +34,8 @@ local TweenService = game:GetService("TweenService")
 local AFK_THRESHOLD = 180 -- Thời gian (giây) trước khi coi là AFK
 local INTERVENTION_INTERVAL = 600 -- Thời gian (giây) giữa các lần can thiệp
 local CHECK_INTERVAL = 60 -- Tần suất (giây) kiểm tra trạng thái AFK
-local NOTIFICATION_DURATION = 5 -- Thời gian (giây) hiển thị thông báo
-local ANIMATION_TIME = 0.5 -- Thời gian (giây) cho hiệu ứng tween
+local NOTIFICATION_DURATION = 3 -- Thời gian (giây) hiển thị thông báo
+local ANIMATION_TIME = 0.3 -- Thời gian (giây) cho hiệu ứng tween
 local ICON_ASSET_ID = "rbxassetid://117118515787811"
 local ENABLE_INTERVENTION = true
 local SIMULATED_KEY_CODE = Enum.KeyCode.Space
@@ -52,6 +52,8 @@ local inputBeganConnection = nil
 local inputChangedConnection = nil
 local player = Players.LocalPlayer
 local playerGui = player:FindFirstChild("PlayerGui")
+local notificationPool = {}
+local MAX_NOTIFICATIONS = 5
 
 local GUI_SIZE = UDim2.new(0, 250, 0, 60)
 local NOTIFICATION_ANCHOR_POINT = Vector2.new(1, 1)
@@ -68,23 +70,27 @@ local function createNotificationTemplate()
 	notificationTemplate = Instance.new("Frame")
 	local frame = notificationTemplate
 	frame.Name = "NotificationFrameTemplate"
-	frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-	frame.BackgroundTransparency = 1
-	frame.BorderSizePixel = 0
+	frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40) -- Màu nền tối hơn
+	frame.BackgroundTransparency = 0.8 -- Thêm độ trong suốt nhẹ
+	frame.BorderSizePixel = 1
+	frame.BorderColor3 = Color3.fromRGB(80, 80, 80) -- Viền mỏng
 	frame.Size = GUI_SIZE
 	frame.ClipsDescendants = true
 
-	Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
-	Instance.new("UIPadding", frame).PaddingLeft = NOTIFICATION_PADDING
-	Instance.new("UIPadding", frame).PaddingRight = NOTIFICATION_PADDING
-	Instance.new("UIPadding", frame).PaddingTop = UDim.new(0, 5)
-	Instance.new("UIPadding", frame).PaddingBottom = UDim.new(0, 5)
+	local corner = Instance.new("UICorner", frame)
+	corner.CornerRadius = UDim.new(0, 6) -- Góc bo tròn nhẹ hơn
+
+	local padding = Instance.new("UIPadding", frame)
+	padding.PaddingLeft = NOTIFICATION_PADDING
+	padding.PaddingRight = NOTIFICATION_PADDING
+	padding.PaddingTop = UDim.new(0, 8) -- Tăng padding top
+	padding.PaddingBottom = UDim.new(0, 8) -- Tăng padding bottom
 
 	local listLayout = Instance.new("UIListLayout", frame)
 	listLayout.FillDirection = Enum.FillDirection.Horizontal
 	listLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 	listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	listLayout.Padding = NOTIFICATION_PADDING
+	listLayout.Padding = UDim.new(0, 8) -- Giảm padding giữa các element
 
 	local icon = Instance.new("ImageLabel", frame)
 	icon.Name = "Icon"
@@ -104,24 +110,24 @@ local function createNotificationTemplate()
 	title.Name = "Title"
 	title.Text = "Title"
 	title.Font = Enum.Font.GothamBold
-	title.TextSize = 15
-	title.TextColor3 = Color3.fromRGB(255, 255, 255)
+	title.TextSize = 16 -- Tăng kích thước tiêu đề
+	title.TextColor3 = Color3.fromRGB(230, 230, 230) -- Màu chữ sáng hơn
 	title.BackgroundTransparency = 1
 	title.TextTransparency = 1
 	title.TextXAlignment = Enum.TextXAlignment.Left
 	title.AutomaticSize = Enum.AutomaticSize.X
-	title.Size = UDim2.new(0, 0, 1, 0)
+	title.Size = UDim2.new(0, 0, 0.5, 0) -- Giới hạn chiều cao tương đối
 
 	local message = Instance.new("TextLabel", textFrame)
 	message.Name = "Message"
 	message.Text = "Message Content"
 	message.Font = Enum.Font.Gotham
-	message.TextSize = 13
+	message.TextSize = 14 -- Tăng kích thước tin nhắn
 	message.TextColor3 = Color3.fromRGB(200, 200, 200)
 	message.BackgroundTransparency = 1
 	message.TextTransparency = 1
 	message.TextXAlignment = Enum.TextXAlignment.Left
-	message.Size = UDim2.new(0, 0, 1, 0)
+	message.Size = UDim2.new(0, 0, 0.5, 0) -- Giới hạn chiều cao tương đối
 
 	return notificationTemplate
 end
@@ -160,6 +166,27 @@ local function setupNotificationContainer()
 	return notificationContainer
 end
 
+local function createNotificationObject()
+	local newFrame = notificationTemplate:Clone()
+	newFrame.Visible = false
+	newFrame.Parent = notificationContainer
+	return newFrame
+end
+
+local function getAvailableNotification()
+	for _, notification in ipairs(notificationPool) do
+		if not notification.Visible then
+			return notification
+		end
+	end
+	if #notificationPool < MAX_NOTIFICATIONS then
+		local newNotification = createNotificationObject()
+		table.insert(notificationPool, newNotification)
+		return newNotification
+	end
+	return nil
+end
+
 local function showNotification(title, message)
 	if not notificationContainer or not notificationContainer.Parent then
 		warn("AntiAFK: Container thông báo không hợp lệ hoặc đã bị xóa.")
@@ -177,60 +204,63 @@ local function showNotification(title, message)
 		end
 	end
 
-	local newFrame = notificationTemplate:Clone()
-	if not newFrame then
-		warn("AntiAFK: Không thể clone template thông báo.")
-		return
-	end
+	local notificationObject = getAvailableNotification()
 
-	local icon = newFrame:FindFirstChild("Icon")
-	local textFrame = newFrame:FindFirstChild("TextFrame")
-	local titleLabel = textFrame and textFrame:FindFirstChild("Title")
-	local messageLabel = textFrame and textFrame:FindFirstChild("Message")
+	if notificationObject then
+		local icon = notificationObject:FindFirstChild("Icon")
+		local textFrame = notificationObject:FindFirstChild("TextFrame")
+		local titleLabel = textFrame and textFrame:FindFirstChild("Title")
+		local messageLabel = textFrame and textFrame:FindFirstChild("Message")
 
-	if not (icon and titleLabel and messageLabel) then
-		warn("AntiAFK: Frame thông báo được clone bị lỗi cấu trúc.")
-		newFrame:Destroy()
-		return
-	end
-
-	titleLabel.Text = title or "Thông báo"
-	messageLabel.Text = message or ""
-	newFrame.Name = "Notification_" .. (title or "Default")
-	newFrame.Parent = notificationContainer
-
-	local tweenInfoAppear = TweenInfo.new(ANIMATION_TIME, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
-	local tweenPropertiesAppear = { BackgroundTransparency = 0.2, ImageTransparency = 0, TextTransparency = 0 }
-
-	TweenService:Create(newFrame, tweenInfoAppear, { BackgroundTransparency = tweenPropertiesAppear.BackgroundTransparency }):Play()
-	TweenService:Create(icon, tweenInfoAppear, { ImageTransparency = tweenPropertiesAppear.ImageTransparency }):Play()
-	TweenService:Create(titleLabel, tweenInfoAppear, { TextTransparency = tweenPropertiesAppear.TextTransparency }):Play()
-	TweenService:Create(messageLabel, tweenInfoAppear, { TextTransparency = tweenPropertiesAppear.TextTransparency }):Play()
-
-	task.delay(NOTIFICATION_DURATION, function()
-		if not newFrame or not newFrame.Parent then
+		if not (icon and titleLabel and messageLabel) then
+			warn("AntiAFK: Frame thông báo từ pool bị lỗi cấu trúc.")
+			notificationObject:Destroy()
+			-- Có thể thử tạo mới ở đây nếu cần, nhưng nên tránh
 			return
 		end
 
-		local tweenInfoDisappear = TweenInfo.new(ANIMATION_TIME, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
-		local tweenPropertiesDisappear = { BackgroundTransparency = 1, ImageTransparency = 1, TextTransparency = 1 }
+		titleLabel.Text = title or "Thông báo"
+		messageLabel.Text = message or ""
+		notificationObject.Name = "Notification_" .. (title or "Default")
+		notificationObject.Visible = true
+		notificationObject.BackgroundTransparency = 1
+		icon.ImageTransparency = 1
+		titleLabel.TextTransparency = 1
+		messageLabel.TextTransparency = 1
 
-		local fadeOutTweenFrame = TweenService:Create(newFrame, tweenInfoDisappear, { BackgroundTransparency = tweenPropertiesDisappear.BackgroundTransparency })
-		local fadeOutTweenIcon = TweenService:Create(icon, tweenInfoDisappear, { ImageTransparency = tweenPropertiesDisappear.ImageTransparency })
-		local fadeOutTweenTitle = TweenService:Create(titleLabel, tweenInfoDisappear, { TextTransparency = tweenPropertiesDisappear.TextTransparency })
-		local fadeOutTweenMessage = TweenService:Create(messageLabel, tweenInfoDisappear, { TextTransparency = tweenPropertiesDisappear.TextTransparency })
+		local tweenInfoAppear = TweenInfo.new(ANIMATION_TIME, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+		local tweenPropertiesAppear = { BackgroundTransparency = 0.8, ImageTransparency = 0, TextTransparency = 0 }
 
-		fadeOutTweenFrame:Play()
-		fadeOutTweenIcon:Play()
-		fadeOutTweenTitle:Play()
-		fadeOutTweenMessage:Play()
+		TweenService:Create(notificationObject, tweenInfoAppear, { BackgroundTransparency = tweenPropertiesAppear.BackgroundTransparency }):Play()
+		TweenService:Create(icon, tweenInfoAppear, { ImageTransparency = tweenPropertiesAppear.ImageTransparency }):Play()
+		TweenService:Create(titleLabel, tweenInfoAppear, { TextTransparency = tweenPropertiesAppear.TextTransparency }):Play()
+		TweenService:Create(messageLabel, tweenInfoAppear, { TextTransparency = tweenPropertiesAppear.TextTransparency }):Play()
 
-		fadeOutTweenFrame.Completed:Connect(function()
-			if newFrame and newFrame.Parent then
-				newFrame:Destroy()
+		task.delay(NOTIFICATION_DURATION, function()
+			if notificationObject and notificationObject.Parent then
+				local tweenInfoDisappear = TweenInfo.new(ANIMATION_TIME, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
+				local tweenPropertiesDisappear = { BackgroundTransparency = 1, ImageTransparency = 1, TextTransparency = 1 }
+
+				local fadeOutTweenFrame = TweenService:Create(notificationObject, tweenInfoDisappear, { BackgroundTransparency = tweenPropertiesDisappear.BackgroundTransparency })
+				local fadeOutTweenIcon = TweenService:Create(icon, tweenInfoDisappear, { ImageTransparency = tweenPropertiesDisappear.ImageTransparency })
+				local fadeOutTweenTitle = TweenService:Create(titleLabel, tweenInfoDisappear, { TextTransparency = tweenPropertiesDisappear.TextTransparency })
+				local fadeOutTweenMessage = TweenService:Create(messageLabel, tweenInfoDisappear, { TextTransparency = tweenPropertiesDisappear.TextTransparency })
+
+				fadeOutTweenFrame:Play()
+				fadeOutTweenIcon:Play()
+				fadeOutTweenTitle:Play()
+				fadeOutTweenMessage:Play()
+
+				fadeOutTweenFrame.Completed:Connect(function()
+					if notificationObject and notificationObject.Parent then
+						notificationObject.Visible = false
+					end
+				end)
 			end
 		end)
-	end)
+	else
+		warn("AntiAFK: Không thể hiển thị thông báo mới (đạt giới hạn pool).")
+	end
 end
 
 local function performAntiAFKAction()
@@ -297,7 +327,13 @@ local function main()
 		return
 	end
 
-	-- 3. Connect to Input Events (Gộp các loại input để code gọn hơn)
+	-- Initialize notification pool
+	for _ = 1, MAX_NOTIFICATIONS do
+		local notification = createNotificationObject()
+		table.insert(notificationPool, notification)
+	end
+
+	-- 3. Connect to Input Events
 	local function handleInput(input, gameProcessedEvent)
 		if gameProcessedEvent then return end
 		local inputType = input.UserInputType
@@ -322,7 +358,7 @@ local function main()
 
 	-- 5. Main loop to monitor AFK state
 	while true do
-		task.wait(0.5) -- Check every 0.5 seconds
+		task.wait(0.5)
 		local now = os.clock()
 		local idleTime = now - lastInputTime
 
@@ -330,12 +366,10 @@ local function main()
 			local timeSinceLastIntervention = now - lastInterventionTime
 			local timeSinceLastCheck = now - lastCheckTime
 
-			-- Perform intervention if needed
 			if timeSinceLastIntervention >= INTERVENTION_INTERVAL then
 				performAntiAFKAction()
 			end
 
-			-- Show periodic notifications
 			if timeSinceLastCheck >= CHECK_INTERVAL then
 				local nextInterventionIn = math.max(0, INTERVENTION_INTERVAL - timeSinceLastIntervention)
 				local msg = string.format("Can thiệp tiếp theo sau ~%.0f giây.", nextInterventionIn)
@@ -346,7 +380,6 @@ local function main()
 				lastCheckTime = now
 			end
 		else
-			-- Detect AFK state
 			if idleTime >= AFK_THRESHOLD then
 				isConsideredAFK = true
 				lastInterventionTime = now
