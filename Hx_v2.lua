@@ -17,6 +17,10 @@ local animationTime = 0.5
 local enableIntervention = true
 local guiSize = UDim2.new(0, 250, 0, 60)
 
+--// Constants for GUI Names (Unique identifiers)
+local NOTIFICATION_GUI_NAME = "AntiAFK_NotificationContainerGui_v2" -- Added version/unique tag
+local BUTTON_GUI_NAME = "AntiAFK_ButtonGui_v2" -- Added version/unique tag
+
 --// State
 local lastInputTime = os.clock()
 local lastInterventionTime = 0
@@ -27,6 +31,8 @@ local notificationContainer = nil
 local notificationTemplate = nil
 local inputBeganConnection = nil
 local inputChangedConnection = nil
+local notificationScreenGui = nil -- Reference to the notification ScreenGui
+local buttonScreenGui = nil -- Reference to the button ScreenGui
 
 --// Utility
 local function disconnectConnection(conn)
@@ -35,18 +41,37 @@ local function disconnectConnection(conn)
     end
 end
 
-local function cleanupOldButton()
+--// *** NEW: Comprehensive Cleanup Function ***
+local function cleanupPreviousInstances()
     local playerGui = player:FindFirstChild("PlayerGui")
-    if playerGui then
-        local oldGui = playerGui:FindFirstChild("ScreenGui")
-        if oldGui then
-            oldGui:Destroy()
-        end
+    if not playerGui then return end
+
+    -- Destroy previous notification GUI
+    local oldNotificationGui = playerGui:FindFirstChild(NOTIFICATION_GUI_NAME)
+    if oldNotificationGui then
+        print("AntiAFK: Dọn dẹp Notification GUI cũ.")
+        oldNotificationGui:Destroy()
+    end
+
+    -- Destroy previous button GUI
+    local oldButtonGui = playerGui:FindFirstChild(BUTTON_GUI_NAME)
+    if oldButtonGui then
+        print("AntiAFK: Dọn dẹp Button GUI cũ.")
+        oldButtonGui:Destroy()
+    end
+
+    -- (Optional: Cleanup very old generic 'ScreenGui' if it contains our button)
+    local oldGenericGui = playerGui:FindFirstChild("ScreenGui")
+    if oldGenericGui and oldGenericGui:FindFirstChild("CustomButton") then
+         print("AntiAFK: Dọn dẹp Button GUI cũ (generic).")
+         oldGenericGui:Destroy()
     end
 end
+--// *** END NEW ***
 
 --// Notification
 local function createNotificationTemplate()
+    -- ... (Nội dung hàm này giữ nguyên như phiên bản trước của bạn) ...
     if notificationTemplate then return notificationTemplate end
 
     local frame = Instance.new("Frame")
@@ -126,23 +151,20 @@ local function createNotificationTemplate()
 end
 
 local function setupNotificationContainer()
-    if notificationContainer and notificationContainer.Parent then return notificationContainer end
-
+    -- We already cleaned up in cleanupPreviousInstances
     local playerGui = player:FindFirstChild("PlayerGui")
     if not playerGui then
         warn("AntiAFK: Không tìm thấy PlayerGui.")
         return nil
     end
 
-    local oldGui = playerGui:FindFirstChild("AntiAFKContainerGui")
-    if oldGui then oldGui:Destroy() end
-
-    local screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "AntiAFKContainerGui"
-    screenGui.ResetOnSpawn = false
-    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    screenGui.DisplayOrder = 999
-    screenGui.Parent = playerGui
+    -- Create the ScreenGui for notifications
+    notificationScreenGui = Instance.new("ScreenGui")
+    notificationScreenGui.Name = NOTIFICATION_GUI_NAME -- Use specific name
+    notificationScreenGui.ResetOnSpawn = false
+    notificationScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    notificationScreenGui.DisplayOrder = 999
+    notificationScreenGui.Parent = playerGui
 
     local container = Instance.new("Frame")
     container.Name = "NotificationContainerFrame"
@@ -150,7 +172,7 @@ local function setupNotificationContainer()
     container.Position = UDim2.new(1, -18, 1, -48)
     container.Size = UDim2.new(0, 300, 0, 200)
     container.BackgroundTransparency = 1
-    container.Parent = screenGui
+    container.Parent = notificationScreenGui -- Parent to our specific ScreenGui
 
     local layout = Instance.new("UIListLayout", container)
     layout.FillDirection = Enum.FillDirection.Vertical
@@ -164,8 +186,9 @@ local function setupNotificationContainer()
 end
 
 local function showNotification(title, message)
-    if not notificationContainer or not notificationContainer.Parent then
-        if not setupNotificationContainer() then return end
+    -- Check if container exists and is parented correctly
+    if not notificationContainer or not notificationContainer.Parent or not notificationScreenGui or not notificationScreenGui.Parent then
+        if not setupNotificationContainer() then return end -- Re-setup if needed (shouldn't happen often after initial setup)
     end
     if not notificationTemplate then
         if not createNotificationTemplate() then return end
@@ -199,7 +222,7 @@ local function showNotification(title, message)
     end)
 end
 
---// AFK Detection
+--// AFK Detection (Giữ nguyên)
 local function onInput()
     local now = os.clock()
     if isConsideredAFK then
@@ -230,6 +253,17 @@ end
 
 --// GUI Button
 local function createCustomButton()
+    -- We already cleaned up in cleanupPreviousInstances
+    local playerGui = player:WaitForChild("PlayerGui")
+
+    -- Create the specific ScreenGui for the button
+    buttonScreenGui = Instance.new("ScreenGui")
+    buttonScreenGui.Name = BUTTON_GUI_NAME -- Use specific name
+    buttonScreenGui.ResetOnSpawn = false
+    buttonScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    buttonScreenGui.DisplayOrder = 998 -- Slightly lower than notifications
+    buttonScreenGui.Parent = playerGui
+
     local button = Instance.new("Frame")
     button.Name = "CustomButton"
     button.Size = UDim2.new(0, 120, 0, 40)
@@ -238,6 +272,7 @@ local function createCustomButton()
     button.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     button.BackgroundTransparency = 0.5
     button.ClipsDescendants = true
+    button.Parent = buttonScreenGui -- Parent to our specific ScreenGui
 
     Instance.new("UICorner", button).CornerRadius = UDim.new(0, 8)
     local stroke = Instance.new("UIStroke", button)
@@ -257,14 +292,11 @@ local function createCustomButton()
     title.TextYAlignment = Enum.TextYAlignment.Center
     title.Parent = button
 
-    local gui = player:WaitForChild("PlayerGui")
-    local screenGui = gui:FindFirstChild("ScreenGui") or Instance.new("ScreenGui", gui)
-    button.Parent = screenGui
-
     return button, title
 end
 
 local function setupButtonInteraction(button, title)
+    -- ... (Nội dung hàm này giữ nguyên) ...
     local hoverInfo = TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
 
     button.MouseEnter:Connect(function()
@@ -272,20 +304,30 @@ local function setupButtonInteraction(button, title)
         TweenService:Create(button.UIStroke, hoverInfo, { Transparency = 0 }):Play()
     end)
 
+    button.MouseLeave:Connect(function() -- Add MouseLeave for better visual feedback
+        TweenService:Create(button, hoverInfo, { BackgroundTransparency = 0.5 }):Play()
+        TweenService:Create(button.UIStroke, hoverInfo, { Transparency = 0.3 }):Play()
+    end)
+
     button.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             TweenService:Create(title, hoverInfo, { TextColor3 = Color3.fromRGB(255, 255, 0) }):Play()
             showNotification("Đang tiến hành", "Xin vui lòng chờ")
-            task.wait(1)
+            task.wait(1) -- Simulate work
             TweenService:Create(title, hoverInfo, { TextColor3 = Color3.fromRGB(0, 255, 0) }):Play()
             showNotification("Tối ưu thành công", "Chúc chơi vui vẻ")
+            task.delay(0.5, function() -- Revert color after success
+                if title and title.Parent then
+                     TweenService:Create(title, hoverInfo, { TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+                end
+            end)
         end
     end)
 end
 
---// Main
+--// Main Loop (Giữ nguyên)
 local function main()
-    notificationContainer = setupNotificationContainer()
+    notificationContainer = setupNotificationContainer() -- Now creates the specific ScreenGui
     notificationTemplate = createNotificationTemplate()
 
     inputBeganConnection = UserInputService.InputBegan:Connect(function(input, gp)
@@ -302,47 +344,78 @@ local function main()
         end
     end)
 
-    task.wait(3)
+    task.wait(1) -- Slightly shorter delay after cleanup
     showNotification("Anti AFK", "Đã được kích hoạt.")
 
-    while true do
-        task.wait(0.5)
+    while task.wait(0.5) do -- Use task.wait directly in while loop condition
         local now = os.clock()
         local idleTime = now - lastInputTime
 
         if isConsideredAFK then
-            if now - lastInterventionTime >= interventionInterval then
+            if enableIntervention and (now - lastInterventionTime >= interventionInterval) then
                 performAntiAFKAction()
             end
             if now - lastCheckTime >= checkInterval then
-                showNotification("Vẫn đang AFK...", "Can thiệp tiếp theo sau ~" .. math.floor(interventionInterval - (now - lastInterventionTime)) .. " giây.")
+                local timeToNext = enableIntervention and math.floor(interventionInterval - (now - lastInterventionTime)) or "Vô hiệu hóa"
+                showNotification("Vẫn đang AFK...", "Can thiệp tiếp theo sau ~" .. timeToNext .. " giây.")
                 lastCheckTime = now
             end
         elseif idleTime >= afkThreshold then
             isConsideredAFK = true
-            lastInterventionTime = now
+            lastInterventionTime = now -- Reset intervention timer when AFK starts
             lastCheckTime = now
             interventionCounter = 0
-            showNotification("Cảnh báo AFK!", "Sẽ can thiệp sau ~" .. interventionInterval .. " giây nếu không hoạt động.")
+            local timeToFirst = enableIntervention and interventionInterval or "Vô hiệu hóa"
+            showNotification("Cảnh báo AFK!", "Sẽ can thiệp sau ~" .. timeToFirst .. " giây nếu không hoạt động.")
         end
     end
 end
 
 --// Startup
-local button, title = createCustomButton()
+cleanupPreviousInstances() -- *** Call cleanup FIRST ***
+
+local button, title = createCustomButton() -- Now creates the specific ScreenGui
 if button then setupButtonInteraction(button, title) end
 
-local thread = coroutine.create(main)
-local success, err = coroutine.resume(thread)
-if not success then warn("AntiAFK lỗi khởi tạo:", err) end
+local mainThread = task.spawn(main) -- Use task.spawn for better practice
 
+--// Player Leaving Cleanup
 if player then
-    player.CharacterRemoving:Connect(function() end)
-    Players.PlayerRemoving:Connect(function(leaving)
+    -- No need for CharacterRemoving connection unless you need specific character cleanup
+    local playerRemovingConn = Players.PlayerRemoving:Connect(function(leaving)
         if leaving == player then
+            print("AntiAFK: Người chơi rời đi, đang dọn dẹp...")
             disconnectConnection(inputBeganConnection)
+            inputBeganConnection = nil -- Nil out connections
             disconnectConnection(inputChangedConnection)
-            if notificationContainer then notificationContainer:Destroy() end
+            inputChangedConnection = nil
+
+            -- Cancel the main loop thread
+            if mainThread then
+                task.cancel(mainThread)
+                mainThread = nil
+            end
+
+            -- Destroy GUIs explicitly
+            if notificationScreenGui and notificationScreenGui.Parent then
+                notificationScreenGui:Destroy()
+            end
+            if buttonScreenGui and buttonScreenGui.Parent then
+                buttonScreenGui:Destroy()
+            end
+            notificationScreenGui = nil -- Nil out references
+            buttonScreenGui = nil
+            notificationContainer = nil
+            notificationTemplate = nil -- Allow garbage collection
+
+            -- Disconnect the PlayerRemoving connection itself
+            if playerRemovingConn then
+                playerRemovingConn:Disconnect()
+                playerRemovingConn = nil
+            end
+            print("AntiAFK: Đã dọn dẹp.")
         end
     end)
 end
+
+print("AntiAFK Script đã khởi chạy.")
