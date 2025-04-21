@@ -1,131 +1,474 @@
---⚙️ Dịch vụ cần thiết
-local TweenService = game:GetService("TweenService")
+local function cleanupOldButton()
+    local playerGui = game.Players.LocalPlayer:FindFirstChild("PlayerGui")
+    if playerGui then
+        local oldGui = playerGui:FindFirstChild("ScreenGui")
+        if oldGui then
+            oldGui:Destroy()
+        end
+    end
+end
+
+local function createCustomButton()
+    local buttonFrame = Instance.new("Frame")
+    buttonFrame.Name = "CustomButton"
+    buttonFrame.Size = UDim2.new(0, 120, 0, 40)
+    buttonFrame.Position = UDim2.new(1, -20, 1, -50)
+    buttonFrame.AnchorPoint = Vector2.new(1, 1)
+    buttonFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    buttonFrame.BackgroundTransparency = 0.5
+    buttonFrame.ClipsDescendants = true
+
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local TweenService = game:GetService("TweenService")
+
+local afkThreshold = 180
+local interventionInterval = 600
+local checkInterval = 60
+local notificationDuration = 5
+local animationTime = 0.5
+local iconAssetId = "rbxassetid://117118515787811"
+local enableIntervention = true
+local simulatedKeyCode = Enum.KeyCode.Space
+
+local lastInputTime = os.clock()
+local lastInterventionTime = 0
+local lastCheckTime = 0
+local interventionCounter = 0
+local isConsideredAFK = false
+local notificationContainer = nil
+local notificationTemplate = nil
+local inputBeganConnection = nil
+local inputChangedConnection = nil
 local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
 
---📦 Biến kết nối và nút
-local inputBeganConnection
-local inputChangedConnection
-local afkButton
+local guiSize = UDim2.new(0, 250, 0, 60)
 
---📌 Hàm ngắt kết nối an toàn
-local function disconnectConnection(conn)
-	if conn and typeof(conn) == "RBXScriptConnection" then
-		conn:Disconnect()
-	end
+local function createNotificationTemplate()
+    if notificationTemplate then
+        return notificationTemplate
+    end
+
+    local frame = Instance.new("Frame")
+    frame.Name = "NotificationFrameTemplate"
+    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    frame.BackgroundTransparency = 1
+    frame.BorderSizePixel = 0
+    frame.Size = guiSize
+    frame.ClipsDescendants = true
+
+    local corner = Instance.new("UICorner", frame)
+    corner.CornerRadius = UDim.new(0, 8)
+
+    local padding = Instance.new("UIPadding", frame)
+    padding.PaddingLeft = UDim.new(0, 10)
+    padding.PaddingRight = UDim.new(0, 10)
+    padding.PaddingTop = UDim.new(0, 5)
+    padding.PaddingBottom = UDim.new(0, 5)
+
+    local listLayout = Instance.new("UIListLayout", frame)
+    listLayout.FillDirection = Enum.FillDirection.Horizontal
+    listLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.Padding = UDim.new(0, 10)
+
+    local icon = Instance.new("ImageLabel")
+    icon.Name = "Icon"
+    icon.Image = iconAssetId
+    icon.BackgroundTransparency = 1
+    icon.ImageTransparency = 1
+    icon.Size = UDim2.new(0, 40, 0, 40)
+    icon.LayoutOrder = 1
+    icon.Parent = frame
+
+    local textFrame = Instance.new("Frame")
+    textFrame.Name = "TextFrame"
+    textFrame.BackgroundTransparency = 1
+    textFrame.Size = UDim2.new(1, 0, 1, 0)
+    textFrame.LayoutOrder = 2
+    textFrame.Parent = frame
+
+    local textListLayout = Instance.new("UIListLayout", textFrame)
+    textListLayout.FillDirection = Enum.FillDirection.Horizontal
+    textListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+    textListLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+    textListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    textListLayout.Padding = UDim.new(0, 5)
+
+    local title = Instance.new("TextLabel")
+    title.Name = "Title"
+    title.Text = "Tiêu đề" 
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 15
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.BackgroundTransparency = 1
+    title.TextTransparency = 1
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.AutomaticSize = Enum.AutomaticSize.X
+    title.Size = UDim2.new(0, 0, 1, 0)
+    title.Parent = textFrame
+
+    local message = Instance.new("TextLabel")
+    message.Name = "Message"
+    message.Text = "Nội dung tin nhắn." 
+    message.Font = Enum.Font.Gotham
+    message.TextSize = 13
+    message.TextColor3 = Color3.fromRGB(200, 200, 200)
+    message.BackgroundTransparency = 1
+    message.TextTransparency = 1
+    message.TextXAlignment = Enum.TextXAlignment.Left
+    message.TextWrapped = false
+    message.AutomaticSize = Enum.AutomaticSize.X
+    message.Size = UDim2.new(0, 0, 1, 0)
+    message.Parent = textFrame
+
+    notificationTemplate = frame
+    return notificationTemplate
 end
 
---🔄 Hàm dọn dẹp khi cần thiết
+local function setupNotificationContainer()
+    if notificationContainer and notificationContainer.Parent then
+        return notificationContainer
+    end
+
+    local playerGui = player:FindFirstChild("PlayerGui")
+    if not playerGui then
+        warn("AntiAFK: Không tìm thấy PlayerGui cho " .. (player and player.Name or "Người chơi không xác định"))
+        return nil
+    end
+
+    local oldGui = playerGui:FindFirstChild("AntiAFKContainerGui")
+    if oldGui then
+        oldGui:Destroy()
+    end
+
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "AntiAFKContainerGui"
+    screenGui.ResetOnSpawn = false
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    screenGui.DisplayOrder = 999
+    screenGui.Parent = playerGui
+
+    local container = Instance.new("Frame")
+    container.Name = "NotificationContainerFrame"
+    container.AnchorPoint = Vector2.new(1, 1)
+    container.Position = UDim2.new(1, -18, 1, -48)
+    container.Size = UDim2.new(0, 300, 0, 200)
+    container.BackgroundTransparency = 1
+    container.Parent = screenGui
+
+    local listLayout = Instance.new("UIListLayout", container)
+    listLayout.FillDirection = Enum.FillDirection.Vertical
+    listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+    listLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.Padding = UDim.new(0, 5)
+
+    notificationContainer = container
+    return notificationContainer
+end
+
+local function showNotification(title, message)
+    if not notificationContainer or not notificationContainer.Parent then
+        warn("AntiAFK: Container thông báo không hợp lệ hoặc đã bị xóa.")
+        if not setupNotificationContainer() then
+            warn("AntiAFK: Không thể tạo lại container thông báo.")
+            return
+        end
+    end
+
+    if not notificationTemplate then
+        warn("AntiAFK: Template thông báo chưa được tạo.")
+        if not createNotificationTemplate() then
+            warn("AntiAFK: Không thể tạo template thông báo.")
+            return
+        end
+    end
+
+    local newFrame = notificationTemplate:Clone()
+    if not newFrame then
+        warn("AntiAFK: Không thể clone template thông báo.")
+        return
+    end
+
+    local icon = newFrame:FindFirstChild("Icon")
+    local textFrame = newFrame:FindFirstChild("TextFrame")
+    local titleLabel = textFrame and textFrame:FindFirstChild("Title")
+    local messageLabel = textFrame and textFrame:FindFirstChild("Message")
+
+    if not (icon and titleLabel and messageLabel) then
+        warn("AntiAFK: Frame thông báo được clone bị lỗi cấu trúc.")
+        newFrame:Destroy()
+        return
+    end
+
+    titleLabel.Text = title or "Thông báo"
+    messageLabel.Text = message or ""
+    newFrame.Name = "Notification_" .. (title or "Default")
+
+    newFrame.Parent = notificationContainer
+
+    local tweenInfoAppear = TweenInfo.new(animationTime, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+    local fadeInTweenFrame = TweenService:Create(newFrame, tweenInfoAppear, { BackgroundTransparency = 0.2 })
+    local fadeInTweenIcon = TweenService:Create(icon, tweenInfoAppear, { ImageTransparency = 0 })
+    local fadeInTweenTitle = TweenService:Create(titleLabel, tweenInfoAppear, { TextTransparency = 0 })
+    local fadeInTweenMessage = TweenService:Create(messageLabel, tweenInfoAppear, { TextTransparency = 0 })
+    
+    fadeInTweenFrame:Play()
+    fadeInTweenIcon:Play()
+    fadeInTweenTitle:Play()
+    fadeInTweenMessage:Play()
+
+    task.delay(notificationDuration, function()
+        if not newFrame or not newFrame.Parent then
+            return
+        end
+
+        local tweenInfoDisappear = TweenInfo.new(animationTime, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
+        local fadeOutTweenFrame = TweenService:Create(newFrame, tweenInfoDisappear, { BackgroundTransparency = 1 })
+        local fadeOutTweenIcon = TweenService:Create(icon, tweenInfoDisappear, { ImageTransparency = 1 })
+        local fadeOutTweenTitle = TweenService:Create(titleLabel, tweenInfoDisappear, { TextTransparency = 1 })
+        local fadeOutTweenMessage = TweenService:Create(messageLabel, tweenInfoDisappear, { TextTransparency = 1 })
+
+        fadeOutTweenFrame:Play()
+        fadeOutTweenIcon:Play()
+        fadeOutTweenTitle:Play()
+        fadeOutTweenMessage:Play()
+
+        fadeOutTweenFrame.Completed:Connect(function()
+            if newFrame and newFrame.Parent then
+                newFrame:Destroy()
+            end
+        end)
+    end)
+end
+
+local function performAntiAFKAction()
+    if not enableIntervention then
+        return
+    end
+
+    local success, err = pcall(function()
+        VirtualInputManager:SendKeyEvent(true, simulatedKeyCode, false, game)
+        task.wait(0.05 + math.random() * 0.05)
+        VirtualInputManager:SendKeyEvent(false, simulatedKeyCode, false, game)
+    end)
+    if not success then
+        warn("AntiAFK: Không thể mô phỏng nhấn phím " .. tostring(simulatedKeyCode) .. ". Lỗi:", err, debug.traceback())
+    else
+        lastInterventionTime = os.clock()
+        interventionCounter = interventionCounter + 1
+        print(string.format("AntiAFK: Đã thực hiện can thiệp lần %d (nhấn %s)", interventionCounter, tostring(simulatedKeyCode)))
+    end
+end
+
+local function onInput()
+    local now = os.clock()
+    if isConsideredAFK then
+        isConsideredAFK = false
+        lastInterventionTime = 0
+        interventionCounter = 0
+        showNotification("Bạn đã quay lại!", "Đã tạm dừng can thiệp AFK.")
+        print("AntiAFK: Người dùng không còn AFK.")
+    end
+    lastInputTime = now
+end
+
 local function cleanup()
-	disconnectConnection(inputBeganConnection)
-	disconnectConnection(inputChangedConnection)
-	if afkButton then
-		afkButton:Destroy()
-		afkButton = nil
-	end
+    print("AntiAFK: Dọn dẹp tài nguyên...")
+    disconnectConnection(inputBeganConnection)
+    disconnectConnection(inputChangedConnection)
+    if notificationContainer and notificationContainer.Parent then
+        notificationContainer:Destroy()
+    end
+    notificationContainer = nil
+    notificationTemplate = nil
 end
 
---🎨 Tạo nút UI tùy chỉnh
 local function createCustomButton()
-	-- Đảm bảo ScreenGui tồn tại
-	local screenGui = playerGui:FindFirstChild("AFKControlGui")
-	if not screenGui then
-		screenGui = Instance.new("ScreenGui")
-		screenGui.Name = "AFKControlGui"
-		screenGui.ResetOnSpawn = false
-		screenGui.Parent = playerGui
-	end
+    local buttonFrame = Instance.new("Frame")
+    buttonFrame.Name = "CustomButton"
+    buttonFrame.Size = UDim2.new(0, 120, 0, 40) -- Kích thước nhỏ gọn hơn
+    buttonFrame.Position = UDim2.new(1, -20, 1, -50) -- Đặt ở góc phải dưới cùng
+    buttonFrame.AnchorPoint = Vector2.new(1, 1) -- Cố định góc dưới bên phải
+    buttonFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30) -- Màu đen giống thông báo
+    buttonFrame.BackgroundTransparency = 0.5 -- Trong suốt nhẹ
+    buttonFrame.ClipsDescendants = true
 
-	-- Nút chính
-	local buttonFrame = Instance.new("TextButton")
-	buttonFrame.Name = "AFKButton"
-	buttonFrame.Size = UDim2.new(0, 140, 0, 40)
-	buttonFrame.Position = UDim2.new(1, -160, 1, -60)
-	buttonFrame.AnchorPoint = Vector2.new(1, 1)
-	buttonFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-	buttonFrame.BackgroundTransparency = 0.5
-	buttonFrame.TextColor3 = Color3.fromRGB(255, 255, 255)
-	buttonFrame.Text = "Anti AFK: OFF"
-	buttonFrame.Font = Enum.Font.GothamBold
-	buttonFrame.TextSize = 16
-	buttonFrame.AutoButtonColor = false
-	buttonFrame.Parent = screenGui
+    -- Vòng bo ngoài
+    local outerCircle = Instance.new("UICorner", buttonFrame)
+    outerCircle.CornerRadius = UDim.new(0, 8) -- Bo tròn góc
 
-	-- Viền nút
-	local border = Instance.new("UIStroke")
-	border.Color = Color3.fromRGB(255, 255, 255)
-	border.Thickness = 2
-	border.Transparency = 0.3
-	border.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	border.Parent = buttonFrame
+    local border = Instance.new("UIStroke", buttonFrame)
+    border.Color = Color3.fromRGB(50, 50, 50) -- Viền đen nhạt hơn
+    border.Thickness = 2
+    border.Transparency = 0.3 -- Viền trong suốt nhẹ
 
-	-- Bo góc
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 8)
-	corner.Parent = buttonFrame
+    -- Phần chữ
+    local title = Instance.new("TextLabel")
+    title.Name = "Title"
+    title.Text = "Tối ưu"
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 14
+    title.TextColor3 = Color3.fromRGB(255, 255, 255) -- Màu chữ trắng
+    title.BackgroundTransparency = 1
+    title.TextXAlignment = Enum.TextXAlignment.Center
+    title.TextYAlignment = Enum.TextYAlignment.Center
+    title.Size = UDim2.new(1, 0, 1, 0)
+    title.Parent = buttonFrame
 
-	return buttonFrame
+    local playerGui = game.Players.LocalPlayer:FindFirstChild("PlayerGui")
+    if not playerGui then
+        warn("PlayerGui not found for LocalPlayer.")
+        return
+    end
+    local screenGui = playerGui:FindFirstChild("ScreenGui") or Instance.new("ScreenGui", playerGui)
+    buttonFrame.Parent = screenGui
+
+    return buttonFrame, title
 end
 
---🖱️ Cài đặt hiệu ứng tương tác hover
-local function setupButtonInteraction(buttonFrame)
-	local hoverIn = TweenService:Create(buttonFrame, TweenInfo.new(0.3), { BackgroundTransparency = 0.2 })
-	local hoverOut = TweenService:Create(buttonFrame, TweenInfo.new(0.3), { BackgroundTransparency = 0.5 })
+local function setupButtonInteraction(buttonFrame, title)
+    local tweenInfoHover = TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+    local tweenInfoClick = TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
 
-	local border = buttonFrame:FindFirstChild("UIStroke")
-	local borderIn = border and TweenService:Create(border, TweenInfo.new(0.3), { Transparency = 0 })
-	local borderOut = border and TweenService:Create(border, TweenInfo.new(0.3), { Transparency = 0.3 })
+    buttonFrame.MouseEnter:Connect(function()
+        local hoverTween = TweenService:Create(buttonFrame, tweenInfoHover, { BackgroundTransparency = 0.3 }) -- Giảm trong suốt khi hover
+        hoverTween:Play()
 
-	buttonFrame.MouseEnter:Connect(function()
-		hoverIn:Play()
-		if borderIn then borderIn:Play() end
-	end)
+        local hoverBorder = TweenService:Create(buttonFrame.UIStroke, tweenInfoHover, { Transparency = 0 }) -- Viền rõ khi hover
+        hoverBorder:Play()
+    end)
 
-	buttonFrame.MouseLeave:Connect(function()
-		hoverOut:Play()
-		if borderOut then borderOut:Play() end
-	end)
+    local border = buttonFrame:FindFirstChild("UIStroke")
+    if border then
+        local leaveBorder = TweenService:Create(border, tweenInfoHover, { Transparency = 0.3 })
+        leaveBorder:Play()
+    end
+
+    buttonFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            local yellowTween = TweenService:Create(title, tweenInfoClick, { TextColor3 = Color3.fromRGB(255, 255, 0) }) -- Chuyển thành màu vàng
+            yellowTween:Play()
+
+            showNotification("Đang tiến hành", "Xin vui lòng chờ")
+
+            task.wait(1)
+
+            local greenTween = TweenService:Create(title, tweenInfoClick, { TextColor3 = Color3.fromRGB(0, 255, 0) }) -- Chuyển thành màu xanh
+            greenTween:Play()
+
+            showNotification("Tối ưu thành công", "Chúc chơi vui vẻ")
+        end
+    end)
 end
 
---🚫 Cài đặt phát hiện AFK và xử lý input
-local function activateAntiAFK(button)
-	if inputBeganConnection or inputChangedConnection then return end
-
-	inputBeganConnection = UserInputService.InputBegan:Connect(function()
-		if button then button.Text = "Anti AFK: ON (Input)" end
-	end)
-
-	inputChangedConnection = UserInputService.InputChanged:Connect(function()
-		if button then button.Text = "Anti AFK: ON (Input)" end
-	end)
+    buttonFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            local clickTween = TweenService:Create(title, tweenInfoHover, { TextColor3 = Color3.fromRGB(0, 255, 0) }) -- Màu chữ chuyển xanh khi click
+            clickTween:Play()
+            task.wait(0.3)
+            clickTween:Cancel()
+        end
+    end)
 end
 
---▶️ Hàm khởi động và xử lý nút bấm
-local function init()
-	cleanup()
-
-	afkButton = createCustomButton()
-	setupButtonInteraction(afkButton)
-
-	local active = false
-
-	afkButton.MouseButton1Click:Connect(function()
-		active = not active
-		if active then
-			activateAntiAFK(afkButton)
-			afkButton.Text = "Anti AFK: ON"
-			afkButton.BackgroundColor3 = Color3.fromRGB(60, 180, 75) -- Màu xanh
-		else
-			cleanup()
-			afkButton = createCustomButton()
-			setupButtonInteraction(afkButton)
-			afkButton.Text = "Anti AFK: OFF"
-			afkButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-		end
-	end)
+local buttonFrame, title = createCustomButton()
+if buttonFrame then
+    setupButtonInteraction(buttonFrame, title)
 end
 
---▶️ Khởi chạy script
-init()
+local function main()
+    notificationContainer = setupNotificationContainer()
+    if not notificationContainer then
+        warn("AntiAFK: Không thể khởi tạo container GUI. Script sẽ không hiển thị thông báo.")
+        return
+    end
+    notificationTemplate = createNotificationTemplate()
+    if not notificationTemplate then
+        warn("AntiAFK: Không thể tạo template GUI. Script sẽ không hiển thị thông báo.")
+        return
+    end
+
+    inputBeganConnection = UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
+        if gameProcessedEvent then return end
+        if input.UserInputType == Enum.UserInputType.Keyboard or
+           input.UserInputType == Enum.UserInputType.MouseButton1 or
+           input.UserInputType == Enum.UserInputType.MouseButton2 or
+           input.UserInputType == Enum.UserInputType.Touch then
+            onInput()
+        end
+    end)
+    inputChangedConnection = UserInputService.InputChanged:Connect(function(input, gameProcessedEvent)
+        if gameProcessedEvent then return end
+        if input.UserInputType == Enum.UserInputType.MouseMovement or
+           input.UserInputType == Enum.UserInputType.MouseWheel or
+           input.UserInputType.Name:find("Gamepad") then
+            onInput()
+        end
+    end)
+
+    task.wait(3)
+    showNotification("Anti AFK", "Đã được kích hoạt.")
+    print("Anti-AFK Script đã khởi chạy và đang theo dõi input.")
+
+    while true do
+        task.wait(0.5)
+        local now = os.clock()
+        local idleTime = now - lastInputTime
+
+        if isConsideredAFK then
+            local timeSinceLastIntervention = now - lastInterventionTime
+            local timeSinceLastCheck = now - lastCheckTime
+
+            if timeSinceLastIntervention >= interventionInterval then
+                performAntiAFKAction()
+            end
+
+            if timeSinceLastCheck >= checkInterval then
+                local nextInterventionIn = math.max(0, interventionInterval - timeSinceLastIntervention)
+                local msg = string.format("Can thiệp tiếp theo sau ~%.0f giây.", nextInterventionIn)
+                if not enableIntervention then
+                    msg = "Chế độ can thiệp đang tắt."
+                end
+                showNotification("Vẫn đang AFK...", msg)
+                lastCheckTime = now
+            end
+        else
+            if idleTime >= afkThreshold then
+                isConsideredAFK = true
+                lastInterventionTime = now
+                lastCheckTime = now
+                interventionCounter = 0
+                local msg = string.format("Sẽ can thiệp sau ~%.0f giây nếu không hoạt động.", interventionInterval)
+                if not enableIntervention then
+                    msg = "Bạn hiện đang AFK (can thiệp tự động đang tắt)."
+                end
+                showNotification("Cảnh báo AFK!", msg)
+                print("AntiAFK: Người dùng được coi là AFK.")
+            end
+        end
+    end
+end
+
+local mainThread = coroutine.create(main)
+local success, err = coroutine.resume(mainThread)
+if not success then
+    warn("AntiAFK Lỗi Khởi Tạo:", err)
+end
+
+if player then
+    player.CharacterRemoving:Connect(function() end)
+    Players.PlayerRemoving:Connect(function(leavingPlayer)
+        if leavingPlayer == player then
+            cleanup()
+            if coroutine.status(mainThread) == "suspended" or coroutine.status(mainThread) == "running" then
+                print("AntiAFK: Đã yêu cầu dừng vòng lặp chính.")
+            end
+        end
+    end)
+else
+    warn("AntiAFK: Không tìm thấy LocalPlayer khi thiết lập PlayerRemoving listener.")
+end
