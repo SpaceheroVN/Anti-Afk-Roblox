@@ -256,7 +256,7 @@ local function performAntiAFKAction()
         VirtualInputManager:SendKeyEvent(false, simulatedKeyCode, false, game)
     end)
     if not success then
-        warn("AntiAFK: Không thể mô phỏng nhấn phím " .. tostring(simulatedKeyCode) .. ". Lỗi:", err)
+        warn("AntiAFK: Không thể mô phỏng nhấn phím " .. tostring(simulatedKeyCode) .. ". Lỗi:", err, debug.traceback())
     else
         lastInterventionTime = os.clock()
         interventionCounter = interventionCounter + 1
@@ -278,14 +278,8 @@ end
 
 local function cleanup()
     print("AntiAFK: Dọn dẹp tài nguyên...")
-    if inputBeganConnection then
-        inputBeganConnection:Disconnect()
-        inputBeganConnection = nil
-    end
-    if inputChangedConnection then
-        inputChangedConnection:Disconnect()
-        inputChangedConnection = nil
-    end
+    disconnectConnection(inputBeganConnection)
+    disconnectConnection(inputChangedConnection)
     if notificationContainer and notificationContainer.Parent then
         notificationContainer:Destroy()
     end
@@ -348,13 +342,11 @@ local function setupButtonInteraction(buttonFrame, title)
         hoverBorder:Play()
     end)
 
-    buttonFrame.MouseLeave:Connect(function()
-        local leaveTween = TweenService:Create(buttonFrame, tweenInfoHover, { BackgroundTransparency = 0.5 }) -- Trở lại trong suốt
-        leaveTween:Play()
-
-        local leaveBorder = TweenService:Create(buttonFrame.UIStroke, tweenInfoHover, { Transparency = 0.3 }) -- Viền mờ lại
+    local border = buttonFrame:FindFirstChild("UIStroke")
+    if border then
+        local leaveBorder = TweenService:Create(border, tweenInfoHover, { Transparency = 0.3 })
         leaveBorder:Play()
-    end)
+    end
 
     buttonFrame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
