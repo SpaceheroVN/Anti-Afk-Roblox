@@ -1,303 +1,474 @@
---// Services
-local Players = game:GetService("Players")
+local function cleanupOldButton()
+    local playerGui = game.Players.LocalPlayer:FindFirstChild("PlayerGui")
+    if playerGui then
+        local oldGui = playerGui:FindFirstChild("ScreenGui")
+        if oldGui then
+            oldGui:Destroy()
+        end
+    end
+end
+
+local function createCustomButton()
+    local buttonFrame = Instance.new("Frame")
+    buttonFrame.Name = "CustomButton"
+    buttonFrame.Size = UDim2.new(0, 120, 0, 40)
+    buttonFrame.Position = UDim2.new(1, -20, 1, -50)
+    buttonFrame.AnchorPoint = Vector2.new(1, 1)
+    buttonFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    buttonFrame.BackgroundTransparency = 0.5
+    buttonFrame.ClipsDescendants = true
+
 local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
 
---// Config
-local player = Players.LocalPlayer
-local simulatedKeyCode = Enum.KeyCode.Space
-local iconAssetId = "rbxassetid://117118515787811"
 local afkThreshold = 180
 local interventionInterval = 600
 local checkInterval = 60
 local notificationDuration = 5
 local animationTime = 0.5
+local iconAssetId = "rbxassetid://117118515787811"
 local enableIntervention = true
-local guiSize = UDim2.new(0, 250, 0, 60)
+local simulatedKeyCode = Enum.KeyCode.Space
 
---// Constants for GUI Names
-local NOTIFICATION_GUI_NAME = "AntiAFK_NotificationContainerGui_v2"
-local BUTTON_GUI_NAME = "AntiAFK_ButtonGui_v2"
-
---// State
 local lastInputTime = os.clock()
 local lastInterventionTime = 0
+local lastCheckTime = 0
 local interventionCounter = 0
 local isConsideredAFK = false
 local notificationContainer = nil
 local notificationTemplate = nil
-local notificationScreenGui = nil
-local buttonScreenGui = nil
+local inputBeganConnection = nil
+local inputChangedConnection = nil
+local player = Players.LocalPlayer
 
---// Utility
-local function disconnectConnection(conn)
-	if conn then conn:Disconnect() end
-end
+local guiSize = UDim2.new(0, 250, 0, 60)
 
-local function cleanupPreviousInstances()
-	print("AntiAFK Cleanup: Bắt đầu quét dọn các phiên bản cũ...")
-
-	local playerGui = player:FindFirstChild("PlayerGui")
-	if not playerGui then return end
-
-	for _, gui in ipairs(playerGui:GetChildren()) do
-		if gui:IsA("ScreenGui") and (gui.Name == NOTIFICATION_GUI_NAME or gui.Name == BUTTON_GUI_NAME) then
-			print("AntiAFK Cleanup: Phát hiện GUI cũ (tên: " .. gui.Name .. "): " .. gui:GetFullName())
-			gui:Destroy()
-			print("AntiAFK Cleanup: Đã huỷ thành công: " .. gui.ClassName)
-		end
-	end
-
-	notificationContainer = nil
-	notificationTemplate = nil
-	notificationScreenGui = nil
-	buttonScreenGui = nil
-
-	print("AntiAFK Cleanup: Hoàn tất reset biến & GUI.")
-end
-
---// Notification
 local function createNotificationTemplate()
-	if notificationTemplate then return notificationTemplate end
+    if notificationTemplate then
+        return notificationTemplate
+    end
 
-	local frame = Instance.new("Frame")
-	frame.Name = "NotificationFrameTemplate"
-	frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-	frame.BackgroundTransparency = 1
-	frame.Size = guiSize
-	Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
+    local frame = Instance.new("Frame")
+    frame.Name = "NotificationFrameTemplate"
+    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    frame.BackgroundTransparency = 1
+    frame.BorderSizePixel = 0
+    frame.Size = guiSize
+    frame.ClipsDescendants = true
 
-	local padding = Instance.new("UIPadding", frame)
-	padding.PaddingLeft = UDim.new(0, 10)
-	padding.PaddingRight = UDim.new(0, 10)
-	padding.PaddingTop = UDim.new(0, 10)
-	padding.PaddingBottom = UDim.new(0, 10)
+    local corner = Instance.new("UICorner", frame)
+    corner.CornerRadius = UDim.new(0, 8)
 
-	local layout = Instance.new("UIListLayout", frame)
-	layout.FillDirection = Enum.FillDirection.Horizontal
-	layout.VerticalAlignment = Enum.VerticalAlignment.Center
-	layout.SortOrder = Enum.SortOrder.LayoutOrder
-	layout.Padding = UDim.new(0, 10)
+    local padding = Instance.new("UIPadding", frame)
+    padding.PaddingLeft = UDim.new(0, 10)
+    padding.PaddingRight = UDim.new(0, 10)
+    padding.PaddingTop = UDim.new(0, 5)
+    padding.PaddingBottom = UDim.new(0, 5)
 
-	local icon = Instance.new("ImageLabel", frame)
-	icon.Name = "Icon"
-	icon.Image = iconAssetId
-	icon.Size = UDim2.new(0, 40, 0, 40)
-	icon.BackgroundTransparency = 1
-	icon.ImageTransparency = 1
+    local listLayout = Instance.new("UIListLayout", frame)
+    listLayout.FillDirection = Enum.FillDirection.Horizontal
+    listLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.Padding = UDim.new(0, 10)
 
-	local textFrame = Instance.new("Frame", frame)
-	textFrame.Name = "TextFrame"
-	textFrame.BackgroundTransparency = 1
-	textFrame.Size = UDim2.new(1, -50, 1, 0)
+    local icon = Instance.new("ImageLabel")
+    icon.Name = "Icon"
+    icon.Image = iconAssetId
+    icon.BackgroundTransparency = 1
+    icon.ImageTransparency = 1
+    icon.Size = UDim2.new(0, 40, 0, 40)
+    icon.LayoutOrder = 1
+    icon.Parent = frame
 
-	local title = Instance.new("TextLabel", textFrame)
-	title.Name = "Title"
-	title.Text = "Thông báo"
-	title.Font = Enum.Font.GothamBold
-	title.TextSize = 15
-	title.TextColor3 = Color3.fromRGB(255, 255, 255)
-	title.BackgroundTransparency = 1
-	title.TextTransparency = 1
-	title.TextXAlignment = Enum.TextXAlignment.Left
-	title.Size = UDim2.new(1, 0, 0, 18)
+    local textFrame = Instance.new("Frame")
+    textFrame.Name = "TextFrame"
+    textFrame.BackgroundTransparency = 1
+    textFrame.Size = UDim2.new(1, 0, 1, 0)
+    textFrame.LayoutOrder = 2
+    textFrame.Parent = frame
 
-	local message = Instance.new("TextLabel", textFrame)
-	message.Name = "Message"
-	message.Text = "Nội dung"
-	message.Font = Enum.Font.Gotham
-	message.TextSize = 13
-	message.TextColor3 = Color3.fromRGB(200, 200, 200)
-	message.BackgroundTransparency = 1
-	message.TextTransparency = 1
-	message.TextWrapped = true
-	message.TextXAlignment = Enum.TextXAlignment.Left
-	message.Size = UDim2.new(1, 0, 0, 24)
+    local textListLayout = Instance.new("UIListLayout", textFrame)
+    textListLayout.FillDirection = Enum.FillDirection.Horizontal
+    textListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+    textListLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+    textListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    textListLayout.Padding = UDim.new(0, 5)
 
-	notificationTemplate = frame
-	return frame
+    local title = Instance.new("TextLabel")
+    title.Name = "Title"
+    title.Text = "Tiêu đề" 
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 15
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.BackgroundTransparency = 1
+    title.TextTransparency = 1
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.AutomaticSize = Enum.AutomaticSize.X
+    title.Size = UDim2.new(0, 0, 1, 0)
+    title.Parent = textFrame
+
+    local message = Instance.new("TextLabel")
+    message.Name = "Message"
+    message.Text = "Nội dung tin nhắn." 
+    message.Font = Enum.Font.Gotham
+    message.TextSize = 13
+    message.TextColor3 = Color3.fromRGB(200, 200, 200)
+    message.BackgroundTransparency = 1
+    message.TextTransparency = 1
+    message.TextXAlignment = Enum.TextXAlignment.Left
+    message.TextWrapped = false
+    message.AutomaticSize = Enum.AutomaticSize.X
+    message.Size = UDim2.new(0, 0, 1, 0)
+    message.Parent = textFrame
+
+    notificationTemplate = frame
+    return notificationTemplate
 end
 
 local function setupNotificationContainer()
-	local playerGui = player:FindFirstChild("PlayerGui")
-	if not playerGui then return end
+    if notificationContainer and notificationContainer.Parent then
+        return notificationContainer
+    end
 
-	local gui = Instance.new("ScreenGui", playerGui)
-	gui.Name = NOTIFICATION_GUI_NAME
-	gui.ResetOnSpawn = false
-	gui.DisplayOrder = 999
+    local playerGui = player:FindFirstChild("PlayerGui")
+    if not playerGui then
+        warn("AntiAFK: Không tìm thấy PlayerGui cho " .. (player and player.Name or "Người chơi không xác định"))
+        return nil
+    end
 
-	local container = Instance.new("Frame", gui)
-	container.Name = "NotificationContainerFrame"
-	container.AnchorPoint = Vector2.new(1, 1)
-	container.Position = UDim2.new(1, -18, 1, -48)
-	container.Size = UDim2.new(0, 300, 0, 200)
-	container.BackgroundTransparency = 1
+    local oldGui = playerGui:FindFirstChild("AntiAFKContainerGui")
+    if oldGui then
+        oldGui:Destroy()
+    end
 
-	local layout = Instance.new("UIListLayout", container)
-	layout.FillDirection = Enum.FillDirection.Vertical
-	layout.VerticalAlignment = Enum.VerticalAlignment.Bottom
-	layout.SortOrder = Enum.SortOrder.LayoutOrder
-	layout.Padding = UDim.new(0, 5)
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "AntiAFKContainerGui"
+    screenGui.ResetOnSpawn = false
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    screenGui.DisplayOrder = 999
+    screenGui.Parent = playerGui
 
-	notificationContainer = container
-	return container
+    local container = Instance.new("Frame")
+    container.Name = "NotificationContainerFrame"
+    container.AnchorPoint = Vector2.new(1, 1)
+    container.Position = UDim2.new(1, -18, 1, -48)
+    container.Size = UDim2.new(0, 300, 0, 200)
+    container.BackgroundTransparency = 1
+    container.Parent = screenGui
+
+    local listLayout = Instance.new("UIListLayout", container)
+    listLayout.FillDirection = Enum.FillDirection.Vertical
+    listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+    listLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.Padding = UDim.new(0, 5)
+
+    notificationContainer = container
+    return notificationContainer
 end
 
 local function showNotification(title, message)
-	if not notificationContainer then setupNotificationContainer() end
-	if not notificationTemplate then createNotificationTemplate() end
+    if not notificationContainer or not notificationContainer.Parent then
+        warn("AntiAFK: Container thông báo không hợp lệ hoặc đã bị xóa.")
+        if not setupNotificationContainer() then
+            warn("AntiAFK: Không thể tạo lại container thông báo.")
+            return
+        end
+    end
 
-	local newFrame = notificationTemplate:Clone()
-	newFrame.TextFrame.Title.Text = title
-	newFrame.TextFrame.Message.Text = message
-	newFrame.Parent = notificationContainer
+    if not notificationTemplate then
+        warn("AntiAFK: Template thông báo chưa được tạo.")
+        if not createNotificationTemplate() then
+            warn("AntiAFK: Không thể tạo template thông báo.")
+            return
+        end
+    end
 
-	local tweenInfo = TweenInfo.new(animationTime, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
-	TweenService:Create(newFrame, tweenInfo, { BackgroundTransparency = 0.2 }):Play()
-	TweenService:Create(newFrame.Icon, tweenInfo, { ImageTransparency = 0 }):Play()
-	TweenService:Create(newFrame.TextFrame.Title, tweenInfo, { TextTransparency = 0 }):Play()
-	TweenService:Create(newFrame.TextFrame.Message, tweenInfo, { TextTransparency = 0 }):Play()
+    local newFrame = notificationTemplate:Clone()
+    if not newFrame then
+        warn("AntiAFK: Không thể clone template thông báo.")
+        return
+    end
 
-	task.delay(notificationDuration, function()
-		local tweenOut = TweenInfo.new(animationTime, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
-		TweenService:Create(newFrame, tweenOut, { BackgroundTransparency = 1 }):Play()
-		TweenService:Create(newFrame.Icon, tweenOut, { ImageTransparency = 1 }):Play()
-		TweenService:Create(newFrame.TextFrame.Title, tweenOut, { TextTransparency = 1 }):Play()
-		TweenService:Create(newFrame.TextFrame.Message, tweenOut, { TextTransparency = 1 }):Play()
-		task.delay(animationTime, function()
-			if newFrame then newFrame:Destroy() end
-		end)
-	end)
+    local icon = newFrame:FindFirstChild("Icon")
+    local textFrame = newFrame:FindFirstChild("TextFrame")
+    local titleLabel = textFrame and textFrame:FindFirstChild("Title")
+    local messageLabel = textFrame and textFrame:FindFirstChild("Message")
+
+    if not (icon and titleLabel and messageLabel) then
+        warn("AntiAFK: Frame thông báo được clone bị lỗi cấu trúc.")
+        newFrame:Destroy()
+        return
+    end
+
+    titleLabel.Text = title or "Thông báo"
+    messageLabel.Text = message or ""
+    newFrame.Name = "Notification_" .. (title or "Default")
+
+    newFrame.Parent = notificationContainer
+
+    local tweenInfoAppear = TweenInfo.new(animationTime, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+    local fadeInTweenFrame = TweenService:Create(newFrame, tweenInfoAppear, { BackgroundTransparency = 0.2 })
+    local fadeInTweenIcon = TweenService:Create(icon, tweenInfoAppear, { ImageTransparency = 0 })
+    local fadeInTweenTitle = TweenService:Create(titleLabel, tweenInfoAppear, { TextTransparency = 0 })
+    local fadeInTweenMessage = TweenService:Create(messageLabel, tweenInfoAppear, { TextTransparency = 0 })
+    
+    fadeInTweenFrame:Play()
+    fadeInTweenIcon:Play()
+    fadeInTweenTitle:Play()
+    fadeInTweenMessage:Play()
+
+    task.delay(notificationDuration, function()
+        if not newFrame or not newFrame.Parent then
+            return
+        end
+
+        local tweenInfoDisappear = TweenInfo.new(animationTime, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
+        local fadeOutTweenFrame = TweenService:Create(newFrame, tweenInfoDisappear, { BackgroundTransparency = 1 })
+        local fadeOutTweenIcon = TweenService:Create(icon, tweenInfoDisappear, { ImageTransparency = 1 })
+        local fadeOutTweenTitle = TweenService:Create(titleLabel, tweenInfoDisappear, { TextTransparency = 1 })
+        local fadeOutTweenMessage = TweenService:Create(messageLabel, tweenInfoDisappear, { TextTransparency = 1 })
+
+        fadeOutTweenFrame:Play()
+        fadeOutTweenIcon:Play()
+        fadeOutTweenTitle:Play()
+        fadeOutTweenMessage:Play()
+
+        fadeOutTweenFrame.Completed:Connect(function()
+            if newFrame and newFrame.Parent then
+                newFrame:Destroy()
+            end
+        end)
+    end)
 end
 
---// Anti-AFK
 local function performAntiAFKAction()
-	if not enableIntervention then return end
-	pcall(function()
-		VirtualInputManager:SendKeyEvent(true, simulatedKeyCode, false, game)
-		task.wait(0.1)
-		VirtualInputManager:SendKeyEvent(false, simulatedKeyCode, false, game)
-	end)
-	lastInterventionTime = os.clock()
-	interventionCounter += 1
+    if not enableIntervention then
+        return
+    end
+
+    local success, err = pcall(function()
+        VirtualInputManager:SendKeyEvent(true, simulatedKeyCode, false, game)
+        task.wait(0.05 + math.random() * 0.05)
+        VirtualInputManager:SendKeyEvent(false, simulatedKeyCode, false, game)
+    end)
+    if not success then
+        warn("AntiAFK: Không thể mô phỏng nhấn phím " .. tostring(simulatedKeyCode) .. ". Lỗi:", err, debug.traceback())
+    else
+        lastInterventionTime = os.clock()
+        interventionCounter = interventionCounter + 1
+        print(string.format("AntiAFK: Đã thực hiện can thiệp lần %d (nhấn %s)", interventionCounter, tostring(simulatedKeyCode)))
+    end
 end
 
 local function onInput()
-	if isConsideredAFK then
-		isConsideredAFK = false
-		lastInterventionTime = 0
-		interventionCounter = 0
-		showNotification("Bạn đã quay lại!", "Đã tạm dừng can thiệp AFK.")
-	end
-	lastInputTime = os.clock()
+    local now = os.clock()
+    if isConsideredAFK then
+        isConsideredAFK = false
+        lastInterventionTime = 0
+        interventionCounter = 0
+        showNotification("Bạn đã quay lại!", "Đã tạm dừng can thiệp AFK.")
+        print("AntiAFK: Người dùng không còn AFK.")
+    end
+    lastInputTime = now
 end
 
---// Optimization Button
+local function cleanup()
+    print("AntiAFK: Dọn dẹp tài nguyên...")
+    disconnectConnection(inputBeganConnection)
+    disconnectConnection(inputChangedConnection)
+    if notificationContainer and notificationContainer.Parent then
+        notificationContainer:Destroy()
+    end
+    notificationContainer = nil
+    notificationTemplate = nil
+end
+
 local function createCustomButton()
-	local playerGui = player:WaitForChild("PlayerGui")
-	local screenGui = Instance.new("ScreenGui", playerGui)
-	screenGui.Name = BUTTON_GUI_NAME
-	screenGui.ResetOnSpawn = false
-	screenGui.DisplayOrder = 998
+    local buttonFrame = Instance.new("Frame")
+    buttonFrame.Name = "CustomButton"
+    buttonFrame.Size = UDim2.new(0, 120, 0, 40) -- Kích thước nhỏ gọn hơn
+    buttonFrame.Position = UDim2.new(1, -20, 1, -50) -- Đặt ở góc phải dưới cùng
+    buttonFrame.AnchorPoint = Vector2.new(1, 1) -- Cố định góc dưới bên phải
+    buttonFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30) -- Màu đen giống thông báo
+    buttonFrame.BackgroundTransparency = 0.5 -- Trong suốt nhẹ
+    buttonFrame.ClipsDescendants = true
 
-	local frame = Instance.new("Frame", screenGui)
-	frame.Name = "CustomButton"
-	frame.Size = UDim2.new(0, 120, 0, 40)
-	frame.Position = UDim2.new(1, -20, 1, -50)
-	frame.AnchorPoint = Vector2.new(1, 1)
-	frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-	frame.BackgroundTransparency = 0.5
+    -- Vòng bo ngoài
+    local outerCircle = Instance.new("UICorner", buttonFrame)
+    outerCircle.CornerRadius = UDim.new(0, 8) -- Bo tròn góc
 
-	Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
-	local stroke = Instance.new("UIStroke", frame)
-	stroke.Thickness = 2
-	stroke.Color = Color3.fromRGB(50, 50, 50)
-	stroke.Transparency = 0.3
+    local border = Instance.new("UIStroke", buttonFrame)
+    border.Color = Color3.fromRGB(50, 50, 50) -- Viền đen nhạt hơn
+    border.Thickness = 2
+    border.Transparency = 0.3 -- Viền trong suốt nhẹ
 
-	local title = Instance.new("TextLabel", frame)
-	title.Name = "Title"
-	title.Text = "Tối ưu"
-	title.Font = Enum.Font.GothamBold
-	title.TextSize = 14
-	title.TextColor3 = Color3.fromRGB(255, 255, 255)
-	title.BackgroundTransparency = 1
-	title.Size = UDim2.new(1, 0, 1, 0)
+    -- Phần chữ
+    local title = Instance.new("TextLabel")
+    title.Name = "Title"
+    title.Text = "Tối ưu"
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 14
+    title.TextColor3 = Color3.fromRGB(255, 255, 255) -- Màu chữ trắng
+    title.BackgroundTransparency = 1
+    title.TextXAlignment = Enum.TextXAlignment.Center
+    title.TextYAlignment = Enum.TextYAlignment.Center
+    title.Size = UDim2.new(1, 0, 1, 0)
+    title.Parent = buttonFrame
 
-	return frame, title
+    local playerGui = game.Players.LocalPlayer:FindFirstChild("PlayerGui")
+    if not playerGui then
+        warn("PlayerGui not found for LocalPlayer.")
+        return
+    end
+    local screenGui = playerGui:FindFirstChild("ScreenGui") or Instance.new("ScreenGui", playerGui)
+    buttonFrame.Parent = screenGui
+
+    return buttonFrame, title
 end
 
-local function optimizeGame()
-	settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
-	for _, obj in ipairs(workspace:GetDescendants()) do
-		if obj:IsA("Decal") or obj:IsA("Texture") then
-			obj.Transparency = 1
-		elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") then
-			obj.Enabled = false
-		elseif obj:IsA("BasePart") then
-			obj.Material = Enum.Material.Plastic
-			obj.Reflectance = 0
-		end
-	end
+local function setupButtonInteraction(buttonFrame, title)
+    local tweenInfoHover = TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+    local tweenInfoClick = TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+
+    buttonFrame.MouseEnter:Connect(function()
+        local hoverTween = TweenService:Create(buttonFrame, tweenInfoHover, { BackgroundTransparency = 0.3 }) -- Giảm trong suốt khi hover
+        hoverTween:Play()
+
+        local hoverBorder = TweenService:Create(buttonFrame.UIStroke, tweenInfoHover, { Transparency = 0 }) -- Viền rõ khi hover
+        hoverBorder:Play()
+    end)
+
+    local border = buttonFrame:FindFirstChild("UIStroke")
+    if border then
+        local leaveBorder = TweenService:Create(border, tweenInfoHover, { Transparency = 0.3 })
+        leaveBorder:Play()
+    end
+
+    buttonFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            local yellowTween = TweenService:Create(title, tweenInfoClick, { TextColor3 = Color3.fromRGB(255, 255, 0) }) -- Chuyển thành màu vàng
+            yellowTween:Play()
+
+            showNotification("Đang tiến hành", "Xin vui lòng chờ")
+
+            task.wait(1)
+
+            local greenTween = TweenService:Create(title, tweenInfoClick, { TextColor3 = Color3.fromRGB(0, 255, 0) }) -- Chuyển thành màu xanh
+            greenTween:Play()
+
+            showNotification("Tối ưu thành công", "Chúc chơi vui vẻ")
+        end
+    end)
 end
 
-local function restoreSettings()
-	settings().Rendering.QualityLevel = Enum.QualityLevel.Automatic
-	for _, obj in ipairs(workspace:GetDescendants()) do
-		if obj:IsA("Decal") or obj:IsA("Texture") then
-			obj.Transparency = 0
-		elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") then
-			obj.Enabled = true
-		elseif obj:IsA("BasePart") then
-			obj.Material = Enum.Material.SmoothPlastic
-			obj.Reflectance = 0
-		end
-	end
+    buttonFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            local clickTween = TweenService:Create(title, tweenInfoHover, { TextColor3 = Color3.fromRGB(0, 255, 0) }) -- Màu chữ chuyển xanh khi click
+            clickTween:Play()
+            task.wait(0.3)
+            clickTween:Cancel()
+        end
+    end)
 end
 
-local function setupButtonInteraction(button, title)
-	local formatting = false
-	local isOptimized = false
-	local dots = 0
-
-	local function animateDots()
-		while formatting do
-			dots = (dots + 1) % 4
-			title.Text = "Đang định dạng" .. string.rep(".", dots)
-			wait(0.5)
-		end
-	end
-
-	button.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 and not formatting then
-			formatting = true
-			button.BackgroundColor3 = Color3.fromRGB(255, 213, 0)
-			task.spawn(animateDots)
-
-			task.delay(3, function()
-				formatting = false
-				if not isOptimized then
-					optimizeGame()
-					title.Text = "Hủy tối ưu"
-					button.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-					isOptimized = true
-				else
-					restoreSettings()
-					title.Text = "Tối ưu"
-					button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-					isOptimized = false
-				end
-			end)
-		end
-	end)
+local buttonFrame, title = createCustomButton()
+if buttonFrame then
+    setupButtonInteraction(buttonFrame, title)
 end
 
---// Start
-cleanupPreviousInstances()
-local button, title = createCustomButton()
-setupButtonInteraction(button, title)
-UserInputService.InputBegan:Connect(onInput)
+local function main()
+    notificationContainer = setupNotificationContainer()
+    if not notificationContainer then
+        warn("AntiAFK: Không thể khởi tạo container GUI. Script sẽ không hiển thị thông báo.")
+        return
+    end
+    notificationTemplate = createNotificationTemplate()
+    if not notificationTemplate then
+        warn("AntiAFK: Không thể tạo template GUI. Script sẽ không hiển thị thông báo.")
+        return
+    end
 
-print("AntiAFK Script đã khởi chạy.")
+    inputBeganConnection = UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
+        if gameProcessedEvent then return end
+        if input.UserInputType == Enum.UserInputType.Keyboard or
+           input.UserInputType == Enum.UserInputType.MouseButton1 or
+           input.UserInputType == Enum.UserInputType.MouseButton2 or
+           input.UserInputType == Enum.UserInputType.Touch then
+            onInput()
+        end
+    end)
+    inputChangedConnection = UserInputService.InputChanged:Connect(function(input, gameProcessedEvent)
+        if gameProcessedEvent then return end
+        if input.UserInputType == Enum.UserInputType.MouseMovement or
+           input.UserInputType == Enum.UserInputType.MouseWheel or
+           input.UserInputType.Name:find("Gamepad") then
+            onInput()
+        end
+    end)
+
+    task.wait(3)
+    showNotification("Anti AFK", "Đã được kích hoạt.")
+    print("Anti-AFK Script đã khởi chạy và đang theo dõi input.")
+
+    while true do
+        task.wait(0.5)
+        local now = os.clock()
+        local idleTime = now - lastInputTime
+
+        if isConsideredAFK then
+            local timeSinceLastIntervention = now - lastInterventionTime
+            local timeSinceLastCheck = now - lastCheckTime
+
+            if timeSinceLastIntervention >= interventionInterval then
+                performAntiAFKAction()
+            end
+
+            if timeSinceLastCheck >= checkInterval then
+                local nextInterventionIn = math.max(0, interventionInterval - timeSinceLastIntervention)
+                local msg = string.format("Can thiệp tiếp theo sau ~%.0f giây.", nextInterventionIn)
+                if not enableIntervention then
+                    msg = "Chế độ can thiệp đang tắt."
+                end
+                showNotification("Vẫn đang AFK...", msg)
+                lastCheckTime = now
+            end
+        else
+            if idleTime >= afkThreshold then
+                isConsideredAFK = true
+                lastInterventionTime = now
+                lastCheckTime = now
+                interventionCounter = 0
+                local msg = string.format("Sẽ can thiệp sau ~%.0f giây nếu không hoạt động.", interventionInterval)
+                if not enableIntervention then
+                    msg = "Bạn hiện đang AFK (can thiệp tự động đang tắt)."
+                end
+                showNotification("Cảnh báo AFK!", msg)
+                print("AntiAFK: Người dùng được coi là AFK.")
+            end
+        end
+    end
+end
+
+local mainThread = coroutine.create(main)
+local success, err = coroutine.resume(mainThread)
+if not success then
+    warn("AntiAFK Lỗi Khởi Tạo:", err)
+end
+
+if player then
+    player.CharacterRemoving:Connect(function() end)
+    Players.PlayerRemoving:Connect(function(leavingPlayer)
+        if leavingPlayer == player then
+            cleanup()
+            if coroutine.status(mainThread) == "suspended" or coroutine.status(mainThread) == "running" then
+                print("AntiAFK: Đã yêu cầu dừng vòng lặp chính.")
+            end
+        end
+    end)
+else
+    warn("AntiAFK: Không tìm thấy LocalPlayer khi thiết lập PlayerRemoving listener.")
+end
