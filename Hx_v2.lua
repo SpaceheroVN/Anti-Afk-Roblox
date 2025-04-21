@@ -41,33 +41,55 @@ local function disconnectConnection(conn)
     end
 end
 
---// *** NEW: Comprehensive Cleanup Function ***
+--// *** UPDATED: More Robust Cleanup Function ***
 local function cleanupPreviousInstances()
     local playerGui = player:FindFirstChild("PlayerGui")
-    if not playerGui then return end
-
-    -- Destroy previous notification GUI
-    local oldNotificationGui = playerGui:FindFirstChild(NOTIFICATION_GUI_NAME)
-    if oldNotificationGui then
-        print("AntiAFK: Dọn dẹp Notification GUI cũ.")
-        oldNotificationGui:Destroy()
+    if not playerGui then
+        warn("AntiAFK Cleanup: Không tìm thấy PlayerGui.")
+        return
     end
 
-    -- Destroy previous button GUI
-    local oldButtonGui = playerGui:FindFirstChild(BUTTON_GUI_NAME)
-    if oldButtonGui then
-        print("AntiAFK: Dọn dẹp Button GUI cũ.")
-        oldButtonGui:Destroy()
+    print("AntiAFK Cleanup: Bắt đầu quét dọn các phiên bản cũ...")
+
+    local childrenToDestroy = {} -- Tạo bảng tạm để lưu các đối tượng cần hủy
+
+    -- Lặp qua tất cả con trực tiếp của PlayerGui
+    for _, child in ipairs(playerGui:GetChildren()) do
+        -- Kiểm tra xem có phải ScreenGui và có tên khớp không
+        if child:IsA("ScreenGui") then
+            if child.Name == NOTIFICATION_GUI_NAME then
+                print("AntiAFK Cleanup: Phát hiện Notification GUI cũ:", child:GetFullName())
+                table.insert(childrenToDestroy, child) -- Thêm vào danh sách hủy
+            elseif child.Name == BUTTON_GUI_NAME then
+                print("AntiAFK Cleanup: Phát hiện Button GUI cũ:", child:GetFullName())
+                table.insert(childrenToDestroy, child) -- Thêm vào danh sách hủy
+            -- (Tùy chọn) Kiểm tra ScreenGui cũ tên "ScreenGui" nếu chứa nút
+            elseif child.Name == "ScreenGui" and child:FindFirstChild("CustomButton") then
+                 print("AntiAFK Cleanup: Phát hiện Button GUI cũ (tên generic):", child:GetFullName())
+                 table.insert(childrenToDestroy, child) -- Thêm vào danh sách hủy
+            end
+        end
     end
 
-    -- (Optional: Cleanup very old generic 'ScreenGui' if it contains our button)
-    local oldGenericGui = playerGui:FindFirstChild("ScreenGui")
-    if oldGenericGui and oldGenericGui:FindFirstChild("CustomButton") then
-         print("AntiAFK: Dọn dẹp Button GUI cũ (generic).")
-         oldGenericGui:Destroy()
+    -- Hủy các đối tượng đã tìm thấy
+    if #childrenToDestroy > 0 then
+        print("AntiAFK Cleanup: Đang hủy " .. #childrenToDestroy .. " GUI cũ...")
+        for _, guiInstance in ipairs(childrenToDestroy) do
+            -- Kiểm tra lại xem nó còn tồn tại và đúng vị trí không trước khi hủy
+            if guiInstance and guiInstance.Parent == playerGui then
+                 guiInstance:Destroy()
+                 print("AntiAFK Cleanup: Đã hủy thành công:", guiInstance.Name)
+            else
+                -- Có thể nó đã bị hủy bởi một tiến trình khác hoặc lỗi gì đó
+                 warn("AntiAFK Cleanup: Không thể hủy '" .. (guiInstance and guiInstance.Name or "nil") .. "', có thể đã bị hủy hoặc không còn trong PlayerGui.")
+            end
+        end
+        print("AntiAFK Cleanup: Hoàn tất quét dọn.")
+    else
+        print("AntiAFK Cleanup: Không tìm thấy GUI cũ nào cần dọn dẹp.")
     end
 end
---// *** END NEW ***
+--// *** END UPDATED ***
 
 --// Notification
 local function createNotificationTemplate()
