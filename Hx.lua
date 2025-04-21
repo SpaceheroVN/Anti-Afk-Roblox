@@ -8,244 +8,101 @@ end
 
 _G.AntiAFK_Running = true
 
--- 🔄 Cleanup Function
+-- 📦 Services
+local Players = game:GetService("Players")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+
+-- 🔁 Cleanup
+local inputBeganConnection, inputChangedConnection
+local notificationContainer
 _G.AntiAFK_CleanupFunction = function()
     if inputBeganConnection then inputBeganConnection:Disconnect() end
     if inputChangedConnection then inputChangedConnection:Disconnect() end
-    if notificationContainer and notificationContainer.Parent then
-        notificationContainer:Destroy()
-    end
-    inputBeganConnection = nil
-    inputChangedConnection = nil
+    if notificationContainer then notificationContainer:Destroy() end
+    inputBeganConnection, inputChangedConnection = nil, nil
     notificationContainer = nil
-    notificationTemplate = nil
-    notificationPool = {}
     print("✅ Script AntiAFK cũ đã được dọn dẹp.")
 end
 
--- 📦 Services
-local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local VirtualInputManager = game:GetService("VirtualInputManager")
-local TweenService = game:GetService("TweenService")
+-- 🧱 GUI Container
+notificationContainer = Instance.new("ScreenGui")
+notificationContainer.Name = "AntiAFK_NotificationGUI"
+notificationContainer.ResetOnSpawn = false
+notificationContainer.IgnoreGuiInset = true
+notificationContainer.Parent = player:WaitForChild("PlayerGui")
 
--- ⚙️ Config
-local AFK_THRESHOLD = 180
-local INTERVENTION_INTERVAL = 600
-local CHECK_INTERVAL = 60
-local SIMULATED_KEY_CODE = Enum.KeyCode.Space
-local ENABLE_INTERVENTION = true
-local NOTIFICATION_DURATION = 3
-local MAX_NOTIFICATIONS = 5
-local ANIMATION_TIME = 0.3
-local ICON_ASSET_ID = "rbxassetid://117118515787811"
-
--- 📊 State
-local lastInputTime = os.clock()
-local lastInterventionTime = 0
-local lastCheckTime = 0
-local isAFK = false
-local notificationContainer, notificationTemplate = nil, nil
-local inputBeganConnection, inputChangedConnection = nil, nil
-local player = Players.LocalPlayer
-local playerGui = player:FindFirstChild("PlayerGui")
-local notificationPool = {}
-
--- 🎨 GUI constants
-local GUI_SIZE = UDim2.new(0, 250, 0, 60)
-local CONTAINER_SIZE = UDim2.new(0, 300, 0, 200)
-local ICON_SIZE = UDim2.new(0, 40, 0, 40)
-local ANCHOR_POINT = Vector2.new(1, 1)
-local POSITION_OFFSET = UDim2.new(0, -18, 0, -48)
-
--- 📐 GUI Factory
-local function createTemplate()
-    if notificationTemplate then return notificationTemplate end
-
-    local frame = Instance.new("Frame")
-    frame.Name = "NotificationFrame"
-    frame.Size = GUI_SIZE
-    frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    frame.BackgroundTransparency = 0.8
-    frame.BorderColor3 = Color3.fromRGB(80, 80, 80)
-
-    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
-    local padding = Instance.new("UIPadding", frame)
-    padding.PaddingTop = UDim.new(0, 6)
-    padding.PaddingBottom = UDim.new(0, 6)
-    padding.PaddingLeft = UDim.new(0, 10)
-    padding.PaddingRight = UDim.new(0, 10)
-
-    local layout = Instance.new("UIListLayout", frame)
-    layout.FillDirection = Enum.FillDirection.Horizontal
-    layout.Padding = UDim.new(0, 6)
-
-    local icon = Instance.new("ImageLabel", frame)
-    icon.Name = "Icon"
-    icon.Image = ICON_ASSET_ID
-    icon.Size = ICON_SIZE
-    icon.BackgroundTransparency = 1
-    icon.ImageTransparency = 1
-
-    local text = Instance.new("TextLabel", frame)
-    text.Name = "Text"
-    text.Size = UDim2.new(1, -50, 1, 0)
-    text.BackgroundTransparency = 1
-    text.TextColor3 = Color3.fromRGB(230, 230, 230)
-    text.TextTransparency = 1
-    text.TextXAlignment = Enum.TextXAlignment.Left
-    text.Font = Enum.Font.Gotham
-    text.TextSize = 14
-    text.TextWrapped = true
-
-    notificationTemplate = frame
-    return frame
-end
-
-local function setupContainer()
-    if notificationContainer and notificationContainer.Parent then return notificationContainer end
-
-    if not playerGui then return nil end
-    local oldGui = playerGui:FindFirstChild("AntiAFKGui")
-    if oldGui then oldGui:Destroy() end
-
-    local screenGui = Instance.new("ScreenGui", playerGui)
-    screenGui.Name = "AntiAFKGui"
-    screenGui.ResetOnSpawn = false
-    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-
-    local container = Instance.new("Frame", screenGui)
-    container.Size = CONTAINER_SIZE
-    container.AnchorPoint = ANCHOR_POINT
-    container.Position = UDim2.new(1, POSITION_OFFSET.X.Offset, 1, POSITION_OFFSET.Y.Offset)
-    container.BackgroundTransparency = 1
-
-    local layout = Instance.new("UIListLayout", container)
-    layout.FillDirection = Enum.FillDirection.Vertical
-    layout.VerticalAlignment = Enum.VerticalAlignment.Bottom
-    layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Padding = UDim.new(0, 8)
-
-    notificationContainer = container
-    return container
-end
-
--- 🔔 Notification System
+-- 🔔 Notification
 local function showNotification(message)
-    local template = createTemplate()
-    local container = setupContainer()
-    if not (template and container) then return end
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 300, 0, 50)
+    frame.Position = UDim2.new(1, 100, 1, -60)
+    frame.AnchorPoint = Vector2.new(1, 1)
+    frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    frame.BackgroundTransparency = 0.05
+    frame.BorderSizePixel = 0
+    frame.ZIndex = 10
+    frame.Parent = notificationContainer
 
-    local note = nil
-    for _, n in ipairs(notificationPool) do
-        if not n.Visible then note = n break end
-    end
-    if not note and #notificationPool < MAX_NOTIFICATIONS then
-        note = template:Clone()
-        note.Parent = container
-        table.insert(notificationPool, note)
-    end
-    if not note then return end
+    local corner = Instance.new("UICorner", frame)
+    corner.CornerRadius = UDim.new(0, 10)
 
-    local icon = note:FindFirstChild("Icon")
-    local text = note:FindFirstChild("Text")
-    if not (icon and text) then return end
+    local shadow = Instance.new("UIStroke", frame)
+    shadow.Thickness = 1
+    shadow.Color = Color3.fromRGB(80, 80, 80)
+    shadow.Transparency = 0.3
 
-    note.Visible = true
-    icon.ImageTransparency = 1
-    text.TextTransparency = 1
-    text.Text = message
+    local label = Instance.new("TextLabel")
+    label.Text = message
+    label.Font = Enum.Font.GothamMedium
+    label.TextSize = 18
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.BackgroundTransparency = 1
+    label.Size = UDim2.new(1, -20, 1, 0)
+    label.Position = UDim2.new(0, 10, 0, 0)
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = frame
 
-    local tweenIn = TweenInfo.new(ANIMATION_TIME, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
-    TweenService:Create(icon, tweenIn, { ImageTransparency = 0 }):Play()
-    TweenService:Create(text, tweenIn, { TextTransparency = 0 }):Play()
+    -- Animate in
+    TweenService:Create(frame, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+        Position = UDim2.new(1, -20, 1, -60)
+    }):Play()
 
-    task.delay(NOTIFICATION_DURATION, function()
-        if note and note.Parent then
-            local tweenOut = TweenInfo.new(ANIMATION_TIME, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
-            TweenService:Create(icon, tweenOut, { ImageTransparency = 1 }):Play()
-            TweenService:Create(text, tweenOut, { TextTransparency = 1 }):Play()
-            task.delay(ANIMATION_TIME, function()
-                if note then note.Visible = false end
-            end)
-        end
+    -- Wait and animate out
+    task.delay(4, function()
+        local outTween = TweenService:Create(frame, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {
+            Position = UDim2.new(1, 100, 1, -60)
+        })
+        outTween:Play()
+        outTween.Completed:Wait()
+        frame:Destroy()
     end)
 end
 
--- 🧠 Core
-local function handleInput()
-    if isAFK then
-        isAFK = false
-        lastInterventionTime = 0
-        showNotification("👋 Bạn đã quay lại!")
-        print("AntiAFK: Đã thoát trạng thái AFK.")
-    end
-    lastInputTime = os.clock()
+-- 👟 Anti-AFK Core
+local lastActivity = tick()
+
+local function simulateActivity()
+    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Space, false, nil)
+    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Space, false, nil)
+    showNotification("✅ Đã chống AFK tự động!")
 end
 
-local function simulateKeyPress()
-    if not ENABLE_INTERVENTION then return end
-    local ok, err = pcall(function()
-        VirtualInputManager:SendKeyEvent(true, SIMULATED_KEY_CODE, false, game)
-        task.wait(0.05)
-        VirtualInputManager:SendKeyEvent(false, SIMULATED_KEY_CODE, false, game)
-    end)
-    if ok then
-        lastInterventionTime = os.clock()
-        print("AntiAFK: Đã mô phỏng phím", SIMULATED_KEY_CODE.Name)
-    else
-        warn("AntiAFK: Lỗi mô phỏng phím:", err)
-    end
-end
-
--- 🔁 Main
-local function main()
-    showNotification("✅ AntiAFK đang hoạt động...")
-    print("AntiAFK script đang theo dõi input...")
-
-    inputBeganConnection = UserInputService.InputBegan:Connect(function(input, gp)
-        if not gp then handleInput() end
-    end)
-    inputChangedConnection = UserInputService.InputChanged:Connect(function(input, gp)
-        if not gp then handleInput() end
-    end)
-
-    while true do
-        task.wait(1)
-        local now = os.clock()
-
-        if isAFK then
-            if now - lastInterventionTime >= INTERVENTION_INTERVAL then
-                simulateKeyPress()
-            end
-            if now - lastCheckTime >= CHECK_INTERVAL then
-                local msg = ENABLE_INTERVENTION
-                    and string.format("💤 AFK - Can thiệp sau %.0f giây.", INTERVENTION_INTERVAL - (now - lastInterventionTime))
-                    or "AFK - Can thiệp tự động đang tắt."
-                showNotification(msg)
-                lastCheckTime = now
-            end
-        else
-            if now - lastInputTime >= AFK_THRESHOLD then
-                isAFK = true
-                lastInterventionTime = now
-                lastCheckTime = now
-                showNotification("⚠️ Bạn đang AFK! Can thiệp sẽ bắt đầu sau 10 phút.")
-                print("AntiAFK: Bắt đầu theo dõi trạng thái AFK.")
-            end
-        end
-    end
-end
-
--- 🚀 Khởi chạy
-local thread = coroutine.create(main)
-local ok, err = coroutine.resume(thread)
-if not ok then warn("AntiAFK Lỗi khởi động:", err) end
-
--- 🧹 Cleanup khi người chơi rời
-Players.PlayerRemoving:Connect(function(plr)
-    if plr == player then
-        _G.AntiAFK_CleanupFunction()
-        print("AntiAFK: Người chơi rời - đã cleanup script.")
+-- ⏱️ Heartbeat Checker
+RunService.Heartbeat:Connect(function()
+    if tick() - lastActivity > 60 then
+        simulateActivity()
+        lastActivity = tick()
     end
 end)
+
+-- 🕹️ Input Tracking
+local UIS = game:GetService("UserInputService")
+inputBeganConnection = UIS.InputBegan:Connect(function() lastActivity = tick() end)
+inputChangedConnection = UIS.InputChanged:Connect(function() lastActivity = tick() end)
+
+-- 🚀 Ready!
+print("✅ AntiAFK script đã khởi động.")
+showNotification("🚀 Script AntiAFK đã sẵn sàng!")
