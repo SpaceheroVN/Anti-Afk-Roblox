@@ -1,3 +1,12 @@
+print("AntiAFK Cleanup: Bắt đầu quét dọn các phiên bản cũ...")
+
+if gui.Name == NOTIFICATION_GUI_NAME or gui.Name == BUTTON_GUI_NAME then
+	print("AntiAFK Cleanup: Phát hiện GUI cũ (tên: " .. gui.Name .. "): " .. gui:GetFullName())
+	gui:Destroy()
+	print("AntiAFK Cleanup: Đã huỷ thành công: " .. gui.ClassName)
+end
+print("AntiAFK Cleanup: Hoàn tất reset biến & GUI.")
+
 --// Services
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
@@ -293,3 +302,5 @@ cleanupPreviousInstances()
 local button, title = createCustomButton()
 setupButtonInteraction(button, title)
 UserInputService.InputBegan:Connect(onInput)
+
+print("AntiAFK Script đã khởi chạy.")
