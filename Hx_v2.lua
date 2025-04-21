@@ -1,12 +1,3 @@
-print("AntiAFK Cleanup: Bắt đầu quét dọn các phiên bản cũ...")
-
-if gui.Name == NOTIFICATION_GUI_NAME or gui.Name == BUTTON_GUI_NAME then
-	print("AntiAFK Cleanup: Phát hiện GUI cũ (tên: " .. gui.Name .. "): " .. gui:GetFullName())
-	gui:Destroy()
-	print("AntiAFK Cleanup: Đã huỷ thành công: " .. gui.ClassName)
-end
-print("AntiAFK Cleanup: Hoàn tất reset biến & GUI.")
-
 --// Services
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
@@ -46,12 +37,16 @@ local function disconnectConnection(conn)
 end
 
 local function cleanupPreviousInstances()
+	print("AntiAFK Cleanup: Bắt đầu quét dọn các phiên bản cũ...")
+
 	local playerGui = player:FindFirstChild("PlayerGui")
 	if not playerGui then return end
 
 	for _, gui in ipairs(playerGui:GetChildren()) do
 		if gui:IsA("ScreenGui") and (gui.Name == NOTIFICATION_GUI_NAME or gui.Name == BUTTON_GUI_NAME) then
+			print("AntiAFK Cleanup: Phát hiện GUI cũ (tên: " .. gui.Name .. "): " .. gui:GetFullName())
 			gui:Destroy()
+			print("AntiAFK Cleanup: Đã huỷ thành công: " .. gui.ClassName)
 		end
 	end
 
@@ -59,6 +54,8 @@ local function cleanupPreviousInstances()
 	notificationTemplate = nil
 	notificationScreenGui = nil
 	buttonScreenGui = nil
+
+	print("AntiAFK Cleanup: Hoàn tất reset biến & GUI.")
 end
 
 --// Notification
@@ -302,5 +299,3 @@ cleanupPreviousInstances()
 local button, title = createCustomButton()
 setupButtonInteraction(button, title)
 UserInputService.InputBegan:Connect(onInput)
-
-print("AntiAFK Script đã khởi chạy.")
