@@ -62,8 +62,8 @@ local function createNotificationTemplate()
     local padding = Instance.new("UIPadding", frame)
     padding.PaddingLeft = UDim.new(0, 10)
     padding.PaddingRight = UDim.new(0, 10)
-    padding.PaddingTop = UDim.new(0, 5)
-    padding.PaddingBottom = UDim.new(0, 5)
+    padding.PaddingTop = UDim.new(0, 10)
+    padding.PaddingBottom = UDim.new(0, 10)
 
     local listLayout = Instance.new("UIListLayout", frame)
     listLayout.FillDirection = Enum.FillDirection.Horizontal
@@ -83,16 +83,16 @@ local function createNotificationTemplate()
     local textFrame = Instance.new("Frame")
     textFrame.Name = "TextFrame"
     textFrame.BackgroundTransparency = 1
-    textFrame.Size = UDim2.new(1, 0, 1, 0)
+    textFrame.Size = UDim2.new(1, -50, 1, 0)
     textFrame.LayoutOrder = 2
     textFrame.Parent = frame
 
     local textListLayout = Instance.new("UIListLayout", textFrame)
-    textListLayout.FillDirection = Enum.FillDirection.Horizontal
+    textListLayout.FillDirection = Enum.FillDirection.Vertical
     textListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
     textListLayout.VerticalAlignment = Enum.VerticalAlignment.Center
     textListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    textListLayout.Padding = UDim.new(0, 5)
+    textListLayout.Padding = UDim.new(0, 2)
 
     local title = Instance.new("TextLabel")
     title.Name = "Title"
@@ -103,8 +103,8 @@ local function createNotificationTemplate()
     title.BackgroundTransparency = 1
     title.TextTransparency = 1
     title.TextXAlignment = Enum.TextXAlignment.Left
-    title.AutomaticSize = Enum.AutomaticSize.X
-    title.Size = UDim2.new(0, 0, 1, 0)
+    title.TextYAlignment = Enum.TextYAlignment.Center
+    title.Size = UDim2.new(1, 0, 0, 18)
     title.Parent = textFrame
 
     local message = Instance.new("TextLabel")
@@ -116,8 +116,9 @@ local function createNotificationTemplate()
     message.BackgroundTransparency = 1
     message.TextTransparency = 1
     message.TextXAlignment = Enum.TextXAlignment.Left
-    message.AutomaticSize = Enum.AutomaticSize.X
-    message.Size = UDim2.new(0, 0, 1, 0)
+    message.TextYAlignment = Enum.TextYAlignment.Top
+    message.TextWrapped = true
+    message.Size = UDim2.new(1, 0, 0, 24)
     message.Parent = textFrame
 
     notificationTemplate = frame
