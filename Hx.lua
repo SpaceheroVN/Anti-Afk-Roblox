@@ -1,3 +1,4 @@
+-- Global State
 if _G.AntiAFK_Running then
     if _G.AntiAFK_CleanupFunction then
         _G.AntiAFK_CleanupFunction()
@@ -7,7 +8,7 @@ end
 _G.AntiAFK_Running = true
 
 _G.AntiAFK_CleanupFunction = function()
-    print("AntiAFK: Dọn dẹp tài nguyên của script cũ...")
+    print("AntiAFK: Cleaning up old script resources...")
     if inputBeganConnection then
         inputBeganConnection:Disconnect()
         inputBeganConnection = nil
@@ -23,21 +24,24 @@ _G.AntiAFK_CleanupFunction = function()
     notificationTemplate = nil
 end
 
+-- Services
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local TweenService = game:GetService("TweenService")
 
-local afkThreshold = 180
-local interventionInterval = 600
-local checkInterval = 60
-local notificationDuration = 5
-local animationTime = 0.5
+-- Configuration
+local afkThreshold = 180 -- Time in seconds before considering AFK
+local interventionInterval = 600 -- Time in seconds for periodic intervention
+local checkInterval = 60 -- Interval for checking AFK state
+local notificationDuration = 5 -- Time in seconds for notifications to appear
+local animationTime = 0.5 -- Tween animation duration
 local iconAssetId = "rbxassetid://117118515787811"
 local enableIntervention = true
 local simulatedKeyCode = Enum.KeyCode.Space
 
+-- State Variables
 local lastInputTime = os.clock()
 local lastInterventionTime = 0
 local lastCheckTime = 0
@@ -51,10 +55,9 @@ local player = Players.LocalPlayer
 
 local guiSize = UDim2.new(0, 250, 0, 60)
 
+-- Utility Functions
 local function createNotificationTemplate()
-    if notificationTemplate then
-        return notificationTemplate
-    end
+    if notificationTemplate then return notificationTemplate end
 
     local frame = Instance.new("Frame")
     frame.Name = "NotificationFrameTemplate"
@@ -72,7 +75,7 @@ local function createNotificationTemplate()
     padding.PaddingRight = UDim.new(0, 10)
     padding.PaddingTop = UDim.new(0, 5)
     padding.PaddingBottom = UDim.new(0, 5)
-
+    
     local listLayout = Instance.new("UIListLayout", frame)
     listLayout.FillDirection = Enum.FillDirection.Horizontal
     listLayout.VerticalAlignment = Enum.VerticalAlignment.Center
@@ -95,16 +98,9 @@ local function createNotificationTemplate()
     textFrame.LayoutOrder = 2
     textFrame.Parent = frame
 
-    local textListLayout = Instance.new("UIListLayout", textFrame)
-    textListLayout.FillDirection = Enum.FillDirection.Horizontal
-    textListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-    textListLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-    textListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    textListLayout.Padding = UDim.new(0, 5)
-
     local title = Instance.new("TextLabel")
     title.Name = "Title"
-    title.Text = "Tiêu đề" 
+    title.Text = "Title"
     title.Font = Enum.Font.GothamBold
     title.TextSize = 15
     title.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -117,15 +113,13 @@ local function createNotificationTemplate()
 
     local message = Instance.new("TextLabel")
     message.Name = "Message"
-    message.Text = "Nội dung tin nhắn." 
+    message.Text = "Message Content"
     message.Font = Enum.Font.Gotham
     message.TextSize = 13
     message.TextColor3 = Color3.fromRGB(200, 200, 200)
     message.BackgroundTransparency = 1
     message.TextTransparency = 1
     message.TextXAlignment = Enum.TextXAlignment.Left
-    message.TextWrapped = false
-    message.AutomaticSize = Enum.AutomaticSize.X
     message.Size = UDim2.new(0, 0, 1, 0)
     message.Parent = textFrame
 
@@ -134,35 +128,29 @@ local function createNotificationTemplate()
 end
 
 local function setupNotificationContainer()
-    if notificationContainer and notificationContainer.Parent then
-        return notificationContainer
-    end
+    if notificationContainer and notificationContainer.Parent then return notificationContainer end
 
     local playerGui = player:FindFirstChild("PlayerGui")
     if not playerGui then
-        warn("AntiAFK: Không tìm thấy PlayerGui cho " .. (player and player.Name or "Người chơi không xác định"))
+        warn("AntiAFK: PlayerGui not found for " .. (player and player.Name or "Unknown Player"))
         return nil
     end
 
     local oldGui = playerGui:FindFirstChild("AntiAFKContainerGui")
-    if oldGui then
-        oldGui:Destroy()
-    end
+    if oldGui then oldGui:Destroy() end
 
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "AntiAFKContainerGui"
     screenGui.ResetOnSpawn = false
     screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    screenGui.DisplayOrder = 999
     screenGui.Parent = playerGui
 
-    local container = Instance.new("Frame")
+    local container = Instance.new("Frame", screenGui)
     container.Name = "NotificationContainerFrame"
     container.AnchorPoint = Vector2.new(1, 1)
     container.Position = UDim2.new(1, -18, 1, -48)
     container.Size = UDim2.new(0, 300, 0, 200)
     container.BackgroundTransparency = 1
-    container.Parent = screenGui
 
     local listLayout = Instance.new("UIListLayout", container)
     listLayout.FillDirection = Enum.FillDirection.Vertical
@@ -298,18 +286,23 @@ local function cleanup()
     notificationTemplate = nil
 end
 
+-- Main Functionality
 local function main()
+    -- 1. Setup notification container
     notificationContainer = setupNotificationContainer()
     if not notificationContainer then
         warn("AntiAFK: Không thể khởi tạo container GUI. Script sẽ không hiển thị thông báo.")
         return
     end
+
+    -- 2. Setup notification template
     notificationTemplate = createNotificationTemplate()
     if not notificationTemplate then
         warn("AntiAFK: Không thể tạo template GUI. Script sẽ không hiển thị thông báo.")
         return
     end
 
+    -- 3. Connect to Input Events
     inputBeganConnection = UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
         if gameProcessedEvent then return end
         if input.UserInputType == Enum.UserInputType.Keyboard or
@@ -319,6 +312,7 @@ local function main()
             onInput()
         end
     end)
+
     inputChangedConnection = UserInputService.InputChanged:Connect(function(input, gameProcessedEvent)
         if gameProcessedEvent then return end
         if input.UserInputType == Enum.UserInputType.MouseMovement or
@@ -328,12 +322,14 @@ local function main()
         end
     end)
 
+    -- 4. Notify the user that the script is active
     task.wait(3)
     showNotification("Anti AFK", "Đã được kích hoạt.")
     print("Anti-AFK Script đã khởi chạy và đang theo dõi input.")
 
+    -- 5. Main loop to monitor AFK state
     while true do
-        task.wait(0.5)
+        task.wait(0.5) -- Check every 0.5 seconds
         local now = os.clock()
         local idleTime = now - lastInputTime
 
@@ -341,10 +337,12 @@ local function main()
             local timeSinceLastIntervention = now - lastInterventionTime
             local timeSinceLastCheck = now - lastCheckTime
 
+            -- Perform intervention if needed
             if timeSinceLastIntervention >= interventionInterval then
                 performAntiAFKAction()
             end
 
+            -- Show periodic notifications
             if timeSinceLastCheck >= checkInterval then
                 local nextInterventionIn = math.max(0, interventionInterval - timeSinceLastIntervention)
                 local msg = string.format("Can thiệp tiếp theo sau ~%.0f giây.", nextInterventionIn)
@@ -355,6 +353,7 @@ local function main()
                 lastCheckTime = now
             end
         else
+            -- Detect AFK state
             if idleTime >= afkThreshold then
                 isConsideredAFK = true
                 lastInterventionTime = now
