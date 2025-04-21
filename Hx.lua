@@ -56,50 +56,51 @@ local GUI_SIZE = UDim2.new(0, 250, 0, 60)
 local CONTAINER_SIZE = UDim2.new(0, 300, 0, 200)
 local ICON_SIZE = UDim2.new(0, 40, 0, 40)
 local ANCHOR_POINT = Vector2.new(1, 1)
-local POSITION_OFFSET = UDim2.new(0, -18, 0, -48)
+local POSITION_OFFSET_HIDDEN = UDim2.new(1, GUI_SIZE.X.Offset + 20, 1, POSITION_OFFSET.Y.Offset)
+local POSITION_OFFSET_VISIBLE = UDim2.new(1, POSITION_OFFSET.X.Offset, 1, POSITION_OFFSET.Y.Offset)
 
 -- 📐 GUI Factory
 local function createTemplate()
-    if notificationTemplate then return notificationTemplate end
+    if notificationTemplate then return notificationTemplate end
 
-    local frame = Instance.new("Frame")
-    frame.Name = "NotificationFrame"
-    frame.Size = GUI_SIZE
-    frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    frame.BackgroundTransparency = 0.8
-    frame.BorderColor3 = Color3.fromRGB(80, 80, 80)
+    local frame = Instance.new("Frame")
+    frame.Name = "NotificationFrame"
+    frame.Size = GUI_SIZE
+    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30) -- Nền đậm hơn
+    frame.BackgroundTransparency = 0.6 -- Ít trong suốt hơn
+    frame.BorderColor3 = Color3.fromRGB(80, 80, 80)
 
-    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
-    local padding = Instance.new("UIPadding", frame)
-    padding.PaddingTop = UDim.new(0, 6)
-    padding.PaddingBottom = UDim.new(0, 6)
-    padding.PaddingLeft = UDim.new(0, 10)
-    padding.PaddingRight = UDim.new(0, 10)
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
+    local padding = Instance.new("UIPadding", frame)
+    padding.PaddingTop = UDim.new(0, 6)
+    padding.PaddingBottom = UDim.new(0, 6)
+    padding.PaddingLeft = UDim.new(0, 10)
+    padding.PaddingRight = UDim.new(0, 10)
 
-    local layout = Instance.new("UIListLayout", frame)
-    layout.FillDirection = Enum.FillDirection.Horizontal
-    layout.Padding = UDim.new(0, 6)
+    local layout = Instance.new("UIListLayout", frame)
+    layout.FillDirection = Enum.FillDirection.Horizontal
+    layout.Padding = UDim.new(0, 6)
 
-    local icon = Instance.new("ImageLabel", frame)
-    icon.Name = "Icon"
-    icon.Image = ICON_ASSET_ID
-    icon.Size = ICON_SIZE
-    icon.BackgroundTransparency = 1
-    icon.ImageTransparency = 1
+    local icon = Instance.new("ImageLabel", frame)
+    icon.Name = "Icon"
+    icon.Image = ICON_ASSET_ID
+    icon.Size = ICON_SIZE
+    icon.BackgroundTransparency = 1
+    icon.ImageTransparency = 1
 
-    local text = Instance.new("TextLabel", frame)
-    text.Name = "Text"
-    text.Size = UDim2.new(1, -50, 1, 0)
-    text.BackgroundTransparency = 1
-    text.TextColor3 = Color3.fromRGB(230, 230, 230)
-    text.TextTransparency = 1
-    text.TextXAlignment = Enum.TextXAlignment.Left
-    text.Font = Enum.Font.Gotham
-    text.TextSize = 14
-    text.TextWrapped = true
+    local textLabel = Instance.new("TextLabel", frame)
+    textLabel.Name = "Text"
+    textLabel.Size = UDim2.new(1, -50, 1, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.TextColor3 = Color3.fromRGB(230, 230, 230)
+    textLabel.TextTransparency = 1
+    textLabel.TextXAlignment = Enum.TextXAlignment.Left
+    textLabel.Font = Enum.Font.GothamBold -- Chữ đậm hơn
+    textLabel.TextSize = 14
+    textLabel.TextWrapped = true
 
-    notificationTemplate = frame
-    return frame
+    notificationTemplate = frame
+    return frame
 end
 
 local function setupContainer()
@@ -132,46 +133,48 @@ end
 
 -- 🔔 Notification System
 local function showNotification(message)
-    local template = createTemplate()
-    local container = setupContainer()
-    if not (template and container) then return end
+    local template = createTemplate()
+    local container = setupContainer()
+    if not (template and container) then return end
 
-    local note = nil
-    for _, n in ipairs(notificationPool) do
-        if not n.Visible then note = n break end
-    end
-    if not note and #notificationPool < MAX_NOTIFICATIONS then
-        note = template:Clone()
-        note.Parent = container
-        table.insert(notificationPool, note)
-    end
-    if not note then return end
+    local note = nil
+    for _, n in ipairs(notificationPool) do
+        if not n.Visible then note = n break end
+    end
+    if not note and #notificationPool < MAX_NOTIFICATIONS then
+        note = template:Clone()
+        note.Parent = container
+        table.insert(notificationPool, note)
+    end
+    if not note then return end
 
-    local icon = note:FindFirstChild("Icon")
-    local text = note:FindFirstChild("Text")
-    if not (icon and text) then return end
+    local icon = note:FindFirstChild("Icon")
+    local textLabel = note:FindFirstChild("Text")
+    if not (icon and textLabel) then return end
 
-    note.Visible = true
-    icon.ImageTransparency = 1
-    text.TextTransparency = 1
-    text.Text = message
+    note.Visible = true
+    note.Position = POSITION_OFFSET_HIDDEN -- Bắt đầu từ vị trí ẩn bên phải
+    icon.ImageTransparency = 1
+    textLabel.TextTransparency = 1
+    textLabel.Text = message
 
-    local tweenIn = TweenInfo.new(ANIMATION_TIME, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
-    TweenService:Create(icon, tweenIn, { ImageTransparency = 0 }):Play()
-    TweenService:Create(text, tweenIn, { TextTransparency = 0 }):Play()
+    local tweenIn = TweenInfo.new(ANIMATION_TIME, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+    TweenService:Create(note, tweenIn, { Position = POSITION_OFFSET_VISIBLE }):Play() -- Trượt từ phải sang trái
+    TweenService:Create(icon, tweenIn, { ImageTransparency = 0 }):Play()
+    TweenService:Create(textLabel, tweenIn, { TextTransparency = 0 }):Play()
 
-    task.delay(NOTIFICATION_DURATION, function()
-        if note and note.Parent then
-            local tweenOut = TweenInfo.new(ANIMATION_TIME, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
-            TweenService:Create(icon, tweenOut, { ImageTransparency = 1 }):Play()
-            TweenService:Create(text, tweenOut, { TextTransparency = 1 }):Play()
-            task.delay(ANIMATION_TIME, function()
-                if note then note.Visible = false end
-            end)
-        end
-    end)
+    task.delay(NOTIFICATION_DURATION, function()
+        if note and note.Parent then
+            local tweenOut = TweenInfo.new(ANIMATION_TIME, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
+            TweenService:Create(note, tweenOut, { Position = POSITION_OFFSET_HIDDEN }):Play() -- Trượt về bên phải để ẩn
+            TweenService:Create(icon, tweenOut, { ImageTransparency = 1 }):Play()
+            TweenService:Create(textLabel, tweenOut, { TextTransparency = 1 }):Play()
+            task.delay(ANIMATION_TIME, function()
+                if note then note.Visible = false end
+            end)
+        end
+    end)
 end
-
 -- 🧠 Core
 local function handleInput()
     if isAFK then
