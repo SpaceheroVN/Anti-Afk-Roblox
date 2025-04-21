@@ -21,6 +21,7 @@ _G.AntiAFK_CleanupFunction = function()
     end
     notificationContainer = nil
     notificationTemplate = nil
+    print("AntiAFK: Dọn dẹp hoàn tất.")
 end
 
 local UserInputService = game:GetService("UserInputService")
