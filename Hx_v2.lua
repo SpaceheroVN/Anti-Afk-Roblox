@@ -1,22 +1,28 @@
-local function cleanupOldButton()
-    local playerGui = game.Players.LocalPlayer:FindFirstChild("PlayerGui")
-    if playerGui then
-        local oldGui = playerGui:FindFirstChild("ScreenGui")
-        if oldGui then
-            oldGui:Destroy()
-        end
+if _G.AntiAFK_Running then
+    if _G.AntiAFK_CleanupFunction then
+        _G.AntiAFK_CleanupFunction()
     end
 end
 
-local function createCustomButton()
-    local buttonFrame = Instance.new("Frame")
-    buttonFrame.Name = "CustomButton"
-    buttonFrame.Size = UDim2.new(0, 120, 0, 40)
-    buttonFrame.Position = UDim2.new(1, -20, 1, -50)
-    buttonFrame.AnchorPoint = Vector2.new(1, 1)
-    buttonFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    buttonFrame.BackgroundTransparency = 0.5
-    buttonFrame.ClipsDescendants = true
+_G.AntiAFK_Running = true
+
+_G.AntiAFK_CleanupFunction = function()
+    print("AntiAFK: Dọn dẹp tài nguyên của script cũ...")
+    if inputBeganConnection then
+        inputBeganConnection:Disconnect()
+        inputBeganConnection = nil
+    end
+    if inputChangedConnection then
+        inputChangedConnection:Disconnect()
+        inputChangedConnection = nil
+    end
+    if notificationContainer and notificationContainer.Parent then
+        notificationContainer:Destroy()
+    end
+    notificationContainer = nil
+    notificationTemplate = nil
+    print("AntiAFK: Dọn dẹp hoàn tất.")
+end
 
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
@@ -293,83 +299,6 @@ local function cleanup()
     notificationTemplate = nil
 end
 
-local function createCustomButton()
-    local buttonFrame = Instance.new("Frame")
-    buttonFrame.Name = "CustomButton"
-    buttonFrame.Size = UDim2.new(0, 120, 0, 40) -- Kích thước nhỏ gọn hơn
-    buttonFrame.Position = UDim2.new(1, -20, 1, -50) -- Đặt ở góc phải dưới cùng
-    buttonFrame.AnchorPoint = Vector2.new(1, 1) -- Cố định góc dưới bên phải
-    buttonFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30) -- Màu đen giống thông báo
-    buttonFrame.BackgroundTransparency = 0.5 -- Trong suốt nhẹ
-    buttonFrame.ClipsDescendants = true
-
-    -- Vòng bo ngoài
-    local outerCircle = Instance.new("UICorner", buttonFrame)
-    outerCircle.CornerRadius = UDim.new(0, 8) -- Bo tròn góc
-
-    local border = Instance.new("UIStroke", buttonFrame)
-    border.Color = Color3.fromRGB(50, 50, 50) -- Viền đen nhạt hơn
-    border.Thickness = 2
-    border.Transparency = 0.3 -- Viền trong suốt nhẹ
-
-    -- Phần chữ
-    local title = Instance.new("TextLabel")
-    title.Name = "Title"
-    title.Text = "Tối ưu"
-    title.Font = Enum.Font.GothamBold
-    title.TextSize = 14
-    title.TextColor3 = Color3.fromRGB(255, 255, 255) -- Màu chữ trắng
-    title.BackgroundTransparency = 1
-    title.TextXAlignment = Enum.TextXAlignment.Center
-    title.TextYAlignment = Enum.TextYAlignment.Center
-    title.Size = UDim2.new(1, 0, 1, 0)
-    title.Parent = buttonFrame
-
-    local playerGui = game.Players.LocalPlayer:FindFirstChild("PlayerGui")
-    if not playerGui then
-        warn("PlayerGui not found for LocalPlayer.")
-        return
-    end
-    local screenGui = playerGui:FindFirstChild("ScreenGui") or Instance.new("ScreenGui", playerGui)
-    buttonFrame.Parent = screenGui
-
-    return buttonFrame, title
-end
-
-local function setupButtonInteraction(buttonFrame, title)
-    local tweenInfoHover = TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
-
-    buttonFrame.MouseEnter:Connect(function()
-        local hoverTween = TweenService:Create(buttonFrame, tweenInfoHover, { BackgroundTransparency = 0.3 }) -- Giảm trong suốt khi hover
-        hoverTween:Play()
-
-        local hoverBorder = TweenService:Create(buttonFrame.UIStroke, tweenInfoHover, { Transparency = 0 }) -- Viền rõ khi hover
-        hoverBorder:Play()
-    end)
-
-    buttonFrame.MouseLeave:Connect(function()
-        local leaveTween = TweenService:Create(buttonFrame, tweenInfoHover, { BackgroundTransparency = 0.5 }) -- Trở lại trong suốt
-        leaveTween:Play()
-
-        local leaveBorder = TweenService:Create(buttonFrame.UIStroke, tweenInfoHover, { Transparency = 0.3 }) -- Viền mờ lại
-        leaveBorder:Play()
-    end)
-
-    buttonFrame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            local clickTween = TweenService:Create(title, tweenInfoHover, { TextColor3 = Color3.fromRGB(0, 255, 0) }) -- Màu chữ chuyển xanh khi click
-            clickTween:Play()
-            task.wait(0.3)
-            clickTween:Cancel()
-        end
-    end)
-end
-
-local buttonFrame, title = createCustomButton()
-if buttonFrame then
-    setupButtonInteraction(buttonFrame, title)
-end
-
 local function main()
     notificationContainer = setupNotificationContainer()
     if not notificationContainer then
@@ -402,7 +331,7 @@ local function main()
 
     task.wait(3)
     showNotification("Anti AFK", "Đã được kích hoạt.")
-    print("Anti-AFK Script đã khởi chạy và đang theo dõi input.")
+    print("Anti-AFK Script đã khởi chạy.")
 
     while true do
         task.wait(0.5)
