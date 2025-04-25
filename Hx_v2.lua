@@ -2,7 +2,7 @@
 if _G.UnifiedAntiAFK_AutoClicker_Running then
     if _G.UnifiedAntiAFK_AutoClicker_CleanupFunction then
         pcall(_G.UnifiedAntiAFK_AutoClicker_CleanupFunction)
-        warn("UnifiedAFK+Clicker: Đã dừng và dọn dẹp instance cũ.")
+        warn("Hx: Đã dừng và dọn dẹp instance cũ.")
     end
 end
 _G.UnifiedAntiAFK_AutoClicker_Running = true
@@ -18,7 +18,7 @@ local GuiService = game:GetService("GuiService") -- Cần cho kiểm tra GUI
 
 local player = Players.LocalPlayer
 if not player then
-    warn("UnifiedAFK+Clicker: Không tìm thấy LocalPlayer! Script sẽ không hoạt động.")
+    warn("Hx: Không tìm thấy LocalPlayer! Script sẽ không hoạt động.")
     _G.UnifiedAntiAFK_AutoClicker_Running = false
     return
 end
@@ -45,7 +45,7 @@ local Config = {
 		MobileButtonDefaultPos = UDim2.new(1, -80, 1, -80), -- Góc dưới bên phải
 
     -- GUI & Thông báo
-    GuiTitle = "Tiện ích AFK & Clicker v3",
+    GuiTitle = "Hx_v2 Menu",
     NotificationDuration = 5,
     AnimationTime = 0.3,
     IconAntiAFK = "rbxassetid://117118515787811",
@@ -104,12 +104,12 @@ local autoClickCoroutine = nil
 
 -- // ============================ HÀM DỌN DẸP (Cập nhật) ============================ //
 local function cleanup()
-    print("UnifiedAFK+Clicker: Bắt đầu dọn dẹp v3...")
+    print("Hx: Bắt đầu dọn dẹp v3...")
     _G.UnifiedAntiAFK_AutoClicker_Running = false
 
     if State.AutoClicking then
         State.AutoClicking = false
-        print("UnifiedAFK+Clicker: Đã yêu cầu dừng Auto Clicker.")
+        print("Hx: Đã yêu cầu dừng Auto Clicker.")
         autoClickCoroutine = nil
     end
 
@@ -120,7 +120,7 @@ local function cleanup()
     for name, connection in pairs(State.Connections) do
         if connection and typeof(connection) == "RBXScriptConnection" then
             pcall(function() connection:Disconnect() end)
-            -- print("UnifiedAFK+Clicker: Đã ngắt kết nối '" .. name .. "'") -- Giảm spam log
+            -- print("Hx: Đã ngắt kết nối '" .. name .. "'") -- Giảm spam log
         end
         State.Connections[name] = nil
     end
@@ -129,16 +129,16 @@ local function cleanup()
     -- Hủy GUI
     if State.GuiElements.ScreenGui and State.GuiElements.ScreenGui.Parent then
         pcall(function() State.GuiElements.ScreenGui:Destroy() end)
-        print("UnifiedAFK+Clicker: Đã hủy ScreenGui.")
+        print("Hx: Đã hủy ScreenGui.")
     end
 		-- Đảm bảo nút mobile cũng bị hủy nếu tồn tại riêng lẻ
 		if State.GuiElements.MobileClickButton and State.GuiElements.MobileClickButton.Parent then
 			pcall(function() State.GuiElements.MobileClickButton:Destroy() end)
-			print("UnifiedAFK+Clicker: Đã hủy MobileClickButton残.")
+			print("Hx: Đã hủy MobileClickButton残.")
 		end
     State.GuiElements = {} -- Reset bảng
 
-    print("UnifiedAFK+Clicker: Dọn dẹp v3 hoàn tất.")
+    print("Hx: Dọn dẹp v3 hoàn tất.")
     _G.UnifiedAntiAFK_AutoClicker_CleanupFunction = nil
 end
 _G.UnifiedAntiAFK_AutoClicker_CleanupFunction = cleanup
@@ -254,12 +254,12 @@ local function performAntiAFKAction()
         VirtualInputManager:SendKeyEvent(false, Config.SimulatedKeyCode, false, game)
     end)
     if not success then
-        warn("UnifiedAFK+Clicker: Lỗi khi can thiệp AFK:", err)
+        warn("Hx: Lỗi khi can thiệp AFK:", err)
         showNotification("Lỗi Anti-AFK", "Không thể mô phỏng phím.", "AFK")
     else
         State.LastInterventionTime = os.clock()
         State.InterventionCounter = State.InterventionCounter + 1
-        -- print(string.format("UnifiedAFK+Clicker: Đã can thiệp AFK lần %d (nhấn %s)", State.InterventionCounter, tostring(Config.SimulatedKeyCode))) -- Giảm log
+        -- print(string.format("Hx: Đã can thiệp AFK lần %d (nhấn %s)", State.InterventionCounter, tostring(Config.SimulatedKeyCode))) -- Giảm log
     end
 end
 
@@ -271,7 +271,7 @@ local function onInputDetected()
         State.LastInterventionTime = 0
         State.InterventionCounter = 0
         showNotification("Bạn đã quay lại!", "Đã tạm dừng can thiệp AFK.", "AFK")
-        print("UnifiedAFK+Clicker: Người dùng không còn AFK.")
+        print("Hx: Người dùng không còn AFK.")
         if State.GuiElements.AntiAFKStatusLabel then
              State.GuiElements.AntiAFKStatusLabel.Text = "Trạng thái AFK: Bình thường"
              State.GuiElements.AntiAFKStatusLabel.TextColor3 = Color3.fromRGB(180, 255, 180)
@@ -297,7 +297,7 @@ local function doAutoClick()
 	            VirtualInputManager:SendMouseButtonEvent(clickPos.X, clickPos.Y, 0, false, game, 0)
 	        end)
 	        if not success then
-	            warn("UnifiedAFK+Clicker: Lỗi khi auto click:", err)
+	            warn("Hx: Lỗi khi auto click:", err)
 	            showNotification("Lỗi Auto Click", "Không thể mô phỏng click.", "Clicker")
 	            State.AutoClicking = false
 	            if State.GuiElements.AutoClickToggle then
@@ -313,7 +313,7 @@ local function doAutoClick()
 				local waitTime = 1 / State.CurrentCPS
         task.wait(waitTime)
     end
-    print("UnifiedAFK+Clicker: Vòng lặp Auto Click đã dừng.")
+    print("Hx: Vòng lặp Auto Click đã dừng.")
     autoClickCoroutine = nil
 end
 
@@ -330,7 +330,7 @@ local function startClick()
         State.GuiElements.AutoClickToggle.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
     end
     showNotification("Auto Clicker", string.format("Đã bật (%.0f CPS)", State.CurrentCPS), "Clicker")
-    print("UnifiedAFK+Clicker: Bắt đầu Auto Click.")
+    print("Hx: Bắt đầu Auto Click.")
     if not autoClickCoroutine or coroutine.status(autoClickCoroutine) == "dead" then
         autoClickCoroutine = task.spawn(doAutoClick)
     end
@@ -345,7 +345,7 @@ local function stopClick()
         State.GuiElements.AutoClickToggle.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
     end
     showNotification("Auto Clicker", "Đã tắt.", "Clicker")
-    print("UnifiedAFK+Clicker: Đã yêu cầu dừng Auto Click.")
+    print("Hx: Đã yêu cầu dừng Auto Click.")
 		-- Coroutine sẽ tự dừng trong vòng lặp tiếp theo
 end
 
@@ -381,7 +381,7 @@ local function startChoosingClickPos()
 			State.GuiElements.FingerIcon.Position = UDim2.fromOffset(mouse.X - 20, mouse.Y - 20)
 		end
     showNotification("Chọn vị trí", "Click 2 lần để xác định vị trí mới.", "Clicker")
-    print("UnifiedAFK+Clicker: Bắt đầu chọn vị trí click.")
+    print("Hx: Bắt đầu chọn vị trí click.")
 
     local clickCount = 0
 		-- Dọn dẹp kết nối cũ
@@ -416,7 +416,7 @@ local function startChoosingClickPos()
 	            if State.GuiElements.MainFrame then State.GuiElements.MainFrame.Visible = State.GuiVisible end
 	            State.ChoosingClickPos = false -- Kết thúc chế độ chọn
 	            showNotification("Chọn vị trí", string.format("Đã chọn: (%.0f, %.0f)", State.SelectedClickPos.X, State.SelectedClickPos.Y), "Clicker")
-	            print("UnifiedAFK+Clicker: Đã chọn vị trí click mới:", State.SelectedClickPos)
+	            print("Hx: Đã chọn vị trí click mới:", State.SelectedClickPos)
 	        end
 				end
     end)
@@ -450,7 +450,7 @@ local function startBindingHotkey()
 				State.GuiElements.HotkeyButton.BackgroundColor3 = Color3.fromRGB(60, 100, 180) -- Trả lại màu cũ
 			end
 			showNotification("Đặt Hotkey", "Đã đặt hotkey thành: " .. input.KeyCode.Name, "Clicker")
-			print("UnifiedAFK+Clicker: Hotkey được đặt thành:", input.KeyCode.Name)
+			print("Hx: Hotkey được đặt thành:", input.KeyCode.Name)
 
 			-- Ngắt kết nối bind ngay sau khi thành công
 			if State.Connections.HotkeyBinding then State.Connections.HotkeyBinding:Disconnect(); State.Connections.HotkeyBinding = nil end
@@ -490,7 +490,7 @@ local function connectHotkeyListener()
 			end
 		end
 	end)
-	print("UnifiedAFK+Clicker: Đã kết nối trình nghe cho hotkey:", State.AutoClickHotkey.Name)
+	print("Hx: Đã kết nối trình nghe cho hotkey:", State.AutoClickHotkey.Name)
 end
 
 
@@ -499,7 +499,7 @@ local function createOrShowMobileButton()
 	if State.GuiElements.MobileClickButton and State.GuiElements.MobileClickButton.Parent then
 		-- Nút đã tồn tại, chỉ cần đảm bảo nó hiển thị
 		State.GuiElements.MobileClickButton.Visible = true
-		print("UnifiedAFK+Clicker: Hiển thị lại nút Mobile đã có.")
+		print("Hx: Hiển thị lại nút Mobile đã có.")
 	else
 		-- Tạo nút mới
 		local button = Instance.new("ImageButton")
@@ -519,7 +519,7 @@ local function createOrShowMobileButton()
 		corner.CornerRadius = UDim.new(0.5, 0) -- Bo tròn
 
 		State.GuiElements.MobileClickButton = button
-		print("UnifiedAFK+Clicker: Đã tạo nút Mobile mới.")
+		print("Hx: Đã tạo nút Mobile mới.")
 
 		-- Kết nối sự kiện cho nút mobile
 		connectMobileButtonListeners(button)
@@ -564,12 +564,12 @@ local function connectMobileButtonListeners(button)
 			-- Nếu đang ở chế độ Hold và bắt đầu kéo, dừng click ngay
 			stopClick()
 		end
-		print("UnifiedAFK+Clicker: Bắt đầu kéo nút Mobile.")
+		print("Hx: Bắt đầu kéo nút Mobile.")
 	end)
 
 	State.Connections.MobileButtonDragEnded = button.DragStopped:Connect(function()
 		State.MobileButtonIsDragging = false
-		print("UnifiedAFK+Clicker: Kết thúc kéo nút Mobile.")
+		print("Hx: Kết thúc kéo nút Mobile.")
 		-- Không cần làm gì thêm ở đây, InputBegan/Ended sẽ xử lý việc bắt đầu lại click nếu cần
 	end)
 end
@@ -579,7 +579,7 @@ local function hideOrDestroyMobileButton()
 	if State.GuiElements.MobileClickButton and State.GuiElements.MobileClickButton.Parent then
 		-- Chỉ ẩn đi thay vì hủy, để giữ vị trí
 		State.GuiElements.MobileClickButton.Visible = false
-		print("UnifiedAFK+Clicker: Đã ẩn nút Mobile.")
+		print("Hx: Đã ẩn nút Mobile.")
 		-- Tùy chọn: Có thể hủy hoàn toàn nếu muốn reset vị trí mỗi lần chuyển sang mobile
 		-- pcall(function() State.GuiElements.MobileClickButton:Destroy() end)
 		-- State.GuiElements.MobileClickButton = nil
@@ -611,7 +611,7 @@ local function updatePlatformUI()
 			State.GuiElements.MobileClickButton.Visible = true
 		end
 	end
-	print("UnifiedAFK+Clicker: Cập nhật UI cho platform:", State.Platform)
+	print("Hx: Cập nhật UI cho platform:", State.Platform)
 end
 
 
@@ -767,7 +767,7 @@ local function createGUI()
             Config.EnableIntervention = not Config.EnableIntervention
             local statusText = Config.EnableIntervention and "BẬT" or "TẮT"
             showNotification("Anti-AFK", "Can thiệp tự động đã " .. statusText, "AFK")
-            print("UnifiedAFK+Clicker: Can thiệp AFK được đặt thành:", Config.EnableIntervention)
+            print("Hx: Can thiệp AFK được đặt thành:", Config.EnableIntervention)
             return Config.EnableIntervention -- Trả về trạng thái mới để cập nhật nút
         end
     )
@@ -793,7 +793,7 @@ local function createGUI()
 		local modeGroup, modeButtons = createRadioGroup("ClickMode", {"Toggle", "Hold"}, State.AutoClickMode, currentLayoutOrder + 2, frame,
 				function(selectedMode)
 						State.AutoClickMode = selectedMode
-						print("UnifiedAFK+Clicker: Chế độ click đổi thành:", selectedMode)
+						print("Hx: Chế độ click đổi thành:", selectedMode)
 						-- Nếu đang bật click ở chế độ Toggle và chuyển sang Hold, có thể cần dừng click
 						if State.AutoClicking and selectedMode == "Hold" then
 								stopClick()
@@ -807,7 +807,7 @@ local function createGUI()
 		local platformGroup, platformButtons = createRadioGroup("Platform", {"PC", "Mobile"}, State.Platform, currentLayoutOrder + 2, frame,
 				function(selectedPlatform)
 						State.Platform = selectedPlatform
-						print("UnifiedAFK+Clicker: Nền tảng đổi thành:", selectedPlatform)
+						print("Hx: Nền tảng đổi thành:", selectedPlatform)
 						updatePlatformUI() -- Cập nhật các nút hiển thị
 				end
 		)
@@ -853,7 +853,7 @@ local function createGUI()
 								State.GuiElements.MobileClickButton.Draggable = not State.MobileButtonLocked
 						end
 						showNotification("Nút Mobile", State.MobileButtonLocked and "Đã khóa vị trí." or "Đã mở khóa vị trí.", "Clicker")
-						print("UnifiedAFK+Clicker: Khóa vị trí nút Mobile:", State.MobileButtonLocked)
+						print("Hx: Khóa vị trí nút Mobile:", State.MobileButtonLocked)
 						return State.MobileButtonLocked
 				end
 		)
@@ -899,7 +899,7 @@ local function createGUI()
             cpsBox.PlaceholderText = string.format("CPS (hiện tại: %d)", State.CurrentCPS)
             cpsBox.Text = ""
             showNotification("Auto Clicker", string.format("Đã đặt CPS thành %d", State.CurrentCPS), "Clicker")
-            print("UnifiedAFK+Clicker: CPS được đặt thành:", State.CurrentCPS)
+            print("Hx: CPS được đặt thành:", State.CurrentCPS)
         else
             if text ~= "" then showNotification("Lỗi CPS", string.format("Nhập số từ %d đến %d", Config.MinCPS, Config.MaxCPS), "Clicker") end
             cpsBox.Text = ""
@@ -910,13 +910,13 @@ local function createGUI()
     State.Connections.GuiToggleButtonClick = toggleButton.MouseButton1Click:Connect(function()
         State.GuiVisible = not State.GuiVisible
         frame.Visible = State.GuiVisible
-        print("UnifiedAFK+Clicker: GUI visibility toggled to", State.GuiVisible)
+        print("Hx: GUI visibility toggled to", State.GuiVisible)
     end)
 
 		-- Kết nối trình nghe hotkey ban đầu
 		connectHotkeyListener()
 
-    print("UnifiedAFK+Clicker: GUI v3 đã được tạo và kết nối sự kiện.")
+    print("Hx: GUI v3 đã được tạo và kết nối sự kiện.")
 end
 
 -- // ============================ KHỞI TẠO & VÒNG LẶP CHÍNH (Cập nhật Fix Lỗi) ============================ //
@@ -946,14 +946,14 @@ local function initialize()
 
     -- Kết nối sự kiện người chơi (Giữ nguyên)
     if player then
-        State.Connections.CharacterRemoving = player.CharacterRemoving:Connect(function() print("UnifiedAFK+Clicker: Nhân vật đang bị xóa.") end)
+        State.Connections.CharacterRemoving = player.CharacterRemoving:Connect(function() print("Hx: Nhân vật đang bị xóa.") end)
     end
-    State.Connections.PlayerRemoving = Players.PlayerRemoving:Connect(function(leavingPlayer) if leavingPlayer == player then print("UnifiedAFK+Clicker: Người chơi rời đi, dọn dẹp."); cleanup() end end)
+    State.Connections.PlayerRemoving = Players.PlayerRemoving:Connect(function(leavingPlayer) if leavingPlayer == player then print("Hx: Người chơi rời đi, dọn dẹp."); cleanup() end end)
 
     -- Vòng lặp chính (Sửa lỗi thông báo AFK)
     task.wait(1)
     showNotification(Config.GuiTitle, "Đã kích hoạt!", "AFK")
-    print("UnifiedAFK+Clicker: Script v3 đã khởi chạy thành công.")
+    print("Hx: Script v3 đã khởi chạy thành công.")
 
     while _G.UnifiedAntiAFK_AutoClicker_Running do
         local now = os.clock()
@@ -977,7 +977,7 @@ local function initialize()
 											msg = string.format("Can thiệp tiếp theo sau ~%.0f giây.", nextInterventionIn)
 										else
 											msg = "Đang tính thời gian can thiệp..." -- Hoặc thông báo lỗi khác
-											warn("UnifiedAFK+Clicker: nextInterventionIn không phải là số:", nextInterventionIn)
+											warn("Hx: nextInterventionIn không phải là số:", nextInterventionIn)
 										end
 								end
                 showNotification("Vẫn đang AFK...", msg, "AFK") -- Hiển thị thông báo đã sửa
@@ -993,7 +993,7 @@ local function initialize()
                 State.InterventionCounter = 0
                 local msg = Config.EnableIntervention and string.format("Sẽ can thiệp sau ~%.0f giây.", Config.InterventionInterval) or "Can thiệp tự động đang tắt."
                 showNotification("Cảnh báo AFK!", msg, "AFK")
-                print("UnifiedAFK+Clicker: Người dùng được coi là AFK.")
+                print("Hx: Người dùng được coi là AFK.")
                 if State.GuiElements.AntiAFKStatusLabel then
                     State.GuiElements.AntiAFKStatusLabel.Text = "Trạng thái AFK: Đang AFK"
                     State.GuiElements.AntiAFKStatusLabel.TextColor3 = Color3.fromRGB(255, 200, 80)
@@ -1003,13 +1003,13 @@ local function initialize()
 
         task.wait(1)
     end
-    print("UnifiedAFK+Clicker: Vòng lặp chính đã kết thúc do cờ global.")
+    print("Hx: Vòng lặp chính đã kết thúc do cờ global.")
 end
 
 -- // ============================ CHẠY SCRIPT ============================ //
 local success, err = pcall(initialize)
 if not success then
-    warn("UnifiedAFK+Clicker Lỗi Khởi Tạo Nghiêm Trọng v3:", err)
+    warn("Hx Lỗi Khởi Tạo Nghiêm Trọng v3:", err)
     if err then debug.traceback(err) end
     cleanup()
     _G.UnifiedAntiAFK_AutoClicker_Running = false
