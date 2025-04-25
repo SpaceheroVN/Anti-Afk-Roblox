@@ -42,7 +42,7 @@ local Config = {
 		MobileButtonClickSize = 60,
 		MobileButtonDefaultPos = UDim2.new(1, -80, 1, -80), -- Góc dưới bên phải
 
-    GuiTitle = "Tiện ích AFK & Clicker v2",
+    GuiTitle = "Hx_v2 menu",
     NotificationDuration = 5,
     AnimationTime = 0.3,
     IconAntiAFK = "rbxassetid://117118515787811",
