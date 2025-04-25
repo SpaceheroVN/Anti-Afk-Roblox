@@ -2,7 +2,7 @@
 if _G.UnifiedAntiAFK_AutoClicker_Running then
     if _G.UnifiedAntiAFK_AutoClicker_CleanupFunction then
         pcall(_G.UnifiedAntiAFK_AutoClicker_CleanupFunction)
-        warn("Hx: Đã dừng và dọn dẹp instance cũ.")
+        warn("Hx: Đã dừng và dọn dẹp gui cũ.")
     end
 end
 _G.UnifiedAntiAFK_AutoClicker_Running = true
@@ -918,13 +918,13 @@ local function initialize()
 
         task.wait(1)
     end
-    print("Hx: Vòng lặp chính đã kết thúc do cờ global.")
+    print("Hx: Vòng lặp chính đã kết thúc do global.")
 end
 
 -- // ============================ CHẠY SCRIPT ============================ //
 local success, err = pcall(initialize)
 if not success then
-    warn("Hx Lỗi Khởi Tạo Nghiêm Trọng v3:", err)
+    warn("Hx Lỗi Khởi Tạo Nghiêm Trọng v2:", err)
     if err then debug.traceback(err) end
     cleanup()
     _G.UnifiedAntiAFK_AutoClicker_Running = false
