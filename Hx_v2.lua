@@ -317,25 +317,6 @@ local function doAutoClick()
     autoClickCoroutine = nil
 end
 
--- Hàm bắt đầu/dừng dựa trên trạng thái và chế độ
-local function triggerAutoClick()
-	if State.AutoClickMode == "Toggle" then
-		if State.AutoClicking then
-			stopClick()
-		else
-			startClick()
-		end
-	elseif State.AutoClickMode == "Hold" then
-		-- Chế độ Hold: start khi trigger active, stop khi inactive
-		-- Trạng thái active được quản lý bởi InputBegan/Ended của hotkey/nút mobile
-		if State.ClickTriggerActive and not State.AutoClicking then
-			startClick()
-		elseif not State.ClickTriggerActive and State.AutoClicking then
-			stopClick()
-		end
-	end
-end
-
 local function startClick()
     if State.AutoClicking then return end
     if State.ChoosingClickPos then
@@ -366,6 +347,25 @@ local function stopClick()
     showNotification("Auto Clicker", "Đã tắt.", "Clicker")
     print("UnifiedAFK+Clicker: Đã yêu cầu dừng Auto Click.")
 		-- Coroutine sẽ tự dừng trong vòng lặp tiếp theo
+end
+
+-- Hàm bắt đầu/dừng dựa trên trạng thái và chế độ
+local function triggerAutoClick()
+	if State.AutoClickMode == "Toggle" then
+		if State.AutoClicking then
+			stopClick()
+		else
+			startClick()
+		end
+	elseif State.AutoClickMode == "Hold" then
+		-- Chế độ Hold: start khi trigger active, stop khi inactive
+		-- Trạng thái active được quản lý bởi InputBegan/Ended của hotkey/nút mobile
+		if State.ClickTriggerActive and not State.AutoClicking then
+			startClick()
+		elseif not State.ClickTriggerActive and State.AutoClicking then
+			stopClick()
+		end
+	end
 end
 
 local function startChoosingClickPos()
