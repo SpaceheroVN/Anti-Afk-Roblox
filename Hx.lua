@@ -32,7 +32,7 @@ local TweenService = game:GetService("TweenService")
 
 local afkThreshold = 180
 local interventionInterval = 600
-local checkInterval = 60
+local checkInterval = 600
 local notificationDuration = 5
 local animationTime = 0.5
 local iconAssetId = "rbxassetid://117118515787811"
