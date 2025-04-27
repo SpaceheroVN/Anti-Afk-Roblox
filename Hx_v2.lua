@@ -500,8 +500,8 @@ local function startChoosingClickPos()
     lockButton.Position = UDim2.new(0.5, 0, 0, topInset + 15)
     lockButton.AnchorPoint = Vector2.new(0.5, 0)
     lockButton.Image = Config.IconLock
-    lockButton.BackgroundColor3 = Config.ColorButtonPrimary
-    lockButton.BackgroundTransparency = 0.1
+    lockButton.BackgroundColor3 = Config.ColorBackground
+    lockButton.BackgroundTransparency = 0.5
     lockButton.BorderSizePixel = 1
     lockButton.BorderColor3 = Config.ColorBorder
     lockButton.Parent = guiElements.ScreenGui
