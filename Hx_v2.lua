@@ -37,7 +37,7 @@ local Config = {
     IconToggleButton = "rbxassetid://117118515787811", IconMobileClickButton = "rbxassetid://95151289125969", IconLock = "rbxassetid://117118515787811", IconETC = "rbxassetid://117118515787811", IconSystem = "rbxassetid://117118515787811",
     GuiWidth = 330, GuiHeight = 390,
     ToggleButtonSize = 40, LockButtonSize = 40, NotificationWidth = 250, NotificationHeight = 60, NotificationAnchor = Vector2.new(1, 1),
-    NotificationPosition = UDim2.new(1, -18, 1, -48), ScrollbarThickness = 6, CPSBoxWidth = 80, TransparentToggleWidth = 110, TransparentBGLevel = 0.2, OpaqueBGLevel = 0, ButtonTransparentBGLevel = 0.3, ButtonOpaqueBGLevel = 0,
+    NotificationPosition = UDim2.new(1, -18, 1, -48), ScrollbarThickness = 6, CPSBoxWidth = 80, TransparentToggleWidth = 110, TransparentBGLevel = 0.2, OpaqueBGLevel = 0, ButtonTransparentBGLevel = 0.2, ButtonOpaqueBGLevel = 0,
     ColorBackground = Color3.fromRGB(35, 35, 40), ColorBorder = Color3.fromRGB(80, 80, 90), ColorTextPrimary = Color3.fromRGB(245, 245, 245), ColorTextSecondary = Color3.fromRGB(190, 190, 200), ColorInputBackground = Color3.fromRGB(70, 70, 75),
     ColorButtonPrimary = Color3.fromRGB(80, 130, 210), ColorButtonSecondary = Color3.fromRGB(110, 110, 120), ColorToggleOn = Color3.fromRGB(70, 180, 70), ColorToggleOff = Color3.fromRGB(200, 70, 70), ColorSectionHeader = Color3.fromRGB(170, 200, 255),
     ColorScrollbar = Color3.fromRGB(100, 100, 110), ColorToggleCircleBorder = Color3.fromRGB(255, 255, 255), ColorClickTargetCenter = Color3.fromRGB(255, 0, 0), ColorClickTargetBorder = Color3.fromRGB(255, 255, 255), ColorButtonRed = Color3.fromRGB(200, 70, 70), ColorButtonGreen = Color3.fromRGB(70, 180, 70)
