@@ -70,10 +70,9 @@ Phiên bản nâng cấp toàn diện, là một Hub đa chức năng với giao
     * Các tính năng như Auto Clicker, ESP, Anti-AFK tự động được coi là **gian lận (cheating)**.
     * Hành vi này **CÓ THỂ** dẫn đến các hình phạt nghiêm khắc, bao gồm **CẤM TÀI KHOẢN VĨNH VIỄN (BAN)**.
 * **SỬ DỤNG VỚI RỦI RO CỦA RIÊNG BẠN:** Bạn hoàn toàn chịu trách nhiệm về việc sử dụng các script này và mọi hậu quả phát sinh. Nhà phát triển không chịu trách nhiệm nếu tài khoản của bạn bị phạt.
-* **KHẢ NĂNG TƯƠNG THÍCH & BỊ PHÁT HIỆN:**
+* **KHẢ NĂNG TƯƠNG THÍCH:**
     * Script chỉ hoạt động khi có executor tương thích.
     * Các tính năng (đặc biệt trong `Hx Hub v2`) có thể **không hoạt động ổn định** trong mọi game trên Roblox.
-    * Các hệ thống chống gian lận (anti-cheat) của Roblox hoặc của từng game **có thể phát hiện** việc sử dụng script này bất cứ lúc nào.
 * **KHÔNG ĐẢM BẢO:** Script được cung cấp **"nguyên trạng" (as-is)** mà không có bất kỳ sự đảm bảo nào về hiệu suất, tính ổn định, hay khả năng không bị phát hiện trong tương lai.
 
 **Hãy chơi game một cách có trách nhiệm và tôn trọng cộng đồng cũng như các quy tắc của nền tảng.**
