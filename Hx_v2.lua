@@ -1,9 +1,9 @@
--- ███████╗ ██████╗██████╗ ██╗██████╗ ████████╗     ██╗  ██╗██╗  ██╗
--- ██╔════╝██╔════╝██╔══██╗██║██╔══██╗╚══██╔══╝     ██║  ██║╚██╗██╔╝
--- ███████╗██║     ██████╔╝██║██████╔╝   ██║        ███████║ ╚███╔╝
--- ╚════██║██║     ██╔══██╗██║██╔═══╝    ██║        ██╔══██║ ██╔██╗
--- ███████║╚██████╗██║  ██║██║██║        ██║        ██║  ██║██╔╝ ██╗
--- ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝╚═╝        ╚═╝        ╚═╝  ╚═╝╚═╝  ╚═╝
+-- ███████╗ ██████╗██████╗ ██╗██████╗ ████████╗      ██╗  ██╗██╗  ██╗
+-- ██╔════╝██╔════╝██╔══██╗██║██╔══██╗╚══██╔══╝      ██║  ██║╚██╗██╔╝
+-- ███████╗██║     ██████╔╝██║██████╔╝   ██║         ███████║ ╚███╔╝
+-- ╚════██║██║     ██╔══██╗██║██╔═══╝    ██║         ██╔══██║ ██╔██╗
+-- ███████║╚██████╗██║  ██║██║██║        ██║         ██║  ██║██╔╝ ██╗
+-- ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝╚═╝        ╚═╝         ╚═╝  ╚═╝╚═╝  ╚═╝
 
 --===== 🚀 Script Initialization & Reload Check =====--
 if _G.UnifiedAntiAFK_AutoClicker_Running then
@@ -34,9 +34,10 @@ local Config = {
     DefaultClickPos = Vector2.new(mouse.X, mouse.Y), DefaultAutoClickMode = "Toggle", DefaultPlatform = (UserInputService:GetPlatform() == Enum.Platform.Windows or UserInputService:GetPlatform() == Enum.Platform.OSX) and "PC" or "Mobile",
     DefaultHotkey = Enum.KeyCode.R, MobileButtonClickSize = 60, MobileButtonDefaultPos = UDim2.new(1, -80, 1, -80), ClickTargetMarkerSize = 60, ClickTargetCenterDotSize = 8,
     GuiTitle = "Hx_v2", NotificationDuration = 4, AnimationTime = 0.2, IconAntiAFK = "rbxassetid://117118515787811", IconAutoClicker = "rbxassetid://117118515787811",
-    IconToggleButton = "rbxassetid://117118515787811", IconMobileClickButton = "rbxassetid://95151289125969", IconLock = "rbxassetid://114181737500273", IconETC = "rbxassetid://1370487376", IconSystem = "rbxassetid://6031397496",
-    GuiWidth = 330, GuiHeight = 380, ToggleButtonSize = 40, LockButtonSize = 40, NotificationWidth = 250, NotificationHeight = 60, NotificationAnchor = Vector2.new(1, 1),
-    NotificationPosition = UDim2.new(1, -18, 1, -48), ScrollbarThickness = 6, CPSBoxWidth = 80, TransparentToggleWidth = 110, TransparentBGLevel = 0.2, OpaqueBGLevel = 0.1, ButtonTransparentBGLevel = 0.5, ButtonOpaqueBGLevel = 0.3,
+    IconToggleButton = "rbxassetid://117118515787811", IconMobileClickButton = "rbxassetid://95151289125969", IconLock = "rbxassetid://117118515787811", IconETC = "rbxassetid://117118515787811", IconSystem = "rbxassetid://117118515787811",
+    GuiWidth = 330, GuiHeight = 390,
+    ToggleButtonSize = 40, LockButtonSize = 40, NotificationWidth = 250, NotificationHeight = 60, NotificationAnchor = Vector2.new(1, 1),
+    NotificationPosition = UDim2.new(1, -18, 1, -48), ScrollbarThickness = 6, CPSBoxWidth = 80, TransparentToggleWidth = 110, TransparentBGLevel = 0.2, OpaqueBGLevel = 0, ButtonTransparentBGLevel = 0.3, ButtonOpaqueBGLevel = 0,
     ColorBackground = Color3.fromRGB(35, 35, 40), ColorBorder = Color3.fromRGB(80, 80, 90), ColorTextPrimary = Color3.fromRGB(245, 245, 245), ColorTextSecondary = Color3.fromRGB(190, 190, 200), ColorInputBackground = Color3.fromRGB(70, 70, 75),
     ColorButtonPrimary = Color3.fromRGB(80, 130, 210), ColorButtonSecondary = Color3.fromRGB(110, 110, 120), ColorToggleOn = Color3.fromRGB(70, 180, 70), ColorToggleOff = Color3.fromRGB(200, 70, 70), ColorSectionHeader = Color3.fromRGB(170, 200, 255),
     ColorScrollbar = Color3.fromRGB(100, 100, 110), ColorToggleCircleBorder = Color3.fromRGB(255, 255, 255), ColorClickTargetCenter = Color3.fromRGB(255, 0, 0), ColorClickTargetBorder = Color3.fromRGB(255, 255, 255), ColorButtonRed = Color3.fromRGB(200, 70, 70), ColorButtonGreen = Color3.fromRGB(70, 180, 70)
@@ -44,7 +45,13 @@ local Config = {
 local TWEEN_INFO_FAST = TweenInfo.new(Config.AnimationTime, Enum.EasingStyle.Sine, Enum.EasingDirection.Out); local TWEEN_INFO_FAST_IN = TweenInfo.new(Config.AnimationTime, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
 
 --===== 📦 State Variables =====--
-local State = { IsConsideredAFK = false, AutoClicking = false, ChoosingClickPos = false, IsBindingHotkey = false, ClickTriggerActive = false, MobileButtonIsDragging = false, GuiVisible = true, IsTransparent = true, MobileButtonLocked = false, LagReduced = false, LastInputTime = os.clock(), LastInterventionTime = 0, LastCheckTime = 0, InterventionCounter = 0, CurrentCPS = Config.DefaultCPS, SelectedClickPos = Config.DefaultClickPos, AutoClickMode = Config.DefaultAutoClickMode, Platform = Config.DefaultPlatform, AutoClickHotkey = Config.DefaultHotkey, Connections = {}, GuiElements = { ScreenGui = nil, MainFrame = nil, ScrollingFrame = nil, ContentListLayout = nil, GuiToggleButton = nil, TitleBarFrame = nil, TransparentToggle = nil, CircleIndicator = nil, TransparentTextButton = nil, MobileClickButton = nil, NotificationContainer = nil, ClickTargetMarker = nil, LockButton = nil, AutoClicker = { Toggle = nil, ModeGroup = nil, PlatformGroup = nil, CpsLocateFrame = nil, CPSBox = nil, LocateButton = nil, HotkeyButton = nil, MobileCreateButton = nil, MobileLockToggle = nil, ModeButtons = {}, PlatformButtons = {} }, ETC = { ReducesLagButton = nil, AntiAFKToggleButton = nil, EspPlayerButton = nil, AFKStatusLabel = nil } }, TransparencyTargets = {}, SliderSupported = false }
+local State = {
+    IsConsideredAFK = false, AutoClicking = false, ChoosingClickPos = false, IsBindingHotkey = false, ClickTriggerActive = false, MobileButtonIsDragging = false, GuiVisible = true, IsTransparent = true, MobileButtonLocked = false, LagReduced = false, EspEnabled = false,
+    LastInputTime = os.clock(), LastInterventionTime = 0, LastCheckTime = 0, InterventionCounter = 0, CurrentCPS = Config.DefaultCPS, SelectedClickPos = Config.DefaultClickPos, AutoClickMode = Config.DefaultAutoClickMode, Platform = Config.DefaultPlatform, AutoClickHotkey = Config.DefaultHotkey,
+    Connections = {}, EspConnections = {}, HighlightTemplate = nil,
+    GuiElements = { ScreenGui = nil, MainFrame = nil, ScrollingFrame = nil, ContentListLayout = nil, GuiToggleButton = nil, TitleBarFrame = nil, TransparentToggle = nil, CircleIndicator = nil, TransparentTextButton = nil, MobileClickButton = nil, NotificationContainer = nil, ClickTargetMarker = nil, LockButton = nil, AutoClicker = { Toggle = nil, ModeGroup = nil, PlatformGroup = nil, CpsLocateFrame = nil, CPSBox = nil, LocateButton = nil, HotkeyButton = nil, MobileCreateButton = nil, MobileLockToggle = nil, ModeButtons = {}, PlatformButtons = {} }, ETC = { EtcButtonFrame = nil, ReducesLagButton = nil, AntiAFKToggleButton = nil, EspPlayerButton = nil, AFKStatusLabel = nil } }, -- Added EtcButtonFrame
+    TransparencyTargets = {}, SliderSupported = false
+}
 local autoClickCoroutine = nil
 
 --===== ✨ FPS Unlocker =====--
@@ -85,8 +92,194 @@ local function reduceLag()
     if not lag_reduce_success then print("Hx: Lỗi reduceLag:", lag_reduce_err); safeShowNotification("Lỗi Giảm Lag", "Có lỗi xảy ra.", "ETC") end
 end
 
+--===== ✨ ESP Player Functions =====--
+local function createHighlightTemplateEsp()
+    if State.HighlightTemplate then return State.HighlightTemplate end
+    local ht = Instance.new("Highlight")
+    ht.Name = "Highlight_ESP"
+    ht.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    ht.FillTransparency = 0.7
+    ht.OutlineTransparency = 0
+    ht.FillColor = Color3.fromRGB(255, 0, 0)
+    ht.OutlineColor = Color3.fromRGB(255, 255, 255)
+    ht.Enabled = true
+    State.HighlightTemplate = ht
+    return ht
+end
+
+local function removeHighlightFromCharacter(character)
+    if not character then return end
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    if hrp then
+        local highlight = hrp:FindFirstChild("Highlight_ESP")
+        if highlight then
+            pcall(highlight.Destroy, highlight)
+        end
+    end
+end
+
+local function addHighlightToCharacter(character)
+    if not State.EspEnabled or not character then return end
+
+    local template = createHighlightTemplateEsp()
+    if not template then return end
+
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart", 5)
+    if not humanoidRootPart then
+        return
+    end
+
+    if not humanoidRootPart:FindFirstChild(template.Name) then
+        local highlightClone = template:Clone()
+        highlightClone.Adornee = character
+        highlightClone.Parent = humanoidRootPart
+
+        if not State.EspConnections[character] then State.EspConnections[character] = {} end
+        State.EspConnections[character].HighlightInstance = highlightClone
+
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+             local diedConnection = humanoid.Died:Connect(function()
+                if highlightClone and highlightClone.Parent then
+                    pcall(highlightClone.Destroy, highlightClone)
+                end
+                if State.EspConnections[character] and State.EspConnections[character].DiedConnection then
+                    pcall(State.EspConnections[character].DiedConnection.Disconnect, State.EspConnections[character].DiedConnection)
+                    State.EspConnections[character].DiedConnection = nil
+                end
+            end)
+            State.EspConnections[character].DiedConnection = diedConnection
+        end
+    end
+end
+
+local function onEspCharacterAdded(character)
+     task.defer(addHighlightToCharacter, character)
+end
+
+local function onEspPlayerAdded(plr)
+    if not State.EspEnabled then return end
+
+    local charAddedConn = plr.CharacterAdded:Connect(onEspCharacterAdded)
+    State.EspConnections[plr] = State.EspConnections[plr] or {}
+    State.EspConnections[plr].CharacterAddedConnection = charAddedConn
+
+    if plr.Character then
+        onEspCharacterAdded(plr.Character)
+    end
+end
+
+local function onEspPlayerRemoving(plr)
+     if State.EspConnections[plr] then
+         if State.EspConnections[plr].CharacterAddedConnection then
+             pcall(State.EspConnections[plr].CharacterAddedConnection.Disconnect, State.EspConnections[plr].CharacterAddedConnection)
+         end
+         if plr.Character then
+             removeHighlightFromCharacter(plr.Character)
+         end
+         State.EspConnections[plr] = nil
+     end
+ end
+
+local function updateEspButtonState()
+    local btn = State.GuiElements.ETC.EspPlayerButton
+    if not btn then return end
+    local bT = State.IsTransparent and Config.ButtonTransparentBGLevel or Config.ButtonOpaqueBGLevel
+    if State.EspEnabled then
+        btn.Text = "ESP Players: ON"
+        pcall(function() btn.BackgroundColor3 = Config.ColorToggleOn end)
+        pcall(function() btn.BackgroundTransparency = bT end)
+    else
+        btn.Text = "ESP Players: OFF"
+        pcall(function() btn.BackgroundColor3 = Config.ColorToggleOff end)
+        pcall(function() btn.BackgroundTransparency = bT end)
+    end
+end
+
+local function enableEsp()
+    if State.EspEnabled then return end
+    State.EspEnabled = true
+    createHighlightTemplateEsp()
+
+    if State.Connections.EspPlayerAdded then
+        pcall(State.Connections.EspPlayerAdded.Disconnect, State.Connections.EspPlayerAdded)
+    end
+    State.Connections.EspPlayerAdded = Players.PlayerAdded:Connect(onEspPlayerAdded)
+
+    if State.Connections.EspPlayerRemoving then
+         pcall(State.Connections.EspPlayerRemoving.Disconnect, State.Connections.EspPlayerRemoving)
+     end
+     State.Connections.EspPlayerRemoving = Players.PlayerRemoving:Connect(onEspPlayerRemoving)
+
+    for _, p in ipairs(Players:GetPlayers()) do
+        onEspPlayerAdded(p)
+    end
+
+    updateEspButtonState()
+    safeShowNotification("ESP Player", "Đã Bật", "ETC")
+end
+
+local function disableEsp()
+    if not State.EspEnabled then return end
+    State.EspEnabled = false
+
+    if State.Connections.EspPlayerAdded then
+        pcall(State.Connections.EspPlayerAdded.Disconnect, State.Connections.EspPlayerAdded)
+        State.Connections.EspPlayerAdded = nil
+    end
+     if State.Connections.EspPlayerRemoving then
+         pcall(State.Connections.EspPlayerRemoving.Disconnect, State.Connections.EspPlayerRemoving)
+         State.Connections.EspPlayerRemoving = nil
+     end
+
+    for p, conns in pairs(State.EspConnections) do
+         if type(p) == "userdata" and p:IsA("Player") then
+             if conns.CharacterAddedConnection then
+                 pcall(conns.CharacterAddedConnection.Disconnect, conns.CharacterAddedConnection)
+             end
+             if p.Character then
+                 removeHighlightFromCharacter(p.Character)
+                 if conns.DiedConnection then
+                      pcall(conns.DiedConnection.Disconnect, conns.DiedConnection)
+                  end
+             end
+         end
+    end
+    State.EspConnections = {}
+
+    updateEspButtonState()
+    safeShowNotification("ESP Player", "Đã Tắt", "ETC")
+end
+
+local function toggleEsp()
+    if State.EspEnabled then
+        disableEsp()
+    else
+        enableEsp()
+    end
+end
+
+
 --===== 🧹 Cleanup Function =====--
-local function cleanup() print("Hx: Bắt đầu dọn dẹp..."); if not _G.UnifiedAntiAFK_AutoClicker_Running then return end; _G.UnifiedAntiAFK_AutoClicker_Running = false; if State.AutoClicking then State.AutoClicking = false; autoClickCoroutine = nil end; if State.ChoosingClickPos then if State.GuiElements.ClickTargetMarker then pcall(State.GuiElements.ClickTargetMarker.Destroy, State.GuiElements.ClickTargetMarker) end; if State.GuiElements.LockButton then pcall(State.GuiElements.LockButton.Destroy, State.GuiElements.LockButton) end; State.ChoosingClickPos = false end; State.IsBindingHotkey = false; State.LagReduced = false; for _, connection in pairs(State.Connections) do if connection and typeof(connection) == "RBXScriptConnection" then pcall(connection.Disconnect, connection) end end; State.Connections = {}; if State.GuiElements.ScreenGui and State.GuiElements.ScreenGui.Parent and State.GuiElements.ScreenGui.Name == "Hx_v2_GUI" then pcall(State.GuiElements.ScreenGui.Destroy, State.GuiElements.ScreenGui) end; State.GuiElements = { ScreenGui = nil, MainFrame = nil, ScrollingFrame = nil, ContentListLayout = nil, GuiToggleButton = nil, TitleBarFrame = nil, TransparentToggle = nil, CircleIndicator = nil, TransparentTextButton = nil, MobileClickButton = nil, NotificationContainer = nil, ClickTargetMarker = nil, LockButton = nil, AutoClicker = { Toggle = nil, ModeGroup = nil, PlatformGroup = nil, CpsLocateFrame = nil, CPSBox = nil, LocateButton = nil, HotkeyButton = nil, MobileCreateButton = nil, MobileLockToggle = nil, ModeButtons = {}, PlatformButtons = {} }, ETC = { ReducesLagButton = nil, AntiAFKToggleButton = nil, EspPlayerButton = nil, AFKStatusLabel = nil } }; State.TransparencyTargets = {}; print("Hx: Dọn dẹp hoàn tất."); _G.UnifiedAntiAFK_AutoClicker_CleanupFunction = nil end
+local function cleanup()
+    print("Hx: Bắt đầu dọn dẹp...")
+    if not _G.UnifiedAntiAFK_AutoClicker_Running then return end
+    _G.UnifiedAntiAFK_AutoClicker_Running = false
+    if State.AutoClicking then State.AutoClicking = false; autoClickCoroutine = nil end
+    if State.ChoosingClickPos then if State.GuiElements.ClickTargetMarker then pcall(State.GuiElements.ClickTargetMarker.Destroy, State.GuiElements.ClickTargetMarker) end; if State.GuiElements.LockButton then pcall(State.GuiElements.LockButton.Destroy, State.GuiElements.LockButton) end; State.ChoosingClickPos = false end
+    State.IsBindingHotkey = false
+    State.LagReduced = false
+    if State.EspEnabled then disableEsp() end
+    State.HighlightTemplate = nil
+    for _, connection in pairs(State.Connections) do if connection and typeof(connection) == "RBXScriptConnection" then pcall(connection.Disconnect, connection) end end
+    State.Connections = {}
+    State.EspConnections = {}
+    if State.GuiElements.ScreenGui and State.GuiElements.ScreenGui.Parent and State.GuiElements.ScreenGui.Name == "Hx_v2_GUI" then pcall(State.GuiElements.ScreenGui.Destroy, State.GuiElements.ScreenGui) end
+    State.GuiElements = { ScreenGui = nil, MainFrame = nil, ScrollingFrame = nil, ContentListLayout = nil, GuiToggleButton = nil, TitleBarFrame = nil, TransparentToggle = nil, CircleIndicator = nil, TransparentTextButton = nil, MobileClickButton = nil, NotificationContainer = nil, ClickTargetMarker = nil, LockButton = nil, AutoClicker = { Toggle = nil, ModeGroup = nil, PlatformGroup = nil, CpsLocateFrame = nil, CPSBox = nil, LocateButton = nil, HotkeyButton = nil, MobileCreateButton = nil, MobileLockToggle = nil, ModeButtons = {}, PlatformButtons = {} }, ETC = { EtcButtonFrame = nil, ReducesLagButton = nil, AntiAFKToggleButton = nil, EspPlayerButton = nil, AFKStatusLabel = nil } }
+    State.TransparencyTargets = {}
+    print("Hx: Dọn dẹp hoàn tất.")
+    _G.UnifiedAntiAFK_AutoClicker_CleanupFunction = nil
+end
 _G.UnifiedAntiAFK_AutoClicker_CleanupFunction = cleanup
 
 --===== 🛋️ Anti-AFK Functions =====--
@@ -100,7 +293,6 @@ local function doAutoClick() local cp=State.SelectedClickPos;while State.AutoCli
 local function updateAutoClickToggleButtonState()
     local t = State.GuiElements.AutoClicker.Toggle; if not(t and t.Parent) then return end
     local i = State.AutoClicking
-    -- <<< CHANGED: Use "Auto Click: " instead of "AC: " >>>
     local l = "Auto Click: " .. (i and "ON" or "OFF")
     local c = i and Config.ColorToggleOn or Config.ColorToggleOff
     t.Text = l; pcall(function() t.BackgroundColor3 = c end)
@@ -109,13 +301,13 @@ local function startClick() if State.AutoClicking or State.ChoosingClickPos or S
 local function stopClick() if not State.AutoClicking then return end;State.AutoClicking=false;updateAutoClickToggleButtonState();safeShowNotification("Auto Clicker","Tắt","Clicker") end
 local function triggerAutoClick() if State.AutoClickMode=="Toggle" then if State.AutoClicking then stopClick() else startClick() end elseif State.AutoClickMode=="Hold" then if State.ClickTriggerActive and not State.AutoClicking then startClick() elseif not State.ClickTriggerActive and State.AutoClicking then stopClick() end end end
 local function endClickPositionChoice(c) if not State.ChoosingClickPos then return end;local o,g=State.Connections,State.GuiElements;if o.ConfirmClickPos then pcall(o.ConfirmClickPos.Disconnect,o.ConfirmClickPos);o.ConfirmClickPos=nil end;if o.CancelClickPosKey then pcall(o.CancelClickPosKey.Disconnect,o.CancelClickPosKey);o.CancelClickPosKey=nil end;if g.ClickTargetMarker and g.ClickTargetMarker.Parent then pcall(g.ClickTargetMarker.Destroy,g.ClickTargetMarker);g.ClickTargetMarker=nil end;if g.LockButton and g.LockButton.Parent then pcall(g.LockButton.Destroy,g.LockButton);g.LockButton=nil end;if g.MainFrame then g.MainFrame.Visible=State.GuiVisible end;if g.GuiToggleButton then g.GuiToggleButton.Visible=true end;State.ChoosingClickPos=false;if c then safeShowNotification("Chọn vị trí","Hủy","Clicker")else safeShowNotification("Chọn vị trí",string.format("Khóa:(%.0f,%.0f)",State.SelectedClickPos.X,State.SelectedClickPos.Y),"Clicker") end end
-local function confirmClickPosition() if not State.ChoosingClickPos then return end;local g=State.GuiElements;if not g.ClickTargetMarker or not g.ClickTargetMarker.Parent then endClickPositionChoice(true);return end;local m=g.ClickTargetMarker;local p,s=m.AbsolutePosition,m.AbsoluteSize;State.SelectedClickPos=Vector2.new(p.X+s.X/2,p.Y+s.Y/2);endClickPositionChoice(false) end
+local function confirmClickPosition() if not State.ChoosingClickPos then return end; local g=State.GuiElements; if not g.ClickTargetMarker or not g.ClickTargetMarker.Parent then endClickPositionChoice(true); return end; local m=g.ClickTargetMarker; local p,s=m.AbsolutePosition,m.AbsoluteSize; State.SelectedClickPos=Vector2.new(p.X+s.X/2, p.Y+s.Y*1.5); endClickPositionChoice(false); end
 local function cancelClickPositionChoice() if State.ChoosingClickPos then endClickPositionChoice(true) end end
 local function startChoosingClickPos() if State.ChoosingClickPos or State.IsBindingHotkey then return end;if State.AutoClicking then stopClick() end;local g,c=State.GuiElements,State.Connections;State.ChoosingClickPos=true;if g.MainFrame then g.MainFrame.Visible=false end;if g.GuiToggleButton then g.GuiToggleButton.Visible=false end;local m=Instance.new("Frame");m.Name="CTM";m.Size=UDim2.fromOffset(Config.ClickTargetMarkerSize,Config.ClickTargetMarkerSize);m.Position=UDim2.new(0.5,0,0.5,0);m.AnchorPoint=Vector2.new(0.5,0.5);m.BackgroundColor3=Config.ColorBorder;m.BackgroundTransparency=0.5;m.BorderSizePixel=1;m.BorderColor3=Config.ColorClickTargetBorder;m.Active=true;m.Draggable=true;m.Parent=g.ScreenGui;m.ZIndex=20;Instance.new("UICorner",m).CornerRadius=UDim.new(0.5,0);g.ClickTargetMarker=m;local d=Instance.new("Frame");d.Name="CD";d.Size=UDim2.fromOffset(Config.ClickTargetCenterDotSize,Config.ClickTargetCenterDotSize);d.Position=UDim2.new(0.5,0,0.5,0);d.AnchorPoint=Vector2.new(0.5,0.5);d.BackgroundColor3=Config.ColorClickTargetCenter;d.BorderSizePixel=0;d.Parent=m;Instance.new("UICorner",d).CornerRadius=UDim.new(0.5,0);local t=GuiService:GetGuiInset().Y;local l=Instance.new("ImageButton");l.Name="LB";l.Size=UDim2.fromOffset(Config.LockButtonSize,Config.LockButtonSize);l.Position=UDim2.new(0.5,0,0,t+15);l.AnchorPoint=Vector2.new(0.5,0);l.Image=Config.IconLock;l.BackgroundColor3=Config.ColorBackground;l.BackgroundTransparency=0.5;l.BorderSizePixel=1;l.BorderColor3=Config.ColorBorder;l.Parent=g.ScreenGui;l.ZIndex=21;Instance.new("UICorner",l).CornerRadius=UDim.new(0,6);g.LockButton=l;if c.ConfirmClickPos then pcall(c.ConfirmClickPos.Disconnect,c.ConfirmClickPos) end;c.ConfirmClickPos=l.MouseButton1Click:Connect(confirmClickPosition);if c.CancelClickPosKey then pcall(c.CancelClickPosKey.Disconnect,c.CancelClickPosKey) end;c.CancelClickPosKey=UserInputService.InputBegan:Connect(function(i,gp) if State.ChoosingClickPos and not gp and i.KeyCode==Enum.KeyCode.Escape then cancelClickPositionChoice() end end);safeShowNotification("Chọn vị trí","Kéo, nhấn 🔒 xác nhận.","Clicker") end
 local function startBindingHotkey()
     if State.IsBindingHotkey or State.ChoosingClickPos then return end; if State.AutoClicking then stopClick() end; State.IsBindingHotkey = true; local h = State.GuiElements.AutoClicker.HotkeyButton; local oT, oC; if h then oT, oC = h.Text, h.BackgroundColor3; h.BackgroundColor3 = Color3.fromRGB(200, 150, 50); h.Text = "Nhấn..." end; safeShowNotification("Đặt Hotkey", "Nhấn phím (. hủy)", "Clicker"); local c = State.Connections; if c.HotkeyBinding then pcall(c.HotkeyBinding.Disconnect, c.HotkeyBinding); c.HotkeyBinding = nil end
     local function endBinding(cancelled, newKey) if not State.IsBindingHotkey then return end; if c.HotkeyBinding then pcall(c.HotkeyBinding.Disconnect, c.HotkeyBinding); c.HotkeyBinding = nil end; State.IsBindingHotkey = false; if h then h.BackgroundColor3 = oC end; if cancelled then if h then h.Text = oT end; safeShowNotification("Đặt Hotkey", "Hủy", "Clicker") else if newKey then State.AutoClickHotkey = newKey; if h then h.Text = "Hotkey: " .. newKey.Name end; safeShowNotification("Đặt Hotkey", "Đặt: " .. newKey.Name, "Clicker"); connectHotkeyListener() else if h then h.Text = oT end end end end
-    connections.HotkeyBinding = UserInputService.InputBegan:Connect(function(input, gp)
+    c.HotkeyBinding = UserInputService.InputBegan:Connect(function(input, gp)
         if not State.IsBindingHotkey or gp then return end
         if input.UserInputType == Enum.UserInputType.Keyboard then
             if input.KeyCode == Enum.KeyCode.Period then
@@ -159,8 +351,100 @@ local function createGUI()
         updateAutoClickToggleButtonState()
     end);g.AutoClicker.ModeGroup=mG;g.AutoClicker.ModeButtons=mB;
     lO=lO+1;createGuiElement("TextLabel",{Name="PL",Size=UDim2.new(1,0,0,18),Text="Nền tảng:",Font=Enum.Font.SourceSans,TextSize=13,TextColor3=Config.ColorTextSecondary,BackgroundTransparency=1,TextXAlignment=Enum.TextXAlignment.Left,LayoutOrder=lO,Parent=cP});lO=lO+1;local pG,pB=createRadioGroup("P",{"PC","Mobile"},State.Platform,lO,cP,function(nP) if State.Platform~=nP then State.Platform=nP;updatePlatformUI() end end);g.AutoClicker.PlatformGroup=pG;g.AutoClicker.PlatformButtons=pB;lO=lO+1;local hB=createGuiElement("TextButton",{Name="HB",Size=UDim2.new(1,0,0,32),Text="Hotkey: "..State.AutoClickHotkey.Name,Font=Enum.Font.SourceSansBold,TextSize=15,TextColor3=Config.ColorTextPrimary,BackgroundColor3=Config.ColorButtonPrimary,BackgroundTransparency=cBBT,LayoutOrder=lO,Visible=(State.Platform=="PC"),Parent=cP});createGuiElement("UICorner",{CornerRadius=UDim.new(0,5),Parent=hB});g.AutoClicker.HotkeyButton=hB;c.HBC=hB.MouseButton1Click:Connect(startBindingHotkey);table.insert(State.TransparencyTargets,hB);local mCB=createGuiElement("TextButton",{Name="MCB",Size=UDim2.new(1,0,0,32),Text="Tạo/Hiện nút Mobile",Font=Enum.Font.SourceSansBold,TextSize=15,TextColor3=Config.ColorTextPrimary,BackgroundColor3=Config.ColorButtonPrimary,BackgroundTransparency=cBBT,LayoutOrder=lO,Visible=(State.Platform=="Mobile"),Parent=cP});createGuiElement("UICorner",{CornerRadius=UDim.new(0,5),Parent=mCB});g.AutoClicker.MobileCreateButton=mCB;c.MCC=mCB.MouseButton1Click:Connect(createOrShowMobileButton);table.insert(State.TransparencyTargets,mCB);lO=lO+1;local mLT=createToggle("MLT","Khóa vị trí nút",lO,cP,State.MobileButtonLocked,function() State.MobileButtonLocked=not State.MobileButtonLocked;if g.MobileClickButton then g.MobileClickButton.Draggable=not State.MobileButtonLocked end;local lS=State.MobileButtonLocked and "Khóa(OK)"or"Mở(No AC)";safeShowNotification("Nút Mobile",lS,"Clicker");if not State.MobileButtonLocked and State.AutoClicking then stopClick();safeShowNotification("Auto Clicker","Tắt(Mở khóa)","Clicker") end;return State.MobileButtonLocked end);mLT.Visible=(State.Platform=="Mobile");g.AutoClicker.MobileLockToggle=mLT;lO=lO+1;local cLF=createGuiElement("Frame",{Name="CLF",Size=UDim2.new(1,0,0,35),BackgroundTransparency=1,LayoutOrder=lO,Parent=cP});g.AutoClicker.CpsLocateFrame=cLF;local cLL2=createGuiElement("UIListLayout",{FillDirection=Enum.FillDirection.Horizontal,VerticalAlignment=Enum.VerticalAlignment.Center,HorizontalAlignment=Enum.HorizontalAlignment.Left,SortOrder=Enum.SortOrder.LayoutOrder,Padding=UDim.new(0,8),Parent=cLF});local cpsB=createGuiElement("TextBox",{Name="CPS",Size=UDim2.new(0,Config.CPSBoxWidth,1,0),Text="",Font=Enum.Font.SourceSans,TextSize=15,TextColor3=Config.ColorTextPrimary,BackgroundColor3=Config.ColorInputBackground,BackgroundTransparency=0.1,PlaceholderColor3=Config.ColorTextSecondary,ClearTextOnFocus=true,TextXAlignment=Enum.TextXAlignment.Center,LayoutOrder=1,Parent=cLF});createGuiElement("UICorner",{CornerRadius=UDim.new(0,5),Parent=cpsB});g.AutoClicker.CPSBox=cpsB;updateCPSPlaceholder();local lB=createGuiElement("TextButton",{Name="LB",Size=UDim2.new(1,-(Config.CPSBoxWidth+cLL2.Padding.Offset),1,0),Text="Chọn vị trí",Font=Enum.Font.SourceSansBold,TextSize=15,TextColor3=Config.ColorTextPrimary,BackgroundColor3=Config.ColorButtonPrimary,BackgroundTransparency=cBBT,LayoutOrder=2,Parent=cLF});createGuiElement("UICorner",{CornerRadius=UDim.new(0,5),Parent=lB});g.AutoClicker.LocateButton=lB;c.LBC=lB.MouseButton1Click:Connect(startChoosingClickPos);table.insert(State.TransparencyTargets,lB)
-    lO=lO+1;createGuiElement("TextLabel",{Name="ETCH",Size=UDim2.new(1,0,0,22),Text="───═══[ ✨ ETC ✨ ]═══───",Font=Enum.Font.SourceSansBold,TextSize=17,TextColor3=Config.ColorSectionHeader,BackgroundTransparency=1,LayoutOrder=lO,Parent=cP});lO=lO+1;local eBF=createGuiElement("Frame",{Name="EBF",Size=UDim2.new(1,0,0,30),BackgroundTransparency=1,LayoutOrder=lO,Parent=cP});local eBL=createGuiElement("UIListLayout",{FillDirection=Enum.FillDirection.Horizontal,VerticalAlignment=Enum.VerticalAlignment.Center,HorizontalAlignment=Enum.HorizontalAlignment.Center,SortOrder=Enum.SortOrder.LayoutOrder,Padding=UDim.new(0,5),Parent=eBF});local eAW=Config.GuiWidth-20-(2*eBL.Padding.Offset);local eBW=math.floor(eAW/3);local rLB=createGuiElement("TextButton",{Name="RLB",Size=UDim2.new(0,eBW,1,0),Text="Reduces Lag",Font=Enum.Font.SourceSansSemibold,TextSize=14,TextColor3=Config.ColorTextPrimary,BackgroundColor3=State.LagReduced and Config.ColorButtonGreen or Config.ColorButtonRed,BackgroundTransparency=cBBT,LayoutOrder=1,Parent=eBF,AutoButtonColor=false});createGuiElement("UICorner",{CornerRadius=UDim.new(0,5),Parent=rLB});g.ETC.ReducesLagButton=rLB;table.insert(State.TransparencyTargets,rLB);c.RLC=rLB.MouseButton1Click:Connect(function()if not State.LagReduced then reduceLag();if State.LagReduced then pcall(function()rLB.BackgroundColor3=Config.ColorButtonGreen end)end else safeShowNotification("Giảm Lag","Vào lại để tắt.","ETC")end end);local aATB=createGuiElement("TextButton",{Name="AATB",Size=UDim2.new(0,eBW,1,0),Text="Anti AFK"..(Config.EnableIntervention and": ON"or": OFF"),Font=Enum.Font.SourceSansSemibold,TextSize=14,TextColor3=Config.ColorTextPrimary,BackgroundColor3=Config.EnableIntervention and Config.ColorToggleOn or Config.ColorToggleOff,BackgroundTransparency=cBBT,LayoutOrder=2,Parent=eBF,AutoButtonColor=false});createGuiElement("UICorner",{CornerRadius=UDim.new(0,5),Parent=aATB});g.ETC.AntiAFKToggleButton=aATB;table.insert(State.TransparencyTargets,aATB);c.EATC=aATB.MouseButton1Click:Connect(function()Config.EnableIntervention=not Config.EnableIntervention;local s=Config.EnableIntervention and"BẬT"or"TẮT";safeShowNotification("Anti-AFK","Can thiệp: "..s,"AFK");aATB.Text="Anti AFK"..(Config.EnableIntervention and": ON"or": OFF");pcall(function()aATB.BackgroundColor3=Config.EnableIntervention and Config.ColorToggleOn or Config.ColorToggleOff end);updateAFKStatusLabel()end);local ePB=createGuiElement("TextButton",{Name="EPB",Size=UDim2.new(0,eBW,1,0),Text="ESP Player",Font=Enum.Font.SourceSansSemibold,TextSize=14,TextColor3=Config.ColorTextPrimary,BackgroundColor3=Config.ColorButtonSecondary,BackgroundTransparency=cBBT,LayoutOrder=3,Parent=eBF,AutoButtonColor=false});createGuiElement("UICorner",{CornerRadius=UDim.new(0,5),Parent=ePB});g.ETC.EspPlayerButton=ePB;table.insert(State.TransparencyTargets,ePB);c.EPC=ePB.MouseButton1Click:Connect(function()safeShowNotification("ESP Player","Đang PT.","ETC")end)
-    lO=lO+1;local aSL=createGuiElement("TextLabel",{Name="ASL",Size=UDim2.new(1,0,0,20),Text="AFK: Bình thường",Font=Enum.Font.SourceSans,TextSize=14,TextColor3=Color3.fromRGB(180,255,180),BackgroundTransparency=1,TextXAlignment=Enum.TextXAlignment.Left,LayoutOrder=lO,Parent=cP});g.ETC.AFKStatusLabel=aSL;updateAFKStatusLabel();lO=lO+1;createGuiElement("Frame",{Name="BPF",Size=UDim2.new(1,0,0,10),BackgroundTransparency=1,BorderSizePixel=0,LayoutOrder=lO,Parent=cP})
+
+    lO=lO+1;createGuiElement("TextLabel",{Name="ETCH",Size=UDim2.new(1,0,0,22),Text="───═══[ ✨ ETC ✨ ]═══───",Font=Enum.Font.SourceSansBold,TextSize=17,TextColor3=Config.ColorSectionHeader,BackgroundTransparency=1,LayoutOrder=lO,Parent=cP});
+
+    lO=lO+1; local eBF=createGuiElement("Frame",{Name="EBF",Size=UDim2.new(1,0,0,30),BackgroundTransparency=1,LayoutOrder=lO,Parent=cP});
+    g.ETC.EtcButtonFrame = eBF 
+
+    local eBL=createGuiElement("UIListLayout",{
+        FillDirection=Enum.FillDirection.Horizontal,
+        VerticalAlignment=Enum.VerticalAlignment.Center,
+        HorizontalAlignment=Enum.HorizontalAlignment.Center,
+        SortOrder=Enum.SortOrder.LayoutOrder,
+        Padding=UDim.new(0,5), 
+        Parent=eBF
+    });
+
+    local totalPadding = eBL.Padding.Offset * 2 
+    local availableWidth = Config.GuiWidth - 20 - totalPadding 
+    local buttonWidth = math.floor(availableWidth / 3)
+
+    local rLB=createGuiElement("TextButton",{
+        Name="RLB",
+        Size=UDim2.new(0,buttonWidth,1,0), 
+        Text="Reduces Lag",
+        Font=Enum.Font.SourceSansSemibold, TextSize=14,
+        TextColor3=Config.ColorTextPrimary,
+        BackgroundColor3=State.LagReduced and Config.ColorButtonGreen or Config.ColorButtonRed,
+        BackgroundTransparency=cBBT,
+        LayoutOrder=1, 
+        Parent=eBF, 
+        AutoButtonColor=false
+    });
+    createGuiElement("UICorner",{CornerRadius=UDim.new(0,5),Parent=rLB});
+    g.ETC.ReducesLagButton=rLB;
+    table.insert(State.TransparencyTargets,rLB);
+    c.RLC=rLB.MouseButton1Click:Connect(function()if not State.LagReduced then reduceLag();if State.LagReduced then pcall(function()rLB.BackgroundColor3=Config.ColorButtonGreen; rLB.Text = "Lag Reduced" end)end else safeShowNotification("Giảm Lag","Vào lại để tắt.","ETC")end end);
+
+    local aATB=createGuiElement("TextButton",{
+        Name="AATB",
+        Size=UDim2.new(0,buttonWidth,1,0), 
+        Text="AntiAFK"..(Config.EnableIntervention and": ON"or": OFF"),
+        Font=Enum.Font.SourceSansSemibold, TextSize=14,
+        TextColor3=Config.ColorTextPrimary,
+        BackgroundColor3=Config.EnableIntervention and Config.ColorToggleOn or Config.ColorToggleOff,
+        BackgroundTransparency=cBBT,
+        LayoutOrder=2, 
+        Parent=eBF, 
+        AutoButtonColor=false
+    });
+    createGuiElement("UICorner",{CornerRadius=UDim.new(0,5),Parent=aATB});
+    g.ETC.AntiAFKToggleButton=aATB;
+    table.insert(State.TransparencyTargets,aATB);
+    c.EATC=aATB.MouseButton1Click:Connect(function()
+        Config.EnableIntervention=not Config.EnableIntervention;
+        local s=Config.EnableIntervention and"BẬT"or"TẮT";
+        safeShowNotification("Anti-AFK","Can thiệp: "..s,"AFK");
+        aATB.Text="AntiAFK"..(Config.EnableIntervention and": ON"or": OFF"); -- Update shortened text
+        pcall(function()aATB.BackgroundColor3=Config.EnableIntervention and Config.ColorToggleOn or Config.ColorToggleOff end);
+        updateAFKStatusLabel()
+    end);
+
+    local ePB=createGuiElement("TextButton",{
+        Name="EPB",
+        Size=UDim2.new(0,buttonWidth,1,0), 
+        Text="ESP: OFF", 
+        Font=Enum.Font.SourceSansSemibold, TextSize=14,
+        TextColor3=Config.ColorTextPrimary,
+        BackgroundColor3=Config.ColorToggleOff, 
+        BackgroundTransparency=cBBT,
+        LayoutOrder=3, 
+        Parent=eBF, 
+        AutoButtonColor=false
+    });
+    createGuiElement("UICorner",{CornerRadius=UDim.new(0,5),Parent=ePB});
+    g.ETC.EspPlayerButton=ePB;
+    table.insert(State.TransparencyTargets,ePB);
+    c.EPC=ePB.MouseButton1Click:Connect(toggleEsp)
+    updateEspButtonState()
+
+    lO=lO+1;local aSL=createGuiElement("TextLabel",{
+        Name="ASL",
+        Size=UDim2.new(1,0,0,20),
+        Text="AFK: Bình thường",
+        Font=Enum.Font.SourceSans,TextSize=14,
+        TextColor3=Color3.fromRGB(180,255,180),
+        BackgroundTransparency=1,
+        TextXAlignment=Enum.TextXAlignment.Left,
+        LayoutOrder=lO,
+        Parent=cP 
+    });
+    g.ETC.AFKStatusLabel=aSL;
+    updateAFKStatusLabel();
+
+    lO=lO+1;createGuiElement("Frame",{Name="BPF",Size=UDim2.new(1,0,0,10),BackgroundTransparency=1,BorderSizePixel=0,LayoutOrder=lO,Parent=cP})
+
     local function vS(i,s) local n=tonumber(i);if n then n=math.floor(math.clamp(n,Config.MinCPS,Config.MaxCPS)+0.5);if State.CurrentCPS~=n then State.CurrentCPS=n;if s=="T" then safeShowNotification("Auto Clicker",string.format("CPS:%d",State.CurrentCPS),"Clicker") end;updateCPSPlaceholder() end;return true else if s=="T"and i~=""then safeShowNotification("Lỗi CPS","Số?","Clicker")end;updateCPSPlaceholder();return false end end
     local cFL="CFL";if c[cFL] then pcall(c[cFL].Disconnect,c[cFL]) end;c[cFL]=cpsB.FocusLost:Connect(function(eP) local t=cpsB.Text;if t~=""then vS(t,"T")end;cpsB.Text="";updateCPSPlaceholder();if eP then pcall(cpsB.ReleaseFocus,cpsB)end end)
     local cF="CF";if c[cF] then pcall(c[cF].Disconnect,c[cF]) end;c[cF]=cpsB.Focused:Connect(updateCPSPlaceholder)
