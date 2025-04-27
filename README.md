@@ -19,7 +19,6 @@ Phiên bản đầu tiên, tập trung duy nhất vào việc chống bị kick 
     * `enableIntervention`: `true`/`false` để bật/tắt mô phỏng nhấn phím.
     * `simulatedKeyCode`: Phím được mô phỏng (ví dụ: `Enum.KeyCode.Space`).
 
----==========================================---
 
 ## 2. Hx Hub v2 (Anti-AFK, Auto Clicker, ETC)
 
@@ -64,7 +63,7 @@ Phiên bản nâng cấp toàn diện, là một Hub đa chức năng với giao
 
 ---
 
-## ⚠️ Lưu ý Quan trọng & Tuyên bố Miễn trừ Trách nhiệm (Áp dụng cho cả hai script)
+## ⚠️ Lưu ý Quan trọng & Tuyên bố Miễn trừ Trách nhiệm (Áp dụng cho cả hai script và cả bản đang phát triển Hx_v3)
 
 * **RỦI RO VI PHẠM ĐIỀU KHOẢN DỊCH VỤ (ToS) CỦA ROBLOX:**
     * Việc sử dụng bất kỳ phần mềm thứ ba nào (executor) để chạy script can thiệp vào gameplay là **vi phạm nghiêm trọng** quy định của Roblox.
