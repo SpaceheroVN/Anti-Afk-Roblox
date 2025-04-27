@@ -1,10 +1,12 @@
-# Hx Scripts for Roblox (Anti-AFK & Multi-Tool Hub)
-
-Đây là kho lưu trữ chứa các script Lua cho Roblox, được phát triển dưới tên 'Hx'. Bao gồm một script Anti-AFK đơn giản và một Hub đa năng (v2) tích hợp Anti-AFK, Auto Clicker, ESP, và nhiều hơn nữa.
-
----
-
-## 1. Hx Anti-AFK (Script gốc)
+```
+-- ███████╗ ██████╗██████╗ ██╗██████╗ ████████╗      ██╗  ██╗██╗  ██╗
+-- ██╔════╝██╔════╝██╔══██╗██║██╔══██╗╚══██╔══╝      ██║  ██║╚██╗██╔╝
+-- ███████╗██║     ██████╔╝██║██████╔╝   ██║         ███████║ ╚███╔╝
+-- ╚════██║██║     ██╔══██╗██║██╔═══╝    ██║         ██╔══██║ ██╔██╗
+-- ███████║╚██████╗██║  ██║██║██║        ██║         ██║  ██║██╔╝ ██╗
+-- ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝╚═╝        ╚═╝         ╚═╝  ╚═╝╚═╝  ╚═╝
+```
+## 1. Hx (Anti-AFK)
 
 Phiên bản đầu tiên, tập trung duy nhất vào việc chống bị kick khỏi game do AFK.
 
@@ -17,18 +19,10 @@ Phiên bản đầu tiên, tập trung duy nhất vào việc chống bị kick 
     * `enableIntervention`: `true`/`false` để bật/tắt mô phỏng nhấn phím.
     * `simulatedKeyCode`: Phím được mô phỏng (ví dụ: `Enum.KeyCode.Space`).
 
----
+---==========================================---
 
 ## 2. Hx Hub v2 (Anti-AFK, Auto Clicker, ETC)
 
-```
--- ███████╗ ██████╗██████╗ ██╗██████╗ ████████╗      ██╗  ██╗██╗  ██╗
--- ██╔════╝██╔════╝██╔══██╗██║██╔══██╗╚══██╔══╝      ██║  ██║╚██╗██╔╝
--- ███████╗██║     ██████╔╝██║██████╔╝   ██║         ███████║ ╚███╔╝
--- ╚════██║██║     ██╔══██╗██║██╔═══╝    ██║         ██╔══██║ ██╔██╗
--- ███████║╚██████╗██║  ██║██║██║        ██║         ██║  ██║██╔╝ ██╗
--- ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝╚═╝        ╚═╝         ╚═╝  ╚═╝╚═╝  ╚═╝
-```
 Phiên bản nâng cấp toàn diện, là một Hub đa chức năng với giao diện đồ họa (GUI) trực quan.
 ### Tính năng chính
 
