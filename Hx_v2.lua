@@ -30,7 +30,7 @@ local mouse = player:GetMouse()
 
 --===== ⚙️ Script Configuration =====--
 local Config = {
-    AfkThreshold = 180, InterventionInterval = 300, CheckInterval = 300, EnableIntervention = true, DefaultCPS = 20, MinCPS = 1, MaxCPS = 100,
+    AfkThreshold = 300, InterventionInterval = 300, CheckInterval = 300, EnableIntervention = true, DefaultCPS = 20, MinCPS = 1, MaxCPS = 100,
     DefaultClickPos = Vector2.new(mouse.X, mouse.Y), DefaultAutoClickMode = "Toggle", DefaultPlatform = (UserInputService:GetPlatform() == Enum.Platform.Windows or UserInputService:GetPlatform() == Enum.Platform.OSX) and "PC" or "Mobile",
     DefaultHotkey = Enum.KeyCode.R, MobileButtonClickSize = 60, MobileButtonDefaultPos = UDim2.new(1, -80, 1, -80), ClickTargetMarkerSize = 60, ClickTargetCenterDotSize = 8,
     GuiTitle = "Hx_v2", NotificationDuration = 4, AnimationTime = 0.2, IconAntiAFK = "rbxassetid://117118515787811", IconAutoClicker = "rbxassetid://117118515787811",
@@ -285,7 +285,11 @@ _G.UnifiedAntiAFK_AutoClicker_CleanupFunction = cleanup
 --===== 🛋️ Anti-AFK Functions =====--
 local function isPositionOverScriptGui(p) if not State.GuiElements.ScreenGui then return false end;local e={State.GuiElements.MainFrame,State.GuiElements.GuiToggleButton,State.GuiElements.MobileClickButton,State.GuiElements.NotificationContainer};if State.ChoosingClickPos then table.insert(e,State.GuiElements.ClickTargetMarker);table.insert(e,State.GuiElements.LockButton) end;for _,g in ipairs(e) do if g and g:IsA("GuiObject") and g.Visible and g.AbsoluteSize.X>0 then local o,s=g.AbsolutePosition,g.AbsoluteSize;if p.X>=o.X and p.X<=o.X+s.X and p.Y>=o.Y and p.Y<=o.Y+s.Y then return true end end end;if State.GuiElements.NotificationContainer then for _,n in ipairs(State.GuiElements.NotificationContainer:GetChildren()) do if n:IsA("GuiObject") and n.Visible and n.AbsoluteSize.X>0 then local np,ns=n.AbsolutePosition,n.AbsoluteSize;if p.X>=np.X and p.X<=np.X+ns.X and p.Y>=np.Y and p.Y<=np.Y+ns.Y then return true end end end end;return false end
 local function performAntiAFKAction() if not Config.EnableIntervention then return end;local a,s,e="",false,"?";local g=State.GuiElements;if State.GuiVisible and g.MainFrame and g.MainFrame.Visible then a="Jump";s,e=pcall(function() VirtualInputManager:SendKeyEvent(true,Enum.KeyCode.Space,false,game);task.wait(0.06);VirtualInputManager:SendKeyEvent(false,Enum.KeyCode.Space,false,game) end) else a="Click";local c=Workspace.CurrentCamera;if not c then print("Hx: No Camera");return end;local v=c.ViewportSize;local x,y=v.X/2,v.Y/2;s,e=pcall(function() VirtualInputManager:SendMouseButtonEvent(x,y,0,true,game,0);task.wait(0.06);VirtualInputManager:SendMouseButtonEvent(x,y,0,false,game,0) end) end;if not s then print("Hx: Lỗi AntiAFK("..a.."):",e);safeShowNotification("Lỗi Anti-AFK","Lỗi","AFK") else State.LastInterventionTime=os.clock();State.InterventionCounter=State.InterventionCounter+1 end end
-local function updateAFKStatusLabel() local s=State.GuiElements.ETC.AFKStatusLabel;if not s then return end;if not Config.EnableIntervention then s.Text="AFK: Bình thường(Tắt)";s.TextColor3=Config.ColorTextSecondary elseif State.IsConsideredAFK then s.Text="AFK: Đang AFK";s.TextColor3=Color3.fromRGB(255,200,80) else s.Text="AFK: Bình thường";s.TextColor3=Color3.fromRGB(180,255,180) end end
+local function updateAFKStatusLabel()
+    local s = State.GuiElements.ETC.AFKStatusLabel; if not s then return end
+    s.Text = (not Config.EnableIntervention and "AFK: Đã tắt") or (State.IsConsideredAFK and "Trạng thái: Đang AFK") or "Trạng thái: Đang hoạt động"
+    s.TextColor3 = (not Config.EnableIntervention and Config.ColorTextSecondary) or (State.IsConsideredAFK and Color3.fromRGB(255, 200, 80)) or Color3.fromRGB(180, 255, 180)
+end
 local function onInputDetected() local n=os.clock();if State.IsConsideredAFK then State.IsConsideredAFK=false;State.LastInterventionTime=0;State.InterventionCounter=0;if Config.EnableIntervention then safeShowNotification("Bạn đã quay lại!","OK","AFK") end;updateAFKStatusLabel() end;State.LastInputTime=n end
 
 --===== 🖱️ Auto Clicker Functions =====--
