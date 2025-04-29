@@ -71,7 +71,7 @@ Phiên bản mới tập trung vào việc **cải thiện hiệu năng game** b
 
 ---
 
-### 3️⃣ **Hx_V.0.3: Hub Đa Năng (Anti-AFK, Auto Clicker, Reduces Lag, ESP Player)**
+### 3️⃣ **Hx_V.0.3:**
 
 
 ---
