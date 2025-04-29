@@ -6,11 +6,14 @@
            ███████║╚██████╗██║  ██║██║██║        ██║         ██║  ██║██╔╝ ██╗
            ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝╚═╝        ╚═╝         ╚═╝  ╚═╝╚═╝  ╚═╝
 ```
-## 1. Hx (Anti-AFK)
+# ✍️ **Giới thiệu sơ lược:** Script chỉ dùng với mục đích là tăng tính trải nghiệm game, không mang tính chất nhằm mục đích gian lận. 
+- Bạn có thể lấy và tùy chỉnh nếu thích!
 
-Phiên bản đầu tiên, tập trung duy nhất vào việc chống bị kick khỏi game do AFK.
+# 1. Hx_V.0.1
 
-### Tính năng chính
+## **Phiên bản đầu tiên**, tập trung duy nhất vào việc chống bị kick khỏi game do AFK.
+
+## Tính năng chính
 * **Chống AFK:** Tự động phát hiện khi người chơi không hoạt động và mô phỏng nhấn phím (mặc định: `Space`) để duy trì trạng thái online.
 * **Thông báo:** Hiển thị thông báo trạng thái đơn giản trên màn hình (đã kích hoạt, cảnh báo AFK, v.v.).
 * **Cấu hình cơ bản:** Cho phép chỉnh sửa ngưỡng thời gian AFK, khoảng thời gian can thiệp, và phím mô phỏng qua các biến ở đầu script.
@@ -19,8 +22,11 @@ Phiên bản đầu tiên, tập trung duy nhất vào việc chống bị kick 
     * `enableIntervention`: `true`/`false` để bật/tắt mô phỏng nhấn phím.
     * `simulatedKeyCode`: Phím được mô phỏng (ví dụ: `Enum.KeyCode.Space`).
 
+# 2. Hx_V.0.2
 
-## 2. Hx Hub v2 (Anti-AFK, Auto Clicker, ETC)
+* **
+
+## 3. Hx_V.0.3 (Anti-AFK, Auto Clicker, Reduces Lag, ESP Player)
 
 Phiên bản nâng cấp toàn diện, là một Hub đa chức năng với giao diện đồ họa (GUI) trực quan.
 ### Tính năng chính
