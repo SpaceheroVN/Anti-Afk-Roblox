@@ -49,7 +49,7 @@ local KICH_THUOC_KHUNG_CHUA = UDim2.new(0, 300, 0, 200)
 -- 🧩 Các Hàm Chính
 
 local function donDepTaiNguyen()
-	print("AntiAFK: Bắt đầu dọn dẹp tài nguyên...")
+	print("Hx: Bắt đầu dọn dẹp tài nguyên...")
 	dangChay = false 
 
 	if ketNoiInputBegan then ketNoiInputBegan:Disconnect(); ketNoiInputBegan = nil end
@@ -72,7 +72,7 @@ local function donDepTaiNguyen()
 
 	nguoiChoiCucBo = nil
 
-	print("AntiAFK: Dọn dẹp hoàn tất.")
+	print("Hx: Dọn dẹp hoàn tất.")
 end
 
 local function xoaTweenKhoiTheoDoi(tweenInstance)
@@ -169,26 +169,26 @@ local function thietLapKhungChuaThongBao()
 	end
 
 	if not nguoiChoiCucBo or not nguoiChoiCucBo:IsDescendantOf(NguoiChoiService) then
-		warn("AntiAFK: Đối tượng người chơi cục bộ không hợp lệ.")
+		warn("Hx: Đối tượng người chơi cục bộ không hợp lệ.")
 		return nil
 	end
 	local playerGui = nguoiChoiCucBo:FindFirstChild("PlayerGui")
 	if not playerGui then
 		playerGui = nguoiChoiCucBo:WaitForChild("PlayerGui", 5)
 		if not playerGui then
-			 warn("AntiAFK: Không tìm thấy PlayerGui cho " .. nguoiChoiCucBo.Name)
+			 warn("Hx: Không tìm thấy PlayerGui cho " .. nguoiChoiCucBo.Name)
 			 return nil
 		end
 	end
 
-	local oldGui = playerGui:FindFirstChild("AntiAFKContainerGui")
+	local oldGui = playerGui:FindFirstChild("HxContainerGui")
 	if oldGui then
-		warn("AntiAFK: Phát hiện và hủy GUI AntiAFK cũ.")
+		warn("Hx: Phát hiện và hủy GUI Hx cũ.")
 		oldGui:Destroy()
 	end
 
 	giaoDienManHinh = Instance.new("ScreenGui")
-	giaoDienManHinh.Name = "AntiAFKContainerGui"
+	giaoDienManHinh.Name = "HxContainerGui"
 	giaoDienManHinh.ResetOnSpawn = false
 	giaoDienManHinh.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	giaoDienManHinh.DisplayOrder = 999
@@ -215,11 +215,11 @@ end
 
 local function hienThiThongBao(tieuDe, noiDung)
 	if not dangChay then return end
-	if not khungChuaThongBao or not khungChuaThongBao.Parent then warn("AntiAFK: Khung chứa thông báo không hợp lệ."); return end
-	if not mauThongBao then warn("AntiAFK: Mẫu thông báo chưa được tạo."); return end
+	if not khungChuaThongBao or not khungChuaThongBao.Parent then warn("Hx: Khung chứa thông báo không hợp lệ."); return end
+	if not mauThongBao then warn("Hx: Mẫu thông báo chưa được tạo."); return end
 
 	local khungMoi = mauThongBao:Clone()
-	if not khungMoi then warn("AntiAFK: Không thể clone mẫu thông báo."); return end
+	if not khungMoi then warn("Hx: Không thể clone mẫu thông báo."); return end
 
 	local hinhIcon = khungMoi:FindFirstChild("Icon")
 	local khungChu = khungMoi:FindFirstChild("TextFrame")
@@ -227,7 +227,7 @@ local function hienThiThongBao(tieuDe, noiDung)
 	local nhanNoiDung = khungChu and khungChu:FindFirstChild("Message")
 
 	if not (hinhIcon and nhanTieuDe and nhanNoiDung) then
-		warn("AntiAFK: Khung thông báo clone bị lỗi cấu trúc.")
+		warn("Hx: Khung thông báo clone bị lỗi cấu trúc.")
 		khungMoi:Destroy()
 		return
 	end
@@ -309,11 +309,11 @@ local function thucHienHanhDongChongAFK()
 	end)
 
 	if not thanhCong then
-		warn("AntiAFK: Không thể mô phỏng nhấn phím " .. tostring(MA_PHIM_MO_PHONG) .. ". Lỗi:", loi)
+		warn("Hx: Không thể mô phỏng nhấn phím " .. tostring(MA_PHIM_MO_PHONG) .. ". Lỗi:", loi)
 	else
 		thoiDiemCanThiepCuoi = time()
 		boDemCanThiep = boDemCanThiep + 1
-		print(string.format("AntiAFK: Đã thực hiện can thiệp lần %d (nhấn %s)", boDemCanThiep, tostring(MA_PHIM_MO_PHONG)))
+		print(string.format("Hx: Đã thực hiện can thiệp lần %d (nhấn %s)", boDemCanThiep, tostring(MA_PHIM_MO_PHONG)))
 	end
 end
 
@@ -340,7 +340,7 @@ local function xuLyInput(doiTuongInput)
 			thoiDiemCanThiepCuoi = 0
 			boDemCanThiep = 0
 			hienThiThongBao("Bạn đã quay lại!", "Đã tạm dừng can thiệp AFK.")
-			print("AntiAFK: Người dùng không còn AFK.")
+			print("Hx: Người dùng không còn AFK.")
 		end
 		thoiDiemInputCuoi = hienTai
 	end
@@ -348,12 +348,12 @@ end
 
 local function vongLapChinh()
 	if not thietLapKhungChuaThongBao() then
-		warn("AntiAFK: Không thể khởi tạo container GUI.")
+		warn("Hx: Không thể khởi tạo container GUI.")
 		donDepTaiNguyen()
 		return
 	end
 	if not taoMauThongBao() then
-		warn("AntiAFK: Không thể tạo template GUI.")
+		warn("Hx: Không thể tạo template GUI.")
 		donDepTaiNguyen()
 		return
 	end
@@ -369,8 +369,8 @@ local function vongLapChinh()
 
 	task.wait(3)
 	if not dangChay then return end
-	hienThiThongBao("Anti AFK", "Đã được kích hoạt.")
-	print("Anti-AFK Script đã khởi chạy.")
+	hienThiThongBao("Hx", "Anti AFK đã được kích hoạt.")
+	print("Hx Script đã khởi chạy.")
 
 	while dangChay do
 		local hienTai = time()
@@ -403,23 +403,23 @@ local function vongLapChinh()
 				boDemCanThiep = 0
 				local thongDiep = BAT_CAN_THIEP_TU_DONG and string.format("Sẽ can thiệp sau ~%.0f giây nếu không hoạt động.", KHOANG_CAN_THIEP_GIAY) or "Bạn hiện đang AFK (can thiệp tự động đang tắt)."
 				hienThiThongBao("Cảnh báo AFK!", thongDiep)
-				print("AntiAFK: Người dùng được coi là AFK.")
+				print("Hx: Người dùng được coi là AFK.")
 			end
 		end
 
 		if not dangChay then break end
 		task.wait(0.5)
 	end
-	print("AntiAFK: Vòng lặp chính đã thoát.")
+	print("Hx: Vòng lặp chính đã thoát.")
 end
 
 -- ▶️ Khởi Tạo và Dọn Dẹp
 if not nguoiChoiCucBo then
-	warn("AntiAFK: Không tìm thấy người chơi cục bộ khi script bắt đầu.")
+	warn("Hx: Không tìm thấy người chơi khi script bắt đầu.")
 else
 	ketNoiPlayerRemoving = NguoiChoiService.PlayerRemoving:Connect(function(nguoiChoiRoiDi)
 		if nguoiChoiRoiDi == nguoiChoiCucBo then
-			print("AntiAFK: Người chơi cục bộ đang rời đi. Bắt đầu dọn dẹp.")
+			print("Hx: Người chơi đang rời đi. Bắt đầu dọn dẹp.")
 			if dangChay then
 			   donDepTaiNguyen()
 			end
@@ -429,10 +429,10 @@ else
 	local luongChinh = coroutine.create(vongLapChinh)
 	local khoiTaoThanhCong, loiKhoiTao = coroutine.resume(luongChinh)
 	if not khoiTaoThanhCong then
-		warn("AntiAFK Lỗi Khởi Tạo Coroutine:", loiKhoiTao)
+		warn("Hx Lỗi Khởi Tạo Coroutine:", loiKhoiTao)
 		if dangChay then donDepTaiNguyen() end
 	elseif coroutine.status(luongChinh) == "dead" and dangChay then
-		 warn("AntiAFK: Coroutine chính đã kết thúc bất ngờ.")
+		 warn("Hx: Coroutine chính đã kết thúc bất ngờ.")
 		 if dangChay then donDepTaiNguyen() end
 	end
 end
