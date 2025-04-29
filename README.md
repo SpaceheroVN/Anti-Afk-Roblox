@@ -11,7 +11,7 @@
 
 # 1. Hx_V.0.1
 
-## **Phiên bản đầu tiên**, tập trung duy nhất vào việc chống bị kick khỏi game do AFK.
+- **Phiên bản đầu tiên**, tập trung duy nhất vào việc chống bị kick khỏi game do AFK.
 
 ## Tính năng chính
 * **Chống AFK:** Tự động phát hiện khi người chơi không hoạt động và mô phỏng nhấn phím (mặc định: `Space`) để duy trì trạng thái online.
@@ -26,10 +26,10 @@
 
 * **
 
-## 3. Hx_V.0.3 (Anti-AFK, Auto Clicker, Reduces Lag, ESP Player)
+# 3. Hx_V.0.3 (Anti-AFK, Auto Clicker, Reduces Lag, ESP Player)
 
-Phiên bản nâng cấp toàn diện, là một Hub đa chức năng với giao diện đồ họa (GUI) trực quan.
-### Tính năng chính
+- **Phiên bản nâng cấp toàn diện**, là một Hub đa chức năng với giao diện đồ họa (GUI) trực quan.
+## Tính năng chính
 
 * **Giao diện đồ họa (GUI):**
     * Cửa sổ kéo thả, có thể ẩn/hiện bằng nút bấm riêng.
@@ -58,10 +58,10 @@ Phiên bản nâng cấp toàn diện, là một Hub đa chức năng với giao
 
 ---
 
-## 🚀 Cài đặt & Sử dụng (Chung cho cả hai script)
+## 🚀 Cài đặt & Sử dụng
 
 1.  **Yêu cầu BẮT BUỘC:** Bạn **phải** có một trình thực thi script (executor) đang hoạt động trong Roblox.
-2.  **Sao chép Mã:** Copy toàn bộ nội dung của script bạn muốn sử dụng (`Hx Anti-AFK` hoặc `Hx Hub v2`).
+2.  **Sao chép Mã:** Copy toàn bộ nội dung của script bạn muốn sử dụng.
 3.  **Thực thi:** Mở giao diện executor trong game, dán mã vừa sao chép vào ô nhập liệu và nhấn nút thực thi (thường là `Execute`, `Run`, `Inject`...).
 4.  **Sử dụng (Đối với Hx Hub v2):**
     * Một nút nhỏ (icon Hx) sẽ xuất hiện, nhấn vào đó để ẩn/hiện GUI chính.
