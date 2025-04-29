@@ -6,7 +6,7 @@
            ███████║╚██████╗██║  ██║██║██║        ██║         ██║  ██║██╔╝ ██╗
            ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝╚═╝        ╚═╝         ╚═╝  ╚═╝╚═╝  ╚═╝
 ```
-# ✍️ **Giới thiệu sơ lược:** Script chỉ dùng với mục đích là tăng tính trải nghiệm game, không mang tính chất nhằm mục đích gian lận. 
+# ✍️ Script chỉ dùng với mục đích là tăng tính trải nghiệm game, không mang tính chất nhằm mục đích gian lận. 
 - Bạn có thể lấy và tùy chỉnh nếu thích!
 
 # 1. Hx_V.0.1
