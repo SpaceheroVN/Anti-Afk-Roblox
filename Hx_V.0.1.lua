@@ -343,7 +343,7 @@ local function xuLyInput(doiTuongInput)
 			thoiDiemCanThiepCuoi = 0
 			boDemCanThiep = 0
 			hienThiThongBao("Bạn đã quay lại!", "Đã tạm dừng can thiệp AFK.")
-			print("Hx: Người dùng không còn AFK.")
+			print("Hx_V.0.1: Người dùng không còn AFK.")
 		end
 		thoiDiemInputCuoi = hienTai
 	end
@@ -351,12 +351,12 @@ end
 
 local function vongLapChinh()
 	if not thietLapKhungChuaThongBao() then
-		warn("Hx: Không thể khởi tạo container GUI.")
+		warn("Hx_V.0.1: Không thể khởi tạo container GUI.")
 		donDepTaiNguyen()
 		return
 	end
 	if not taoMauThongBao() then
-		warn("Hx: Không thể tạo template GUI.")
+		warn("Hx_V.0.1: Không thể tạo template GUI.")
 		donDepTaiNguyen()
 		return
 	end
@@ -372,8 +372,8 @@ local function vongLapChinh()
 
 	task.wait(3)
 	if not dangChay then return end
-	hienThiThongBao("Hx", "Anti AFK đã được kích hoạt.")
-	print("Hx Script đã khởi chạy.")
+	hienThiThongBao("Hx_V.0.1", "Anti AFK đã được kích hoạt.")
+	print("Hx_V.0.1 Script đã khởi chạy.")
 
 	while dangChay do
 		local hienTai = time()
@@ -406,23 +406,23 @@ local function vongLapChinh()
 				boDemCanThiep = 0
 				local thongDiep = BAT_CAN_THIEP_TU_DONG and string.format("Sẽ can thiệp sau ~%.0f giây nếu không hoạt động.", KHOANG_CAN_THIEP_GIAY) or "Bạn hiện đang AFK (can thiệp tự động đang tắt)."
 				hienThiThongBao("Cảnh báo AFK!", thongDiep)
-				print("Hx: Người dùng được coi là AFK.")
+				print("Hx_V.0.1: Người dùng được coi là AFK.")
 			end
 		end
 
 		if not dangChay then break end
 		task.wait(0.5)
 	end
-	print("Hx: Vòng lặp chính đã thoát.")
+	print("Hx_V.0.1: Vòng lặp chính đã thoát.")
 end
 
 -- ▶️ Khởi Tạo và Dọn Dẹp
 if not nguoiChoiCucBo then
-	warn("Hx: Không tìm thấy người chơi khi script bắt đầu.")
+	warn("Hx_V.0.1: Không tìm thấy người chơi khi script bắt đầu.")
 else
 	ketNoiPlayerRemoving = NguoiChoiService.PlayerRemoving:Connect(function(nguoiChoiRoiDi)
 		if nguoiChoiRoiDi == nguoiChoiCucBo then
-			print("Hx: Người chơi đang rời đi. Bắt đầu dọn dẹp.")
+			print("Hx_V.0.1: Người chơi đang rời đi. Bắt đầu dọn dẹp.")
 			if dangChay then
 			   donDepTaiNguyen()
 			end
@@ -432,10 +432,10 @@ else
 	local luongChinh = coroutine.create(vongLapChinh)
 	local khoiTaoThanhCong, loiKhoiTao = coroutine.resume(luongChinh)
 	if not khoiTaoThanhCong then
-		warn("Hx Lỗi Khởi Tạo Coroutine:", loiKhoiTao)
+		warn("Hx_V.0.1 Lỗi Khởi Tạo Coroutine:", loiKhoiTao)
 		if dangChay then donDepTaiNguyen() end
 	elseif coroutine.status(luongChinh) == "dead" and dangChay then
-		 warn("Hx: Coroutine chính đã kết thúc bất ngờ.")
+		 warn("Hx_V.0.1: Coroutine chính đã kết thúc bất ngờ.")
 		 if dangChay then donDepTaiNguyen() end
 	end
 end
