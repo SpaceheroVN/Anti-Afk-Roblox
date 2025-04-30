@@ -186,7 +186,7 @@ local function thietLapKhungChuaThongBao()
 
 	local oldGui = playerGui:FindFirstChild("HxContainerGui")
 	if oldGui then
-		warn("Hx: Phát hiện và hủy GUI Hx cũ.")
+		warn("Hx: Phát hiện và hủy GUI Hx_V.0.1 cũ.")
 		oldGui:Destroy()
 	end
 
