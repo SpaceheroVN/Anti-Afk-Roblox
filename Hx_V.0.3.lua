@@ -128,8 +128,8 @@ local function createNotificationTemplate()
 	local i = Instance.new("ImageLabel", notificationTemplate); i.Name = "Icon"; i.Image = NOTIF_ICON_ID; i.BackgroundTransparency=1; i.ImageTransparency=1; i.Size=UDim2.new(0,40,0,40); i.LayoutOrder=1
 	local tf = Instance.new("Frame", notificationTemplate); tf.Name="TextFrame"; tf.BackgroundTransparency=1; tf.Size=UDim2.new(1,-50,1,0); tf.LayoutOrder=2
 	local tll = Instance.new("UIListLayout", tf); tll.FillDirection,tll.HorizontalAlignment,tll.VerticalAlignment,tll.SortOrder,tll.Padding = Enum.FillDirection.Vertical,Enum.HorizontalAlignment.Left,Enum.VerticalAlignment.Center,Enum.SortOrder.LayoutOrder,UDim.new(0,2)
-	local tt = Instance.new("TextLabel", tf); tt.Name="Title"; tt.Text="Tiêu đề"; tt.Font=Enum.Font.SourceSansSemibold; tt.TextSize=15; tt.TextColor3=Color3.fromRGB(255,255,255); tt.BackgroundTransparency=1; tt.TextTransparency=1; tt.TextXAlignment=Enum.TextXAlignment.Left; tt.Size=UDim2.new(1,0,0,18); tt.LayoutOrder=1
-	local msg = Instance.new("TextLabel", tf); msg.Name="Message"; msg.Text="Nội dung."; msg.Font=Enum.Font.SourceSans; msg.TextSize=13; msg.TextColor3=Color3.fromRGB(200,200,200); msg.BackgroundTransparency=1; msg.TextTransparency=1; msg.TextXAlignment=Enum.TextXAlignment.Left; msg.TextWrapped=true; msg.Size=UDim2.new(1,0,0,28); msg.LayoutOrder=2
+	local tt = Instance.new("TextLabel", tf); tt.Name="Title"; tt.Text="Tiêu đề"; tt.Font=Enum.Font.SourceSansSemibold; tt.TextSize=17; tt.TextColor3=Color3.fromRGB(255,255,255); tt.BackgroundTransparency=1; tt.TextTransparency=1; tt.TextXAlignment=Enum.TextXAlignment.Left; tt.Size=UDim2.new(1,0,0,18); tt.LayoutOrder=1
+	local msg = Instance.new("TextLabel", tf); msg.Name="Message"; msg.Text="Nội dung."; msg.Font=Enum.Font.SourceSans; msg.TextSize=15; msg.TextColor3=Color3.fromRGB(200,200,200); msg.BackgroundTransparency=1; msg.TextTransparency=1; msg.TextXAlignment=Enum.TextXAlignment.Left; msg.TextWrapped=true; msg.Size=UDim2.new(1,0,0,28); msg.LayoutOrder=2
 	return notificationTemplate
 end
 
