@@ -299,7 +299,7 @@ if RunService:IsClient() then
     local oldNotifUI = playerGui:FindFirstChild(NOTIFICATION_GUI_NAME)
     if oldNotifUI then warn("Hx_V.0.3: Dọn UI thông báo cũ: ", NOTIFICATION_GUI_NAME); oldNotifUI:Destroy() end
     
-	if ENABLE_NOTIFICATIONS then if not createNotificationTemplate() or not setupNotificationContainer() then warn("Hx_V.0.3: Lỗi khởi tạo hệ thống thông báo."); cleanupResources(); return else showNotification(nil,"v0.3.5 đã kích hoạt.") end end
+	if ENABLE_NOTIFICATIONS then if not createNotificationTemplate() or not setupNotificationContainer() then warn("Hx_V.0.3: Lỗi khởi tạo hệ thống thông báo."); cleanupResources(); return else showNotification(nil,"V.0.3 đã kích hoạt.") end end
 	if not localPlayer.Character or not localPlayer.Character.Parent then localPlayer.CharacterAdded:Wait(); task.wait(0.5) end
     currentPresetName = PRESETS[DEFAULT_PRESET_ON_START] and DEFAULT_PRESET_ON_START or "OFF"
 	saveOriginalSettings()
