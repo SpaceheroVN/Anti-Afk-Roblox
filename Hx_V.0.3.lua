@@ -44,7 +44,7 @@ local MAIN_SCREEN_GUI_NAME = "HxLagReducerScreenGui_v035"
 local NOTIFICATION_GUI_NAME = "HxNotificationGui_v035"
 
 -- 🚀 Cấu Hình Tối Ưu
-local DEFAULT_PRESET_ON_START = "OFF"
+local DEFAULT_PRESET_ON_START = DEFAULT_SETTING or "OFF"
 local DEFAULT_OPTIMIZATION_CONFIG = {
 	DisableGlobalShadows = false, ForceCompatibilityLighting = true, DisablePostEffects = false,
 	SimplifyEnvironmentLight = false, DisableParticleEffects = false, OptimizeTerrainWater = false,
