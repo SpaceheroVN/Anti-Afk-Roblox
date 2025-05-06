@@ -27,9 +27,9 @@ local UI_ICON_ID = "rbxassetid://117118515787811"
 
 -- 🖼️ Cài Đặt Nút UI
 local UI_TEXT_SIZE = 17
-local UI_ICON_SIZE = UDim2.new(0, 55, 0, 55)
-local UI_FRAME_WIDTH = 70
-local UI_FRAME_HEIGHT = 80
+local UI_ICON_SIZE = UDim2.new(0, 35, 0, 85)
+local UI_FRAME_WIDTH = 40
+local UI_FRAME_HEIGHT = 50
 
 -- 🔔 Cài Đặt Thông Báo
 local NOTIF_DURATION_S = 5
