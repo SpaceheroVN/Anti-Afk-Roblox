@@ -6,7 +6,7 @@
 -- ||   ██║  ██║██╔╝ ██╗    ███████║╚██████╗██║  ██║██║██║        ██║      ||
 -- ||   ╚═╝  ╚═╝╚═╝  ╚═╝    ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝╚═╝        ╚═╝      ||
 -- \========================================================================/
-wait(1)
+
 -- ⚙️ Dịch Vụ Roblox
 local DichVuInputNguoiDung = game:GetService("UserInputService")
 local NguoiChoiService = game:GetService("Players")
