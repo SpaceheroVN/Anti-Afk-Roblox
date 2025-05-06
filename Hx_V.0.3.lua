@@ -263,7 +263,7 @@ local function applyPreset(presetName)
     currentConfig,currentPresetName=table.clone(DEFAULT_OPTIMIZATION_CONFIG),presetName
     if presetName=="OFF" then
         restoreAllSafeOptimizations()
-        if fastFlagsApplied then task.wait(0.5); showNotification("Thông Báo Hx", "Một số cài đặt (như FastFlags) vẫn còn hiệu lực cho phiên này và không thể tự tắt bởi script.") end
+        if fastFlagsApplied then task.wait(0.5); showNotification("Hx Lag Reducer", "Một số cài đặt (như FastFlags) vẫn còn hiệu lực cho phiên này và không thể tự tắt bởi script.") end
     else local presetData=PRESETS[presetName]; if presetData then for k,v in pairs(presetData) do if currentConfig[k]~=nil then currentConfig[k]=v else warn("Hx_V.0.3: Key lạ '"..k.."' trong preset '"..presetName.."'") end end; optimizedObjects=setmetatable({}, {__mode="k"}); applyAllSafeOptimizations()
         else warn("Hx_V.0.3: Preset '"..presetName.."' không tìm thấy. Quay về OFF."); applyPreset("OFF"); return end
     end
