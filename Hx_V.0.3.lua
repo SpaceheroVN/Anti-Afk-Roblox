@@ -23,7 +23,7 @@ print("Hx_V.0.3: Script Giảm Lag đang tải...")
 -- ⚙️ Cài Đặt Script
 local ENABLE_UI = true
 local ENABLE_NOTIFICATIONS = true
-local UI_ICON_ID = "rbxassetid://13600845569"
+local UI_ICON_ID = "rbxassetid://117118515787811"
 
 -- 🖼️ Cài Đặt Nút UI
 local UI_TEXT_SIZE = 15
@@ -34,7 +34,7 @@ local UI_FRAME_HEIGHT = 80
 -- 🔔 Cài Đặt Thông Báo
 local NOTIF_DURATION_S = 4
 local NOTIF_ANIM_DURATION_S = 0.4
-local NOTIF_ICON_ID = "rbxassetid://13600845569"
+local NOTIF_ICON_ID = "rbxassetid://117118515787811"
 local NOTIF_GUI_SIZE = UDim2.new(0, 230, 0, 55)
 local NOTIF_CONTAINER_POS = UDim2.new(1, -15, 1, -40)
 local NOTIF_CONTAINER_SIZE = UDim2.new(0, 280, 0, 180)
