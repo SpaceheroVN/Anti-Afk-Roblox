@@ -32,8 +32,8 @@ local UI_FRAME_WIDTH = 70
 local UI_FRAME_HEIGHT = 80
 
 -- 🔔 Cài Đặt Thông Báo
-local NOTIF_DURATION_S = 4
-local NOTIF_ANIM_DURATION_S = 0.4
+local NOTIF_DURATION_S = 5
+local NOTIF_ANIM_DURATION_S = 0.5
 local NOTIF_ICON_ID = "rbxassetid://117118515787811"
 local NOTIF_GUI_SIZE = UDim2.new(0, 250, 0, 60)
 local NOTIF_CONTAINER_POS = UDim2.new(1, -12, 1, -48)
