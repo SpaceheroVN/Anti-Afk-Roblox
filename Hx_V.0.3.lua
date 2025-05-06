@@ -145,7 +145,7 @@ local function setupNotificationContainer()
 end
 
 local function showNotification(title, message)
-	local notifTitle = title or "Hx Giảm Lag"
+	local notifTitle = title or "Hx Lag Reducer"
 	if not ENABLE_NOTIFICATIONS or not isRunning then return end
 	if not notificationContainer or not notificationContainer.Parent then if not setupNotificationContainer() then warn("Hx_V.0.3: Khung chứa thông báo lỗi."); return end end
 	if not notificationTemplate then if not createNotificationTemplate() then warn("Hx_V.0.3: Mẫu thông báo lỗi."); return end end
