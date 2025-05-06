@@ -26,7 +26,7 @@ local ENABLE_NOTIFICATIONS = true
 local UI_ICON_ID = "rbxassetid://117118515787811"
 
 -- 🖼️ Cài Đặt Nút UI
-local UI_TEXT_SIZE = 15
+local UI_TEXT_SIZE = 22
 local UI_ICON_SIZE = UDim2.new(0, 55, 0, 55)
 local UI_FRAME_WIDTH = 70
 local UI_FRAME_HEIGHT = 80
@@ -36,7 +36,7 @@ local NOTIF_DURATION_S = 5
 local NOTIF_ANIM_DURATION_S = 0.5
 local NOTIF_ICON_ID = "rbxassetid://117118515787811"
 local NOTIF_GUI_SIZE = UDim2.new(0, 250, 0, 60)
-local NOTIF_CONTAINER_POS = UDim2.new(1, -12, 1, -48)
+local NOTIF_CONTAINER_POS = UDim2.new(1, -18, 1, -48)
 local NOTIF_CONTAINER_SIZE = UDim2.new(0, 300, 0, 200)
 
 -- Tên UI độc nhất cho phiên bản này
