@@ -35,9 +35,9 @@ local UI_FRAME_HEIGHT = 80
 local NOTIF_DURATION_S = 4
 local NOTIF_ANIM_DURATION_S = 0.4
 local NOTIF_ICON_ID = "rbxassetid://117118515787811"
-local NOTIF_GUI_SIZE = UDim2.new(0, 230, 0, 55)
-local NOTIF_CONTAINER_POS = UDim2.new(1, -15, 1, -40)
-local NOTIF_CONTAINER_SIZE = UDim2.new(0, 280, 0, 180)
+local NOTIF_GUI_SIZE = UDim2.new(0, 250, 0, 60)
+local NOTIF_CONTAINER_POS = UDim2.new(1, -12, 1, -48)
+local NOTIF_CONTAINER_SIZE = UDim2.new(0, 300, 0, 200)
 
 -- Tên UI độc nhất cho phiên bản này
 local MAIN_SCREEN_GUI_NAME = "HxLagReducerScreenGui_v035"
