@@ -68,8 +68,13 @@ Phiên bản mới tập trung vào việc **cải thiện hiệu năng game** b
 * **🔄 Tối ưu hóa Liên tục (Real-time):**
     * *Tùy chọn theo Preset:* Kích hoạt `OPTIMIZE_ON_ADD` để tự động tối ưu các đối tượng mới xuất hiện.
 * **📢 Hệ thống Thông báo:** Hiển thị thông báo nhỏ ở góc màn hình (khởi động, đổi Preset).
-
+⚠️ **Lưu ý** Phiên bản này tối ưu quá mức nhưng chưa tích hợp FastFlags!
 ---
+
+### 3️⃣ **Hx_V.0.3: Tối Ưu Hóa Hiệu Năng (Giảm Lag & Tăng FPS)**
+
+Phiên bản này nâng cấp từ Hx_V.0.2, các tính năng cũ nhưng **đã xóa `UltraLow`**.
+✨ **Tính năng được thêm:** FastFlags và số tối ưu khác.
 
 ### 3️⃣ **Hx_V.0.4: Hub Đa Năng (Anti-AFK, Auto Clicker, Reduces Lag, ESP Player)**
 
