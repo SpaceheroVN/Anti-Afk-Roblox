@@ -69,7 +69,7 @@ local PRESETS = {
 		DisableGlobalShadows = true, ForceCompatibilityLighting = true, DisablePostEffects = true,
 		SimplifyEnvironmentLight = true, DisableParticleEffects = true, OptimizeTerrainWater = true,
 		DeleteGenericDecalsTextures = true, DeleteNonEssentialSounds = true,
-		ForceLowestQualitySettings = true, OptimizeOnInstanceAdded = true
+		ForceLowestQualitySettings = true, OptimizeOnInstanceAdded = true, ApplyFastFlags = true
 	}
 }
 
