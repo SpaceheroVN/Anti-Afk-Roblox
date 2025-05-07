@@ -21,7 +21,7 @@ Script được tạo ra với mục tiêu chính là **nâng cao trải nghiệ
 
 ## 📜 **Các Phiên Bản Script Hx**
 
-### 1️⃣ **Hx_V.0.1: Khởi đầu - Chống AFK**
+### 0️⃣•1️⃣ **Hx_V.0.1: Khởi đầu - Chống AFK**
 
 Phiên bản đầu tiên, tập trung giải quyết vấn đề duy nhất: **ngăn chặn việc bị kick khỏi game do không hoạt động (AFK)**.
 
@@ -37,7 +37,7 @@ Phiên bản đầu tiên, tập trung giải quyết vấn đề duy nhất: **
 
 ---
 
-### 2️⃣ **Hx_V.0.2: Tối Ưu Hóa Hiệu Năng (Giảm Lag & Tăng FPS)**
+### 0️⃣•2️⃣ **Hx_V.0.2: Tối Ưu Hóa Hiệu Năng (Giảm Lag & Tăng FPS)**
 
 Phiên bản mới tập trung vào việc **cải thiện hiệu năng game** bằng cách tùy chỉnh đồ họa và vật lý trực tiếp trên máy của người chơi, giúp giảm lag và tăng chỉ số FPS.
 
@@ -69,14 +69,48 @@ Phiên bản mới tập trung vào việc **cải thiện hiệu năng game** b
     * *Tùy chọn theo Preset:* Kích hoạt `OPTIMIZE_ON_ADD` để tự động tối ưu các đối tượng mới xuất hiện.
 * **📢 Hệ thống Thông báo:** Hiển thị thông báo nhỏ ở góc màn hình (khởi động, đổi Preset).
 ⚠️ **Lưu ý** Phiên bản này tối ưu quá mức nhưng chưa tích hợp FastFlags!
+
 ---
 
-### 3️⃣ **Hx_V.0.3: Tối Ưu Hóa Hiệu Năng (Giảm Lag & Tăng FPS)**
+### 0️⃣•3️⃣ **Hx_V.0.3 : Ổn Định & Tối Ưu An Toàn**
 
-Phiên bản này nâng cấp từ Hx_V.0.2, các tính năng cũ nhưng **đã xóa `UltraLow`**.
-✨ **Tính năng được thêm:** FastFlags và số tối ưu khác.
+Phiên bản này được xây dựng lại dựa trên những phản hồi về các lỗi không mong muốn (như xóa khối) từ các phiên bản trước. Mục tiêu chính là cung cấp một trải nghiệm ổn định và an toàn tuyệt đối, tập trung vào các phương pháp giảm lag ít can thiệp vào cấu trúc game nhất có thể, đồng thời tích hợp các cải tiến hiệu năng hiện đại.
 
-### 3️⃣ **Hx_V.0.4: Hub Đa Năng (Anti-AFK, Auto Clicker, Reduces Lag, ESP Player)**
+✨ **Những Cải Tiến Chính & Tính Năng:**
+
+* **🚫 Không Xóa Khối/Model:** Script KHÔNG còn thay đổi thuộc tính (như làm vô hình, đổi vật liệu) hoặc xóa bất kỳ `BasePart` hay `Model` nào không nằm trong danh sách cực kỳ an toàn được định nghĩa trước. Điều này đảm bảo không gây lỗi game do xóa nhầm đối tượng.
+* **⚡ Tích Hợp FastFlags Thông Minh:**
+   * Tự động áp dụng các FastFlags tối ưu hiệu năng ở chế độ cao nhất (`Performance`).
+   * Tự động phát hiện nền tảng: Nếu script chạy trên một môi trường (thường là di động) không hỗ trợ `setfflag` do giới hạn quyền, tính năng FastFlags sẽ được bỏ qua một cách lặng lẽ, không gây lỗi và không hiển thị thông báo không cần thiết.
+* **🎨 Tối Ưu Hóa Đồ Họa An Toàn:**
+   * Tắt đổ bóng toàn cục (Global Shadows).
+   * Tùy chọn chuyển sang chế độ render `Compatibility` (nhẹ hơn `Voxel`).
+   * Đơn giản hóa ánh sáng môi trường (Environment Light).
+   * Tắt các hiệu ứng hậu kỳ (Post-Processing Effects).
+   * Không can thiệp vào `Atmosphere` và `Clouds` bằng cách xóa hoặc clone để tránh các lỗi khôi phục Lighting đã gặp phải.
+* **💧 Tối Ưu Nước Địa Hình:** Làm phẳng mặt nước để giảm gánh nặng render.
+* **💥 Tắt Hiệu Ứng Hạt:** Vô hiệu hóa `ParticleEmitters`, `Beams`, `Trails`, `khói`, `lửa`,...
+* **📉 Ép Chất Lượng Đồ Họa:** Tùy chọn để đặt mức chất lượng đồ họa của Roblox xuống thấp nhất.
+* **🗑️ Xóa Chọn Lọc (An Toàn Hơn):**
+   * Tùy chọn: Xóa `Decal`, `Texture` không thuộc về nhân vật.
+   * Tùy chọn: Xóa `Sound` không thiết yếu (không phải nhạc nền, không đang phát).
+   * Tùy chọn: Xóa `ScreenGui` không thiết yếu (có danh sách trắng các UI quan trọng như Chat, CoreGui, và UI của chính script).
+* **🔧 Cấu Hình Preset Tinh Gọn:
+   * `OFF`: Tắt tối ưu, cố gắng phục hồi các cài đặt đã thay đổi (trừ FastFlags).
+   * `Minimal`: Tối ưu nhẹ nhàng.
+   * `Balanced`: Cân bằng hiệu năng và đồ họa.
+   * `Performance`: Kết hợp tất cả các tối ưu an toàn ở trên cùng với FastFlags.
+* **🖱️ Giao Diện Điều Khiển:** Nút bấm nhỏ gọn có thể kéo thả, hiển thị preset hiện tại.
+* **🔄 Tối Ưu Khi Có Đối Tượng Mới:** Tùy chọn để tự động áp dụng các tối ưu an toàn (chủ yếu là tắt hiệu ứng) cho các đối tượng mới được thêm vào game.
+* **📢 Thông Báo Tiếng Việt:** Toàn bộ thông báo cho người dùng được hiển thị bằng tiếng Việt.
+* **🚀 Tùy Chỉnh Khởi Động:** Cho phép đặt preset mặc định khi chạy script từ xa thông qua biến toàn cục `DEFAULT_SETTING`.
+* **🧹 Dọn Dẹp Độc Lập:** Script chỉ dọn dẹp các UI do chính nó tạo ra (dựa trên tên UI có chứa phiên bản, ví dụ `HxLagReducerScreenGui_v036`).
+* **🐛 Sửa Lỗi & Tăng Độ Ổn Định:** Nhiều cải tiến nhỏ trong việc xử lý lỗi, kiểm tra đối tượng và khởi tạo script để đảm bảo hoạt động mượt mà hơn trên PC.
+* **⚠️ Lưu ý:** Một khi `FastFlags` đã được áp dụng, thường sẽ có hiệu lực trong suốt phiên chơi và không thể dễ dàng "tắt" bởi script.
+
+---
+
+### 0️⃣•4️⃣ **Hx_V.0.4: Hub Đa Năng (Anti-AFK, Auto Clicker, Reduces Lag, ESP Player)**
 
 Phiên bản nâng cấp toàn diện, tích hợp nhiều chức năng mạnh mẽ vào một **Hub điều khiển với giao diện đồ họa (GUI)** trực quan.
 
