@@ -17,6 +17,7 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local HttpService = game:GetService("HttpService")
+local GuiService = game:GetService("GuiService")
 
 print("Hx_V.0.3: Script Giảm Lag đang tải...")
 
@@ -40,8 +41,8 @@ local NOTIF_CONTAINER_POS = UDim2.new(1, -18, 1, -48)
 local NOTIF_CONTAINER_SIZE = UDim2.new(0, 300, 0, 200)
 
 -- Tên UI độc nhất cho phiên bản này
-local MAIN_SCREEN_GUI_NAME = "HxLagReducerScreenGui_v035"
-local NOTIFICATION_GUI_NAME = "HxNotificationGui_v035"
+local MAIN_SCREEN_GUI_NAME = "HxLagReducerScreenGui_v036"
+local NOTIFICATION_GUI_NAME = "HxNotificationGui_v036"
 
 -- 🚀 Cấu Hình Tối Ưu
 local DEFAULT_PRESET_ON_START = DEFAULT_SETTING or "OFF"
@@ -64,7 +65,7 @@ local PRESETS = {
 		SimplifyEnvironmentLight = true, DisableParticleEffects = true, OptimizeTerrainWater = true,
 		ForceLowestQualitySettings = true, OptimizeOnInstanceAdded = true,
 	},
-	MaxPerformance = {
+	Performance = {
 		DisableGlobalShadows = true, ForceCompatibilityLighting = true, DisablePostEffects = true,
 		SimplifyEnvironmentLight = true, DisableParticleEffects = true, OptimizeTerrainWater = true,
 		DeleteGenericDecalsTextures = true, DeleteNonEssentialSounds = true,
@@ -74,7 +75,7 @@ local PRESETS = {
 
 -- 📊 Trạng Thái Script
 local currentPresetName = "OFF"
-local presetCycleOrder = {"OFF", "Minimal", "Balanced", "MaxPerformance"}
+local presetCycleOrder = {"OFF", "Minimal", "Balanced", "Performance"}
 local optimizedObjects = setmetatable({}, { __mode = "k" })
 local isListenerConnected = false
 local addInstanceDebounce = false
@@ -82,6 +83,7 @@ local isRunning = true
 local localPlayer = Players.LocalPlayer
 local playerGui = nil
 local fastFlagsApplied = false
+local fastFlagsSupported = true
 
 -- 💾 Lưu Trữ Cài Đặt Gốc
 local originalLightingSettings = {}
@@ -89,9 +91,8 @@ local originalTerrainSettings = {}
 local originalQualityLevel = Enum.SavedQualitySetting.Automatic
 local originalEffectStates = setmetatable({}, {__mode = "k"}) 
 
--- 🖼️ Biến UI
+-- 🖼️ Biến UI & 🔌 Biến Kết Nối Sự Kiện
 local mainFrame, notificationGui, notificationContainer, notificationTemplate
--- 🔌 Biến Kết Nối Sự Kiện
 local descendantAddedConn, playerRemovingConn, buttonInputBeganConn, buttonInputEndedConn, buttonClickConn, frameDragConn
 local activeTweens = {}
 
@@ -104,13 +105,8 @@ local function cleanupResources()
 	descendantAddedConn,playerRemovingConn,buttonInputBeganConn,buttonInputEndedConn,buttonClickConn,frameDragConn = nil,nil,nil,nil,nil,nil
 	isListenerConnected = false
 	for tween,_ in pairs(activeTweens) do if typeof(tween)=="Instance" and tween:IsA("Tween") then pcall(tween.Cancel,tween) end end; activeTweens = {}
-	
-	local notifGuiToDestroy = playerGui and playerGui:FindFirstChild(NOTIFICATION_GUI_NAME)
-	if notifGuiToDestroy then notifGuiToDestroy:Destroy() end
-	
-	local mainUiToDestroy = playerGui and playerGui:FindFirstChild(MAIN_SCREEN_GUI_NAME)
-	if mainUiToDestroy then mainUiToDestroy:Destroy() end
-	
+	local notifGuiToDestroy = playerGui and playerGui:FindFirstChild(NOTIFICATION_GUI_NAME); if notifGuiToDestroy then notifGuiToDestroy:Destroy() end
+	local mainUiToDestroy = playerGui and playerGui:FindFirstChild(MAIN_SCREEN_GUI_NAME); if mainUiToDestroy then mainUiToDestroy:Destroy() end
 	notificationGui,notificationContainer,notificationTemplate,mainFrame = nil,nil,nil,nil
 	print("Hx_V.0.3: Dọn dẹp hoàn tất.")
 end
@@ -132,7 +128,6 @@ local function createNotificationTemplate()
 	local msg = Instance.new("TextLabel", tf); msg.Name="Message"; msg.Text="Nội dung."; msg.Font=Enum.Font.SourceSans; msg.TextSize=15; msg.TextColor3=Color3.fromRGB(200,200,200); msg.BackgroundTransparency=1; msg.TextTransparency=1; msg.TextXAlignment=Enum.TextXAlignment.Left; msg.TextWrapped=true; msg.Size=UDim2.new(1,0,0,28); msg.LayoutOrder=2
 	return notificationTemplate
 end
-
 local function setupNotificationContainer()
 	if notificationContainer and notificationContainer.Parent and notificationGui and notificationGui.Parent then return notificationContainer end
 	if not localPlayer or not localPlayer:IsDescendantOf(Players) then warn("Hx_V.0.3: Người chơi cục bộ không hợp lệ."); return nil end
@@ -143,10 +138,8 @@ local function setupNotificationContainer()
 	local ll = Instance.new("UIListLayout",notificationContainer); ll.FillDirection,ll.HorizontalAlignment,ll.VerticalAlignment,ll.SortOrder,ll.Padding = Enum.FillDirection.Vertical,Enum.HorizontalAlignment.Right,Enum.VerticalAlignment.Bottom,Enum.SortOrder.LayoutOrder,UDim.new(0,5)
 	return notificationContainer
 end
-
 local function showNotification(title, message)
-	local notifTitle = title or "Hx Lag Reducer"
-	if not ENABLE_NOTIFICATIONS or not isRunning then return end
+	local notifTitle = title or "Hx Giảm Lag"; if not ENABLE_NOTIFICATIONS or not isRunning then return end
 	if not notificationContainer or not notificationContainer.Parent then if not setupNotificationContainer() then warn("Hx_V.0.3: Khung chứa thông báo lỗi."); return end end
 	if not notificationTemplate then if not createNotificationTemplate() then warn("Hx_V.0.3: Mẫu thông báo lỗi."); return end end
 	local newNotifFrame = notificationTemplate:Clone(); if not newNotifFrame then warn("Hx_V.0.3: Sao chép mẫu thông báo lỗi."); return end
@@ -168,86 +161,102 @@ end
 local function saveOriginalSettings()
 	originalQualityLevel = Enum.SavedQualitySetting.Automatic
 	local success = pcall(function()
-		originalLightingSettings.GlobalShadows = Lighting.GlobalShadows; originalLightingSettings.Technology = Lighting.Technology
-		originalLightingSettings.Brightness = Lighting.Brightness; originalLightingSettings.EnvironmentDiffuseScale = Lighting.EnvironmentDiffuseScale
-		originalLightingSettings.EnvironmentSpecularScale = Lighting.EnvironmentSpecularScale; originalLightingSettings.Ambient = Lighting.Ambient
-		originalLightingSettings.OutdoorAmbient = Lighting.OutdoorAmbient
-		for _,effect in ipairs(Lighting:GetChildren()) do if effect:IsA("PostEffect") then originalEffectStates[effect] = effect.Enabled end end
-		local terrain = Workspace:FindFirstChildOfClass("Terrain")
-		if terrain then
-			originalTerrainSettings.WaterWaveSize = terrain.WaterWaveSize; originalTerrainSettings.WaterWaveSpeed = terrain.WaterWaveSpeed
-			originalTerrainSettings.WaterReflectance = terrain.WaterReflectance; originalTerrainSettings.WaterTransparency = terrain.WaterTransparency
-		end
-		if UserSettingsService and UserSettingsService.GameSettings then originalQualityLevel = UserSettingsService.GameSettings.SavedQualityLevel
-		elseif typeof(settings)=="function" then local s,q=pcall(settings().Rendering.QualityLevel); if s then originalQualityLevel=q end; warn("Hx_V.0.3: API settings() cũ không được hỗ trợ.")
-		else warn("Hx_V.0.3: Không truy cập được UserSettings.") end
-	end)
-	if not success then warn("Hx_V.0.3: Lỗi khi lưu cài đặt gốc!") end
+		originalLightingSettings.GlobalShadows=Lighting.GlobalShadows; originalLightingSettings.Technology=Lighting.Technology; originalLightingSettings.Brightness=Lighting.Brightness; originalLightingSettings.EnvironmentDiffuseScale=Lighting.EnvironmentDiffuseScale; originalLightingSettings.EnvironmentSpecularScale=Lighting.EnvironmentSpecularScale; originalLightingSettings.Ambient=Lighting.Ambient; originalLightingSettings.OutdoorAmbient=Lighting.OutdoorAmbient
+		for _,effect in ipairs(Lighting:GetChildren()) do if effect:IsA("PostEffect") then originalEffectStates[effect]=effect.Enabled end end
+		local terrain=Workspace:FindFirstChildOfClass("Terrain"); if terrain then originalTerrainSettings.WaterWaveSize=terrain.WaterWaveSize; originalTerrainSettings.WaterWaveSpeed=terrain.WaterWaveSpeed; originalTerrainSettings.WaterReflectance=terrain.WaterReflectance; originalTerrainSettings.WaterTransparency=terrain.WaterTransparency end
+		if UserSettingsService and UserSettingsService.GameSettings then originalQualityLevel=UserSettingsService.GameSettings.SavedQualityLevel
+		elseif typeof(settings)=="function" then local s,q=pcall(settings().Rendering.QualityLevel); if s then originalQualityLevel=q end; warn("Hx_V.0.3: API settings() cũ.")
+		else warn("Hx_V.0.3: Lỗi UserSettings.") end
+	end); if not success then warn("Hx_V.0.3: Lỗi khi lưu cài đặt gốc!") end
 end
 
 local function optimizeObjectSafe(obj)
 	if not isRunning or optimizedObjects[obj] then return end
-	local isPlayerCharacterPart = false; if localPlayer and localPlayer.Character and (obj == localPlayer.Character or obj:IsDescendantOf(localPlayer.Character)) then isPlayerCharacterPart = true end
+	local isPlayerPart = false; if localPlayer and localPlayer.Character and (obj==localPlayer.Character or obj:IsDescendantOf(localPlayer.Character)) then isPlayerPart=true end
 	pcall(function()
 		if currentConfig.DisableParticleEffects and (obj:IsA("ParticleEmitter") or obj:IsA("Beam") or obj:IsA("Trail") or obj:IsA("Smoke") or obj:IsA("Fire") or obj:IsA("Sparkles") or obj:IsA("Explosion")) then
-			if obj.Enabled then originalEffectStates[obj] = obj.Enabled; obj.Enabled = false end
-		elseif currentConfig.DeleteGenericDecalsTextures and (obj:IsA("Decal") or obj:IsA("Texture")) and not isPlayerCharacterPart then
-			obj:Destroy()
-		elseif currentConfig.DeleteNonEssentialSounds and obj:IsA("Sound") then
-			if obj.Parent and obj.Name ~= "BackgroundSound" and not obj.IsPlaying then obj:Destroy() end
-		elseif currentConfig.DeleteNonEssentialUI and obj:IsA("ScreenGui") then
-			if obj.Name~=NOTIFICATION_GUI_NAME and obj.Name~=MAIN_SCREEN_GUI_NAME and obj.Name~="CoreGui" and obj.Name~="EssentialUI" and obj.Name~="Chat" then obj:Destroy() end
+			if obj.Enabled then originalEffectStates[obj]=obj.Enabled; obj.Enabled=false end
+		elseif currentConfig.DeleteGenericDecalsTextures and (obj:IsA("Decal") or obj:IsA("Texture")) and not isPlayerPart then obj:Destroy()
+		elseif currentConfig.DeleteNonEssentialSounds and obj:IsA("Sound") then if obj.Parent and obj.Name~="BackgroundSound" and not obj.IsPlaying then obj:Destroy() end
+		elseif currentConfig.DeleteNonEssentialUI and obj:IsA("ScreenGui") then if obj.Name~=NOTIFICATION_GUI_NAME and obj.Name~=MAIN_SCREEN_GUI_NAME and obj.Name~="CoreGui" and obj.Name~="EssentialUI" and obj.Name~="Chat" then obj:Destroy() end
 		end
 	end)
-	optimizedObjects[obj] = true
+	optimizedObjects[obj]=true
 end
 
 local function optimizeLightingSafe(isReverting)
 	if isReverting then
-		local s=pcall(function()
-			for key,value in pairs(originalLightingSettings) do if Lighting[key]~=nil then Lighting[key]=value end end
-			for effect, enabledState in pairs(originalEffectStates) do if effect and effect.Parent then effect.Enabled = enabledState end end
-			originalEffectStates = setmetatable({}, {__mode="k"})
-		end); if not s then warn("Hx_V.0.3: Lỗi khôi phục Lighting.") end; return
+		local s=pcall(function() for k,v in pairs(originalLightingSettings) do if Lighting[k]~=nil then Lighting[k]=v end end; for ef,en in pairs(originalEffectStates) do if ef and ef.Parent then ef.Enabled=en end end; originalEffectStates=setmetatable({}, {__mode="k"}) end)
+		if not s then warn("Hx_V.0.3: Lỗi khôi phục Lighting.") end; return
 	end
 	local s=pcall(function()
 		if currentConfig.DisableGlobalShadows then Lighting.GlobalShadows=false end
 		Lighting.Technology = currentConfig.ForceCompatibilityLighting and Enum.Technology.Compatibility or Enum.Technology.Voxel
 		if currentConfig.SimplifyEnvironmentLight then Lighting.Brightness,Lighting.EnvironmentDiffuseScale,Lighting.EnvironmentSpecularScale,Lighting.Ambient,Lighting.OutdoorAmbient = 0,0,0,Color3.new(0.2,0.2,0.2),Color3.new(0.2,0.2,0.2) end
-		if currentConfig.DisablePostEffects then for _,effect in ipairs(Lighting:GetChildren()) do if effect:IsA("PostEffect") then if effect.Enabled then originalEffectStates[effect]=effect.Enabled; effect.Enabled=false end end end end
+		if currentConfig.DisablePostEffects then for _,ef in ipairs(Lighting:GetChildren()) do if ef:IsA("PostEffect") then if ef.Enabled then originalEffectStates[ef]=ef.Enabled; ef.Enabled=false end end end end
 	end); if not s then warn("Hx_V.0.3: Lỗi tối ưu Lighting.") end
 end
 
 local function optimizeTerrainSafe(isReverting)
-	local terrain=Workspace:FindFirstChildOfClass("Terrain"); if not terrain then return end
-	if isReverting then pcall(function() for key,value in pairs(originalTerrainSettings) do if terrain[key]~=nil then terrain[key]=value end end end); return end
-	if currentConfig.OptimizeTerrainWater then pcall(function() terrain.WaterWaveSize,terrain.WaterWaveSpeed,terrain.WaterReflectance,terrain.WaterTransparency=0,0,0,1 end) end
+	local tr=Workspace:FindFirstChildOfClass("Terrain"); if not tr then return end
+	if isReverting then pcall(function() for k,v in pairs(originalTerrainSettings) do if tr[k]~=nil then tr[k]=v end end end); return end
+	if currentConfig.OptimizeTerrainWater then pcall(function() tr.WaterWaveSize,tr.WaterWaveSpeed,tr.WaterReflectance,tr.WaterTransparency=0,0,0,1 end) end
 end
 
 local function forceLowQualitySettings(isReverting)
-	local targetQ = isReverting and originalQualityLevel or Enum.SavedQualitySetting.QualityLevel1
-	if not isReverting and not currentConfig.ForceLowestQualitySettings then return end; if not targetQ then warn("Hx_V.0.3: Target Quality lỗi."); return end
-	local s=pcall(function() if UserSettingsService and UserSettingsService.GameSettings then UserSettingsService.GameSettings.SavedQualityLevel=targetQ elseif typeof(settings)=="function" then warn("Hx_V.0.3: API settings() cũ.") else error("Lỗi UserSettings/settings() quality.") end end)
+	local tq=isReverting and originalQualityLevel or Enum.SavedQualitySetting.QualityLevel1
+	if not isReverting and not currentConfig.ForceLowestQualitySettings then return end; if not tq then warn("Hx_V.0.3: Target Quality lỗi."); return end
+	local s=pcall(function() if UserSettingsService and UserSettingsService.GameSettings then UserSettingsService.GameSettings.SavedQualityLevel=tq elseif typeof(settings)=="function" then warn("Hx_V.0.3: API settings() cũ.") else error("Lỗi UserSettings/settings() quality.") end end)
 	if not s then warn("Hx_V.0.3: Lỗi đặt quality!") end
 end
 
 local fastFlagDataJson = [[{"FastFlags":{"FFlagDebugEnableFastSignals":"true","FFlagGraphicsQualityAutoAdjust":"false","FFlagFixGraphicsQualitySettingCrash":"true","FFlagParallelLuaEnable":"true","FFlagRenderShadowSkipHugeCulling":"true","FFlagOcclusionCullingBetaFeature":"true","FFlagUserCameraInputRefactor3":"true","FFlagUserCameraControlLastInputTypeUpdate":"true","FFlagDisablePostFx":"true","FFlagLuaGCThrottleEnabled":"true","FFlagGCEnabledV2":"true","FFlagNetworkCullingNew":"true","FFlagNewPhysicsSenderThrottle":"true","FFlagStreamOutBehaviorFix":"true","FFlagIsFastFlagEnabled":"true","FFlagDebugDisableTelemetryV2Event":"true","FFlagDebugDisableTelemetryV2Stat":"true","FFlagDebugDisableTelemetryEphemeralCounter":"true","DFIntTeleportClientAssetPreloadingHundredthsPercentage":"100000","FIntRenderGrassDetailStrands":"0","FFlagFixVRRaycastLag":"false","FFlagFixVREdgeCasePerf":"false"}}]]
 local function applyFastFlags()
+	if not fastFlagsSupported then return end
     if fastFlagsApplied then showNotification(nil,"FastFlags đã được áp dụng từ trước."); return end
-    local success,err=pcall(function() local flags=HttpService:JSONDecode(fastFlagDataJson).FastFlags; for n,v in pairs(flags) do setfflag(n,v) end; fastFlagsApplied=true; print("Hx_V.0.3: ✅ FastFlags đã được bật."); showNotification(nil,"FastFlags đã được kích hoạt!") end)
-    if not success then warn("Hx_V.0.3: Lỗi áp dụng FastFlags:",err); showNotification(nil,"Lỗi FastFlags: Không thể áp dụng.") end
+    local allSetSuccess = true
+    local decodeSuccess, flagsTable = pcall(HttpService.JSONDecode, HttpService, fastFlagDataJson)
+    if not decodeSuccess or not flagsTable or not flagsTable.FastFlags then
+        warn("Hx_V.0.3: Lỗi giải mã JSON FastFlags hoặc cấu trúc không đúng:", flagsTable)
+        showNotification(nil,"Lỗi FastFlags: Dữ liệu không hợp lệ.")
+        fastFlagsSupported = false
+        return
+    end
+
+    for n,v in pairs(flagsTable.FastFlags) do 
+        local setSuccess, setError = pcall(setfflag, n, v)
+        if not setSuccess then
+            warn("Hx_V.0.3: Lỗi khi đặt FastFlag '" .. tostring(n) .. "': " .. tostring(setError))
+            allSetSuccess = false
+            if string.find(tostring(setError or ""), "requires Admin") or string.find(tostring(setError or ""), "The current identity") then
+                print("Hx_V.0.3: Phát hiện FastFlags không được hỗ trợ trên nền tảng này.")
+                fastFlagsSupported = false
+                showNotification(nil,"FastFlags không được hỗ trợ trên thiết bị này.")
+                return
+            end
+        end
+    end
+    
+    if allSetSuccess then
+        fastFlagsApplied=true
+        print("Hx_V.0.3: ✅ FastFlags đã được bật.")
+        showNotification(nil,"FastFlags đã được kích hoạt!")
+    else
+        warn("Hx_V.0.3: Một số FastFlags không thể áp dụng.")
+        showNotification(nil,"Lỗi FastFlags: Một số không thể áp dụng.")
+    end
 end
 
 local function applyAllSafeOptimizations()
     if not isRunning then return end; optimizeLightingSafe(false); optimizeTerrainSafe(false)
-	local startTime=tick(); local descendants=Workspace:GetDescendants(); local count=0
-	for i=#descendants,1,-1 do if not isRunning then break end; local obj=descendants[i]; if obj and obj.Parent then optimizeObjectSafe(obj); count=count+1 end; if count%200==0 and tick()-startTime>0.04 then task.wait(); startTime=tick() end end
+	local st=tick(); local ds=Workspace:GetDescendants(); local c=0
+	for i=#ds,1,-1 do if not isRunning then break end; local o=ds[i]; if o and o.Parent then optimizeObjectSafe(o); c=c+1 end; if c%200==0 and tick()-st>0.04 then task.wait(); st=tick() end end
     if not isRunning then return end
-	if currentConfig.DeleteNonEssentialUI then for _,p in ipairs(Players:GetPlayers()) do local pG=p:FindFirstChild("PlayerGui"); if pG then local guis=pG:GetChildren(); for i=#guis,1,-1 do if guis[i] and guis[i]:IsA("ScreenGui") then optimizeObjectSafe(guis[i]) end end end end end
-	forceLowQualitySettings(false); if currentConfig.ApplyFastFlags and not fastFlagsApplied then applyFastFlags() end
+	if currentConfig.DeleteNonEssentialUI then for _,p in ipairs(Players:GetPlayers()) do local pG=p:FindFirstChild("PlayerGui"); if pG then local gs=pG:GetChildren(); for i=#gs,1,-1 do if gs[i] and gs[i]:IsA("ScreenGui") then optimizeObjectSafe(gs[i]) end end end end end
+	forceLowQualitySettings(false); if currentConfig.ApplyFastFlags and not fastFlagsApplied and fastFlagsSupported then applyFastFlags() end
     if isListenerConnected and (not currentConfig.OptimizeOnInstanceAdded or currentPresetName=="OFF") then if descendantAddedConn then descendantAddedConn:Disconnect() end; descendantAddedConn,isListenerConnected=nil,false
 	elseif not isListenerConnected and currentConfig.OptimizeOnInstanceAdded and currentPresetName~="OFF" then isListenerConnected=true; if descendantAddedConn then descendantAddedConn:Disconnect() end
-		descendantAddedConn=Workspace.DescendantAdded:Connect(function(desc) if not isRunning or addInstanceDebounce then return end; addInstanceDebounce=true; optimizeObjectSafe(desc); task.delay(currentConfig.InstanceAddedCooldown,function()addInstanceDebounce=false end) end)
+		descendantAddedConn=Workspace.DescendantAdded:Connect(function(d) if not isRunning or addInstanceDebounce then return end; addInstanceDebounce=true; optimizeObjectSafe(d); task.delay(currentConfig.InstanceAddedCooldown,function()addInstanceDebounce=false end) end)
     end
 end
 
@@ -263,7 +272,7 @@ local function applyPreset(presetName)
     currentConfig,currentPresetName=table.clone(DEFAULT_OPTIMIZATION_CONFIG),presetName
     if presetName=="OFF" then
         restoreAllSafeOptimizations()
-        if fastFlagsApplied then task.wait(0.5); showNotification("Hx Lag Reducer", "Một số cài đặt (như FastFlags) vẫn còn hiệu lực cho phiên này và không thể tự tắt bởi script.") end
+        if fastFlagsApplied and fastFlagsSupported then task.wait(0.5); showNotification("Hx Lag Reducer", "Một số cài đặt không thể đảo ngược!") end
     else local presetData=PRESETS[presetName]; if presetData then for k,v in pairs(presetData) do if currentConfig[k]~=nil then currentConfig[k]=v else warn("Hx_V.0.3: Key lạ '"..k.."' trong preset '"..presetName.."'") end end; optimizedObjects=setmetatable({}, {__mode="k"}); applyAllSafeOptimizations()
         else warn("Hx_V.0.3: Preset '"..presetName.."' không tìm thấy. Quay về OFF."); applyPreset("OFF"); return end
     end
@@ -290,24 +299,50 @@ local function createOrGetUi()
 end
 
 -- ▶️ Khởi Tạo Script
-if RunService:IsClient() then
+local function initializeScript()
+	if not localPlayer then
+		warn("Hx_V.0.3: localPlayer is nil! Waiting for player...")
+		localPlayer = Players.LocalPlayer or Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
+		if not localPlayer then warn("Hx_V.0.3: Still cannot get localPlayer! Script cannot initialize."); return end
+		print("Hx_V.0.3: localPlayer obtained.")
+	end
+
 	playerGui = localPlayer:WaitForChild("PlayerGui", 60)
     if not playerGui then warn("Hx_V.0.3: PlayerGui không tìm thấy! Script không thể khởi tạo."); return end
     
-    local oldMainUI = playerGui:FindFirstChild(MAIN_SCREEN_GUI_NAME)
-    if oldMainUI then warn("Hx_V.0.3: Dọn UI chính cũ: ", MAIN_SCREEN_GUI_NAME); oldMainUI:Destroy() end
-    local oldNotifUI = playerGui:FindFirstChild(NOTIFICATION_GUI_NAME)
-    if oldNotifUI then warn("Hx_V.0.3: Dọn UI thông báo cũ: ", NOTIFICATION_GUI_NAME); oldNotifUI:Destroy() end
+    local oldMainUI = playerGui:FindFirstChild(MAIN_SCREEN_GUI_NAME); if oldMainUI then warn("Hx_V.0.3: Dọn UI chính cũ: ", MAIN_SCREEN_GUI_NAME); oldMainUI:Destroy() end
+    local oldNotifUI = playerGui:FindFirstChild(NOTIFICATION_GUI_NAME); if oldNotifUI then warn("Hx_V.0.3: Dọn UI thông báo cũ: ", NOTIFICATION_GUI_NAME); oldNotifUI:Destroy() end
     
-	if ENABLE_NOTIFICATIONS then if not createNotificationTemplate() or not setupNotificationContainer() then warn("Hx_V.0.3: Lỗi khởi tạo hệ thống thông báo."); cleanupResources(); return else showNotification(nil,"V.0.3 đã kích hoạt.") end end
-	if not localPlayer.Character or not localPlayer.Character.Parent then localPlayer.CharacterAdded:Wait(); task.wait(0.5) end
+	if ENABLE_NOTIFICATIONS then if not createNotificationTemplate() or not setupNotificationContainer() then warn("Hx_V.0.3: Lỗi khởi tạo hệ thống thông báo."); cleanupResources(); return else showNotification(nil,"V.0.3.6 đã kích hoạt.") end end
+	
+	if not localPlayer.Character or not localPlayer.Character.Parent then 
+        local char = localPlayer.CharacterAdded:Wait()
+        if not char then warn("Hx_V.0.3: CharacterAdded trả về nil!") else task.wait(0.5) end
+    else task.wait(0.5) end
+
     currentPresetName = PRESETS[DEFAULT_PRESET_ON_START] and DEFAULT_PRESET_ON_START or "OFF"
 	saveOriginalSettings()
 	if ENABLE_UI then if not createOrGetUi() then warn("Hx_V.0.3: Lỗi tạo UI nút bấm khi khởi tạo.") end end
 	applyPreset(currentPresetName)
+    
     if playerRemovingConn then playerRemovingConn:Disconnect() end
     playerRemovingConn = Players.PlayerRemoving:Connect(function(leavingPlayer) if leavingPlayer==localPlayer then cleanupResources() end end)
     print("Hx_V.0.3 Script đã khởi chạy với preset:", currentPresetName)
+end
+
+if RunService:IsClient() then
+	local canSetFFlagTest, errTest = pcall(setfflag, "HxTestFlag", "true")
+	if not canSetFFlagTest then
+		if errTest and (string.find(tostring(errTest), "requires Admin") or string.find(tostring(errTest), "The current identity")) then
+			print("Hx_V.0.3: FastFlags không được hỗ trợ trên nền tảng này (yêu cầu quyền Admin hoặc do định danh).")
+			fastFlagsSupported = false
+		else
+			print("Hx_V.0.3: Có lỗi khi kiểm tra setfflag, nhưng không phải lỗi quyền Admin. FastFlags có thể không hoạt động đúng. Lỗi:", tostring(errTest))
+		end
+	else
+		print("Hx_V.0.3: FastFlags có vẻ được hỗ trợ.")
+	end
+	initializeScript()
 else
 	warn("Hx_V.0.3: Script phải là LocalScript và chạy trên client!")
 end
