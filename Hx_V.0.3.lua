@@ -125,7 +125,7 @@ local function createNotificationTemplate()
 	local tf = Instance.new("Frame", notificationTemplate); tf.Name="TextFrame"; tf.BackgroundTransparency=1; tf.Size=UDim2.new(1,-50,1,0); tf.LayoutOrder=2
 	local tll = Instance.new("UIListLayout", tf); tll.FillDirection,tll.HorizontalAlignment,tll.VerticalAlignment,tll.SortOrder,tll.Padding = Enum.FillDirection.Vertical,Enum.HorizontalAlignment.Left,Enum.VerticalAlignment.Center,Enum.SortOrder.LayoutOrder,UDim.new(0,2)
 	local tt = Instance.new("TextLabel", tf); tt.Name="Title"; tt.Text="Tiêu đề"; tt.Font=Enum.Font.SourceSansSemibold; tt.TextSize=17; tt.TextColor3=Color3.fromRGB(255,255,255); tt.BackgroundTransparency=1; tt.TextTransparency=1; tt.TextXAlignment=Enum.TextXAlignment.Left; tt.Size=UDim2.new(1,0,0,18); tt.LayoutOrder=1
-	local msg = Instance.new("TextLabel", tf); msg.Name="Message"; msg.Text="Nội dung."; msg.Font=Enum.Font.SourceSans; msg.TextSize=15; msg.TextColor3=Color3.fromRGB(200,200,200); msg.BackgroundTransparency=1; msg.TextTransparency=1; msg.TextXAlignment=Enum.TextXAlignment.Left; msg.TextWrapped=true; msg.Size=UDim2.new(1,0,0,28); msg.LayoutOrder=2
+	local msg = Instance.new("TextLabel", tf); msg.Name="Message"; msg.Text="Nội dung."; msg.Font=Enum.Font.SourceSans; msg.TextSize=14; msg.TextColor3=Color3.fromRGB(200,200,200); msg.BackgroundTransparency=1; msg.TextTransparency=1; msg.TextXAlignment=Enum.TextXAlignment.Left; msg.TextWrapped=true; msg.Size=UDim2.new(1,0,0,28); msg.LayoutOrder=2
 	return notificationTemplate
 end
 local function setupNotificationContainer()
@@ -139,7 +139,7 @@ local function setupNotificationContainer()
 	return notificationContainer
 end
 local function showNotification(title, message)
-	local notifTitle = title or "Hx Giảm Lag"; if not ENABLE_NOTIFICATIONS or not isRunning then return end
+	local notifTitle = title or "Hx Lag Reducer"; if not ENABLE_NOTIFICATIONS or not isRunning then return end
 	if not notificationContainer or not notificationContainer.Parent then if not setupNotificationContainer() then warn("Hx_V.0.3: Khung chứa thông báo lỗi."); return end end
 	if not notificationTemplate then if not createNotificationTemplate() then warn("Hx_V.0.3: Mẫu thông báo lỗi."); return end end
 	local newNotifFrame = notificationTemplate:Clone(); if not newNotifFrame then warn("Hx_V.0.3: Sao chép mẫu thông báo lỗi."); return end
@@ -313,7 +313,7 @@ local function initializeScript()
     local oldMainUI = playerGui:FindFirstChild(MAIN_SCREEN_GUI_NAME); if oldMainUI then warn("Hx_V.0.3: Dọn UI chính cũ: ", MAIN_SCREEN_GUI_NAME); oldMainUI:Destroy() end
     local oldNotifUI = playerGui:FindFirstChild(NOTIFICATION_GUI_NAME); if oldNotifUI then warn("Hx_V.0.3: Dọn UI thông báo cũ: ", NOTIFICATION_GUI_NAME); oldNotifUI:Destroy() end
     
-	if ENABLE_NOTIFICATIONS then if not createNotificationTemplate() or not setupNotificationContainer() then warn("Hx_V.0.3: Lỗi khởi tạo hệ thống thông báo."); cleanupResources(); return else showNotification(nil,"V.0.3.6 đã kích hoạt.") end end
+	if ENABLE_NOTIFICATIONS then if not createNotificationTemplate() or not setupNotificationContainer() then warn("Hx_V.0.3: Lỗi khởi tạo hệ thống thông báo."); cleanupResources(); return else showNotification(nil,"V.0.3 đã kích hoạt.") end end
 	
 	if not localPlayer.Character or not localPlayer.Character.Parent then 
         local char = localPlayer.CharacterAdded:Wait()
