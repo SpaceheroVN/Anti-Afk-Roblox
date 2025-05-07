@@ -63,7 +63,7 @@ local PRESETS = {
 	Balanced = {
 		DisableGlobalShadows = true, ForceCompatibilityLighting = true, DisablePostEffects = true,
 		SimplifyEnvironmentLight = true, DisableParticleEffects = true, OptimizeTerrainWater = true,
-		ForceLowestQualitySettings = true, OptimizeOnInstanceAdded = true, ApplyFastFlags = true
+		ForceLowestQualitySettings = true, OptimizeOnInstanceAdded = true, ApplyFastFlags = true,
 	},
 	Performance = {
 		DisableGlobalShadows = true, ForceCompatibilityLighting = true, DisablePostEffects = true,
